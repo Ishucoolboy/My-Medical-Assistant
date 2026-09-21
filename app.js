@@ -23,11 +23,12 @@ function renderInventory(){
   const q=$("inventorySearch").value.trim().toLowerCase(),cat=$("inventoryCategory").value;
   const rows=inventory.filter(m=>(!q||[m.name,m.category,m.form,m.notes].join(" ").toLowerCase().includes(q))&&(!cat||m.category===cat));
   if(!rows.length){$("inventoryTable").innerHTML='<div class="empty-list">No medicines added yet. Add the verified clinic inventory to enable inventory-aware suggestions.</div>';return}
-  $("inventoryTable").innerHTML='<table><thead><tr><th>Medicine</th><th>Category</th><th>Form</th><th>Stock</th><th>Notes</th><th></th></tr></thead><tbody>'+
-    rows.map(m=>'<tr><td><strong>'+esc(m.name)+'</strong></td><td>'+esc(m.category)+'</td><td>'+esc(m.form)+'</td><td class="'+stockClass(m.stock)+'">'+(Number.isFinite(Number(m.stock))?m.stock:"—")+'</td><td>'+esc(m.notes)+'</td><td><button class="btn ghost" onclick="removeMedicine(\\''+esc(m.id)+'\\')">Remove</button></td></tr>').join("")+
+  $("inventoryTable").innerHTML='<table><thead><tr><th>Medicine</th><th>Category</th><th>Form</th><th>Stock</th><th>Notes</th><th></th></tr></thead><tbody>'+ 
+    rows.map(m=>'<tr><td><strong>'+esc(m.name)+'</strong></td><td>'+esc(m.category)+'</td><td>'+esc(m.form)+'</td><td class="'+stockClass(m.stock)+'">'+(Number.isFinite(Number(m.stock))?m.stock:"—")+'</td><td>'+esc(m.notes)+'</td><td><button class="btn ghost remove-medicine" data-id="'+esc(m.id)+'">Remove</button></td></tr>').join("")+
     '</tbody></table>';
 }
 window.removeMedicine=id=>{inventory=inventory.filter(m=>m.id!==id);saveInventory(inventory);renderInventory()};
+$("inventoryTable").addEventListener("click",e=>{const b=e.target.closest(".remove-medicine");if(b)window.removeMedicine(b.dataset.id)});
 $("inventorySearch").addEventListener("input",renderInventory);$("inventoryCategory").addEventListener("change",renderInventory);
 
 $("addMedicine").addEventListener("click",()=>{
