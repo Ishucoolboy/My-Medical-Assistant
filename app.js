@@ -7,6 +7,25 @@ const starterInventory=[
   {id:"seed-naproxen-500",name:"Naproxen 500 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item.",dose:"Pediatric reference: 10–20 mg/kg/day divided BD; acute migraine 5–7 mg/kg. Use only after age/weight and indication verification."}
 ];
 
+const PROCUREMENT_SUGGESTIONS=[
+{name:"ORS (Oral Rehydration Salts)",form:"Sachet",priority:"High",reason:"Acute diarrhoea, vomiting and mild dehydration support.",note:"WHO 2025 lists ORS as an essential treatment for diarrhoea."},
+{name:"Zinc sulfate",form:"Dispersible tablet",priority:"High",reason:"Adjunct to ORS in acute diarrhoea, especially paediatric cases.",note:"WHO 2025 lists zinc sulfate 20 mg dispersible tablets for acute diarrhoea."},
+{name:"Clotrimazole 1% cream",form:"Topical cream",priority:"High",reason:"Common superficial fungal skin infections.",note:"Prefer single-ingredient topical antifungal rather than routine steroid-antifungal combinations."},
+{name:"Calamine lotion",form:"Lotion",priority:"Medium",reason:"Symptomatic relief for uncomplicated itching/minor irritant skin conditions.",note:"Supportive treatment; assess rash before use."},
+{name:"Normal saline nasal drops",form:"Nasal drops",priority:"Medium",reason:"Nasal dryness/congestion support, including children.",note:"Use age-appropriate formulation and clean administration technique."},
+{name:"Carboxymethylcellulose lubricating eye drops",form:"Eye drops",priority:"Medium",reason:"Symptomatic relief of uncomplicated dry/irritated eyes.",note:"Red/painful eye, photophobia, trauma or visual loss needs evaluation."},
+{name:"Mupirocin 2% ointment",form:"Topical ointment",priority:"Clinician review",reason:"Selected localized bacterial skin infections.",note:"Prescription antimicrobial; use only for appropriate indications and with stewardship/local guidance."},
+{name:"Hydrocortisone 1% cream",form:"Topical cream",priority:"Clinician review",reason:"Selected short-term inflammatory/itchy dermatoses.",note:"Avoid on fungal/bacterial infections, face/genitals or broken skin unless specifically indicated."},
+{name:"Petroleum jelly",form:"Topical ointment",priority:"Medium",reason:"Barrier/moisturizer for dry skin, chafing and minor superficial irritation.",note:"Basic supportive item; not an antimicrobial."},
+{name:"Paracetamol single-ingredient paediatric suspension",form:"Paediatric suspension",priority:"High",reason:"Weight-based fever/pain treatment without unnecessary combination ingredients.",note:"Choose a clearly labelled concentration and calculate dose by weight; avoid duplicate paracetamol products."}
+];
+function renderProcurement(){
+ const el=$("procurementList"); if(!el)return;
+ const names=inventory.map(m=>String(m.name||"").toLowerCase());
+ const rows=PROCUREMENT_SUGGESTIONS.filter(x=>!names.some(n=>n===x.name.toLowerCase()||n.includes(x.name.toLowerCase())||x.name.toLowerCase().includes(n)));
+ el.innerHTML=rows.map(x=>'<div class="procurement-item"><div><strong>'+esc(x.name)+'</strong><span class="procurement-meta">'+esc(x.form)+' • '+esc(x.priority)+'</span><p>'+esc(x.reason)+'</p><small>'+esc(x.note)+'</small></div><button class="btn ghost procurement-add" data-name="'+esc(x.name)+'">Add to inventory</button></div>').join("")||'<div class="empty">No suggested additions are currently unmatched by the inventory names.</div>';
+}
+
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
   "Levocetirizine":"5 mg OD/HS for documented adult OPD indications; pediatric dose must be weight/age/formulation verified.",
@@ -92,7 +111,7 @@ function renderExpiry(){
   const rows=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
   $("expiryTable").innerHTML=rows.length?`<table><thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th>Days</th><th>Stock</th><th>Status</th></tr></thead><tbody>${rows.map(m=>`<tr><td><strong>${esc(m.name)}</strong></td><td>${esc(m.batch||"—")}</td><td>${esc(m.expiry||"—")}</td><td>${daysUntil(m.expiry)}</td><td>${m.stock||0}</td><td><span class="status-tag ${expiryStatus(m)}">${expiryStatus(m)==="expired"?"EXPIRED":"NEAR EXPIRY"}</span></td></tr>`).join("")}</tbody></table>`:'<div class="empty-list">No near-expiry or expired batches.</div>';
 }
-function refreshAll(){renderInventory();renderDashboard();renderRequired();renderExpiry()}
+function refreshAll(){renderInventory();renderDashboard();renderRequired();renderExpiry();renderProcurement()}
 
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
@@ -171,3 +190,4 @@ function renderHistory(){const h=loadHistory();$("historyList").innerHTML=h.leng
 $("clearHistory").addEventListener("click",()=>{if(confirm("Clear locally stored case history?")){localStorage.removeItem(HISTORY_KEY);renderHistory()}});
 
 refreshAll();
+$("procurementList")?.addEventListener("click",e=>{const b=e.target.closest(".procurement-add");if(!b)return;const item=PROCUREMENT_SUGGESTIONS.find(x=>x.name===b.dataset.name);if(!item)return;const exists=inventory.some(m=>String(m.name||"").toLowerCase()===item.name.toLowerCase());if(exists)return alert("Already in inventory.");inventory.push({id:crypto.randomUUID(),name:item.name,category:(item.form.includes("cream")||item.form.includes("ointment")||item.form.includes("lotion"))?"Cream/Gel/Ointment":"Other",form:item.form,batch:"",expiry:"",stock:0,minStock:1,notes:"Suggested addition — verify formulation, local availability and clinic approval before purchase.",dose:"Dose not specified here; use indication-, age-/weight- and formulation-specific clinician guidance."});saveInventory(inventory);refreshAll();});
