@@ -2,10 +2,59 @@ const INVENTORY_KEY="mma_inventory_v2";
 const SETTINGS_KEY="mma_settings_v1";
 const HISTORY_KEY="mma_history_v1";
 const starterInventory=[
-  {id:"seed-prevent-n",name:"Prevent-N",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item."},
-  {id:"seed-naproxen-250",name:"Naproxen 250 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item."},
-  {id:"seed-naproxen-500",name:"Naproxen 500 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item."}
+  {id:"seed-prevent-n",name:"Prevent-N",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item.",dose:"Dose not specified in the provided clinic reference files."},
+  {id:"seed-naproxen-250",name:"Naproxen 250 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item.",dose:"Pediatric reference: 10–20 mg/kg/day divided BD; acute migraine 5–7 mg/kg. Use only after age/weight and indication verification."},
+  {id:"seed-naproxen-500",name:"Naproxen 500 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item.",dose:"Pediatric reference: 10–20 mg/kg/day divided BD; acute migraine 5–7 mg/kg. Use only after age/weight and indication verification."}
 ];
+
+const DOSE_GUIDE={
+  "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
+  "Levocetirizine":"5 mg OD/HS for documented adult OPD indications; pediatric dose must be weight/age/formulation verified.",
+  "Pantoprazole":"40 mg OD before breakfast for documented acidity/dyspepsia/headache-associated gastric protection.",
+  "Domperidone":"10 mg BD before meals for acidity/epigastric pain; 10 mg BD before meals for bloating; 10 mg TDS in dyspepsia per the reference.",
+  "Amitriptyline":"10 mg HS for 2–4 weeks in documented neuropathic pain; 10 mg HS x 3 weeks in recurrent tension-type headache.",
+  "Pregabalin":"75 mg HS for 2–4 weeks in documented neuropathic pain.",
+  "Methylcobalamine":"1500 mcg OD in the documented numbness/neuropathy protocol.",
+  "Amlodipine":"5 mg OD in newly detected hypertension protocol.",
+  "Telmisartan":"40 mg OD if needed in the documented hypertension protocol.",
+  "Atorvastatin":"10 mg HS in newly detected hypertension protocol; 10–20 mg OD at night in dyslipidemia protocol.",
+  "Desmopressin":"0.2 mg HS x 4 weeks in documented nocturnal enuresis protocol.",
+  "Sildenafil":"50 mg on demand, 30–60 min before intercourse; maximum 1 tablet/day in the documented ED protocol.",
+  "Tadalafil":"5 mg OD x 4–6 weeks in the documented ED protocol.",
+  "Dapoxetine":"30 mg on demand, 1–3 hours before intercourse; maximum 1 dose/day.",
+  "Nitrofurantoin":"100 mg BD after meals x 5 days in the documented acute uncomplicated UTI protocol.",
+  "Diethylcarbamazine":"100 mg TDS x 12 days in documented acute filariasis protocol.",
+  "Doxycycline":"100 mg BD x 6 weeks in documented acute filariasis protocol.",
+  "Ondansetron":"4 mg BD in documented dengue protocol; 4 mg TDS in acute diarrhoea; 4 mg SOS in vertigo/minor pregnancy ailments where specified.",
+  "Cefixime":"200 mg BD x 14 days in the documented typhoid protocol.",
+  "Azithromycin":"500 mg OD x 7 days in documented typhoid protocol; 500 mg OD x 5 days in acute sinusitis; 500 mg OD x 3 days in acute diarrhoea.",
+  "Metformin":"500 mg BD after meals in type 2 diabetes; 500 mg OD with meals then BD in PCOD; 500 mg OD/BD after meals in gestational diabetes.",
+  "Glimepiride":"1 mg OD before breakfast in documented type 2 diabetes protocol.",
+  "Sitagliptin":"100 mg OD in documented type 2 diabetes protocol.",
+  "Orlistat":"120 mg TDS with meals in documented obesity protocol.",
+  "Aceclofenac":"100 mg BD after food in arthritis/sciatica/body ache/knee pain protocols.",
+  "Thiocolchicoside":"4 mg BD in documented sciatica/body-ache protocols.",
+  "Gabapentin":"300 mg HS in documented sciatica/numbness protocols.",
+  "Loperamide":"2 mg SOS in IBS-D protocol.",
+  "Racecadotril":"100 mg TDS in documented acute diarrhoea protocol.",
+  "Albendazole":"400 mg single dose, repeat after 2 weeks in intestinal worm protocol; 400 mg stat after 14 weeks in anaemia-in-pregnancy protocol.",
+  "Betahistine":"16 mg TDS in documented vertigo protocol.",
+  "Cinnarizine":"25 mg HS in documented vertigo protocol.",
+  "Metronidazole":"400 mg BD x 7 days in documented infective leucorrhoea protocol.",
+  "Fluconazole":"150 mg stat, one dose only for documented vaginal candidiasis protocol.",
+  "Mefenamic Acid":"500 mg BD during pain in dysmenorrhoea; 500 mg TDS during pain in fibroid protocol.",
+  "Tranexamic Acid":"500 mg TDS during menses/heavy bleeding days in the documented AUB/fibroid protocols.",
+  "Medroxyprogesterone Acetate":"10 mg OD x 10 days/cycle for AUB-O; 10 mg OD from day 16–25 of cycle in fibroid protocol.",
+  "Folic Acid":"5 mg OD x 12 weeks in first-trimester pregnancy; 5 mg OD in infertility and PCOD protocols.",
+  "Calcium + Vitamin D":"OD in arthritis/knee pain/first-trimester pregnancy; BD in second-trimester pregnancy and gestational diabetes protocols.",
+  "Iron + Folic Acid":"OD in second/third trimester pregnancy; elemental iron 60–100 mg + folic acid 0.5 mg, 1 tablet OD after meals in anaemia of pregnancy.",
+  "Myo-inositol + D-chiro-inositol":"OD x 3–6 months in PCOD protocol.",
+  "Prednisolone":"60 mg OD x 5 days, then taper in documented Bell's palsy protocol.",
+  "Acyclovir":"400 mg TDS x 7 days in documented Bell's palsy protocol.",
+  "Aspirin":"75 mg low dose in third-trimester high-risk pregnancy protocol; use only under the documented high-risk indication.",
+  "Labetalol":"100 mg BD, titrate as needed, in documented gestational hypertension protocol.",
+  "Nifedipine":"SR 30 mg OD as an alternative in documented gestational hypertension protocol."
+};
 
 const $=id=>document.getElementById(id);
 function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));return Array.isArray(s)?s:starterInventory}catch{return starterInventory}}
@@ -99,7 +148,10 @@ function buildAssessment(d){
   if(d.redFlags.trim())checks.unshift("Review the reported red flags carefully: "+d.redFlags.trim());
   return {urgent,possible,oral,injectable,checks,summary:["Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Complaint: "+(d.complaint||"Not recorded"),"History: "+(d.history||"Not recorded"),"Examination/Vitals: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded")].join("\\n")};
 }
-function medCard(m){return '<div class="medicine-item"><strong>'+esc(m.name)+'</strong><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+(m.notes?" • "+esc(m.notes):"")+'</small></div>'}
+function medCard(m){
+  const dose=m.dose||Object.entries(DOSE_GUIDE).find(([k])=>m.name.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(m.name.toLowerCase()))?.[1]||"Dose not specified in the provided clinic reference files.";
+  return '<div class="medicine-item"><strong>'+esc(m.name)+'</strong><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+(m.notes?" • "+esc(m.notes):"")+'</small><div class="medicine-dose"><b>Reference dose:</b> '+esc(dose)+'</div></div>'
+}
 
 $("caseForm").addEventListener("submit",e=>{
   e.preventDefault();
