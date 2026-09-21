@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="description" content="Clinic-focused medical assistant for structured OPD documentation and inventory-aware treatment suggestions." />
+  <title>My Medical Assistant</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">CLINIC ASSISTANT</div>
+        <h1>My Medical Assistant</h1>
+        <p class="subtitle">Structured OPD support • Inventory-aware • Hinglish friendly</p>
+      </div>
+      <div class="status-pill"><span class="dot"></span> Local mode</div>
+    </header>
+
+    <main class="container">
+      <section class="notice">
+        <strong>Clinical safety:</strong>
+        This tool provides structured decision support only. It does not replace clinical examination, investigations, local protocols, or professional judgment. It never presents a definitive diagnosis.
+      </section>
+
+      <nav class="tabs" aria-label="Main sections">
+        <button class="tab active" data-tab="assistant">OPD Assistant</button>
+        <button class="tab" data-tab="inventory">Medicine Inventory</button>
+        <button class="tab" data-tab="history">Recent Cases</button>
+      </nav>
+
+      <section id="assistant" class="tab-panel active">
+        <div class="grid two">
+          <article class="card">
+            <div class="card-head">
+              <div>
+                <h2>New Patient</h2>
+                <p>Every case is treated independently.</p>
+              </div>
+              <button id="clearCase" class="btn ghost">Clear</button>
+            </div>
+
+            <form id="caseForm">
+              <label>Patient age
+                <input id="age" type="number" min="0" max="120" placeholder="e.g. 32" />
+              </label>
+
+              <label>Sex
+                <select id="sex">
+                  <option value="">Select</option>
+                  <option>Female</option>
+                  <option>Male</option>
+                  <option>Other</option>
+                </select>
+              </label>
+
+              <label>Chief complaint
+                <input id="complaint" required placeholder="e.g. fever, cough, vomiting..." />
+              </label>
+
+              <label>Symptoms / history
+                <textarea id="history" rows="6" placeholder="Duration, severity, associated symptoms, relevant history, pregnancy status when relevant, allergies, current medicines, etc."></textarea>
+              </label>
+
+              <label>Vitals / examination
+                <textarea id="exam" rows="5" placeholder="BP, pulse, temperature, SpO₂, RR, examination findings..."></textarea>
+              </label>
+
+              <label>Red flags / concerns
+                <textarea id="redFlags" rows="4" placeholder="Severe breathlessness, altered sensorium, shock, severe dehydration, chest pain, bleeding, etc."></textarea>
+              </label>
+
+              <button class="btn primary" type="submit">Generate Structured Assessment</button>
+            </form>
+          </article>
+
+          <article class="card result-card">
+            <div class="card-head">
+              <div>
+                <h2>Assessment</h2>
+                <p>Suggestions are generated from the information entered and available inventory.</p>
+              </div>
+              <span id="resultState" class="badge">Waiting</span>
+            </div>
+
+            <div id="emptyResult" class="empty">
+              <div class="empty-icon">🩺</div>
+              <h3>No case yet</h3>
+              <p>Enter a patient complaint and generate a structured assessment.</p>
+            </div>
+
+            <div id="result" class="hidden">
+              <div id="referralBox"></div>
+              <section class="result-section">
+                <h3>Possible clinical considerations</h3>
+                <p id="possibleDiagnosis"></p>
+              </section>
+
+              <section class="result-section">
+                <div class="phase-title"><span>PHASE 1</span><h3>Oral / topical options</h3></div>
+                <div id="phase1" class="medicine-list"></div>
+              </section>
+
+              <section class="result-section">
+                <div class="phase-title"><span>PHASE 2</span><h3>Injections / IV fluids</h3></div>
+                <div id="phase2" class="medicine-list"></div>
+              </section>
+
+              <section class="result-section">
+                <h3>Important checks</h3>
+                <ul id="checks" class="checks"></ul>
+              </section>
+
+              <section class="result-section">
+                <h3>Documentation</h3>
+                <pre id="summary" class="summary"></pre>
+              </section>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="inventory" class="tab-panel">
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2>Medicine Inventory</h2>
+              <p>Only medicines entered here can be selected by the assistant.</p>
+            </div>
+            <button id="resetInventory" class="btn ghost">Reset local changes</button>
+          </div>
+
+          <div class="inventory-toolbar">
+            <input id="inventorySearch" placeholder="Search medicine..." />
+            <select id="inventoryCategory">
+              <option value="">All categories</option>
+              <option>Tablet/Capsule</option>
+              <option>Syrup/Drops</option>
+              <option>Cream/Gel/Ointment</option>
+              <option>Respule</option>
+              <option>Injection</option>
+              <option>IV Fluid</option>
+              <option>Other</option>
+            </select>
+            <button id="addMedicine" class="btn primary">+ Add medicine</button>
+          </div>
+
+          <div id="inventoryTable" class="table-wrap"></div>
+        </article>
+      </section>
+
+      <section id="history" class="tab-panel">
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2>Recent Cases</h2>
+              <p>Stored only in this browser unless you later connect a database.</p>
+            </div>
+            <button id="clearHistory" class="btn danger-outline">Clear history</button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <span>My Medical Assistant</span><span>•</span>
+      <span>Clinical decision support, not a substitute for medical care.</span>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
