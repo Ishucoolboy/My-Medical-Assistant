@@ -1,7 +1,11 @@
 const INVENTORY_KEY="mma_inventory_v2";
 const SETTINGS_KEY="mma_settings_v1";
 const HISTORY_KEY="mma_history_v1";
-const starterInventory=[];
+const starterInventory=[
+  {id:"seed-prevent-n",name:"Prevent-N",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item."},
+  {id:"seed-naproxen-250",name:"Naproxen 250 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item."},
+  {id:"seed-naproxen-500",name:"Naproxen 500 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item."}
+];
 
 const $=id=>document.getElementById(id);
 function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));return Array.isArray(s)?s:starterInventory}catch{return starterInventory}}
