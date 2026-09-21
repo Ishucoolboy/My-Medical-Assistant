@@ -27,12 +27,35 @@
       </section>
 
       <nav class="tabs" aria-label="Main sections">
-        <button class="tab active" data-tab="assistant">OPD Assistant</button>
-        <button class="tab" data-tab="inventory">Medicine Inventory</button>
+        <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="assistant">OPD Assistant</button>
+        <button class="tab" data-tab="inventory">Inventory</button>
+        <button class="tab" data-tab="required">Required / Reorder</button>
+        <button class="tab" data-tab="expiry">Near Expiry</button>
         <button class="tab" data-tab="history">Recent Cases</button>
       </nav>
 
-      <section id="assistant" class="tab-panel active">
+      <section id="dashboard" class="tab-panel active">
+  <div class="dashboard-grid">
+    <article class="stat-card"><span>Total Items</span><strong id="statTotal">0</strong><small>Medicine records</small></article>
+    <article class="stat-card"><span>Low / Reorder</span><strong id="statLow">0</strong><small>At or below minimum stock</small></article>
+    <article class="stat-card"><span>Out of Stock</span><strong id="statOut">0</strong><small>Immediate purchase attention</small></article>
+    <article class="stat-card"><span>Near Expiry</span><strong id="statExpiry">0</strong><small>Within configured alert window</small></article>
+  </div>
+
+  <div class="grid two">
+    <article class="card">
+      <div class="card-head"><div><h2>Purchase / Reorder List</h2><p>Items whose stock is at or below minimum level.</p></div></div>
+      <div id="dashboardReorder"></div>
+    </article>
+    <article class="card">
+      <div class="card-head"><div><h2>Expiry Alerts</h2><p>Batch-level expiry monitoring.</p></div></div>
+      <div id="dashboardExpiry"></div>
+    </article>
+  </div>
+</section>
+
+<section id="assistant" class="tab-panel">
         <div class="grid two">
           <article class="card">
             <div class="card-head">
@@ -135,6 +158,12 @@
 
           <div class="inventory-toolbar">
             <input id="inventorySearch" placeholder="Search medicine..." />
+            <select id="inventoryStatus">
+              <option value="">All stock status</option>
+              <option value="out">Out of stock</option>
+              <option value="low">Low / reorder</option>
+              <option value="ok">Adequate</option>
+            </select>
             <select id="inventoryCategory">
               <option value="">All categories</option>
               <option>Tablet/Capsule</option>
@@ -145,10 +174,24 @@
               <option>IV Fluid</option>
               <option>Other</option>
             </select>
-            <button id="addMedicine" class="btn primary">+ Add medicine</button>
+            <button id="addMedicine" class="btn primary">+ Add medicine / batch</button>
           </div>
 
           <div id="inventoryTable" class="table-wrap"></div>
+        </article>
+      </section>
+
+      <section id="required" class="tab-panel">
+        <article class="card">
+          <div class="card-head"><div><h2>Required / Reorder Stock</h2><p>Purchase list based on minimum stock levels.</p></div><button id="exportPurchase" class="btn ghost">Export list</button></div>
+          <div id="requiredTable" class="table-wrap"></div>
+        </article>
+      </section>
+
+      <section id="expiry" class="tab-panel">
+        <article class="card">
+          <div class="card-head"><div><h2>Near Expiry & Expired</h2><p>Batch-wise expiry control. Default alert window: 90 days.</p></div><button id="expirySettings" class="btn ghost">Change alert days</button></div>
+          <div id="expiryTable" class="table-wrap"></div>
         </article>
       </section>
 
