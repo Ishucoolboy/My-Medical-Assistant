@@ -8,6 +8,9 @@ function inventoryCandidateMatch(m,c){
 }
 function findProtocolForCase(d){
   const t=opdText(d);
+  const pediatric=Number(d.age)<18;
+  const pediatricText=pediatric&&/fever|pain|bukhar|taav|jwar|body ache|headache|dard/.test(t);
+  if(pediatricText){const pp=(clinicRxProtocols||[]).find(p=>p.title==="Paediatric Fever / Pain — Weight-based");if(pp)return pp;}
   let best=null,bestScore=-Infinity;
   (clinicRxProtocols||[]).forEach(p=>{
     let score=0;
@@ -42,12 +45,13 @@ function clinicalTriage(d){
 function medicineSafetyForAutoRx(m,d,p,rx){
   const t=opdText(d), g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
   const reasons=[];
-  const age=Number(d.age);
+  const age=Number(d.age), weight=Number(d.weight);
+  if(age<18 && (!Number.isFinite(weight)||weight<=0))reasons.push("Paediatric auto-selection requires a recorded body weight for safe dose calculation.");
   if(age<12 && /nimesulide/.test(g))reasons.push("Nimesulide-containing products are not auto-selected below age 12.");
   if(age<18 && !/paediatric|pediatric|child|infant|suspension|drops|syrup/i.test((m.form||"")+" "+(m.category||"")) && !/paediatric|pediatric|child/i.test(String(p?.title||""))){
     reasons.push("No verified paediatric formulation/pathway for this medicine.");
   }
-  if(/pregnan/.test(t) && !/pregnancy|antenatal|trimester|anaemia in pregnancy|anemia in pregnancy/.test(String(p?.title||"").toLowerCase())){
+  if(d.pregnancyStatus==="pregnant" && !/pregnancy|antenatal|trimester|anaemia in pregnancy|anemia in pregnancy/.test(String(p?.title||"").toLowerCase())){
     if(/nsaid|aceclofenac|ibuprofen|nimesulide|etoricoxib|fluoroquinolone|ciprofloxacin|ofloxacin/.test(g))reasons.push("Pregnancy context requires medicine-specific safety review; this class is not auto-selected by a non-pregnancy pathway.");
   }
   if(/dengue/.test(t) && /nsaid|aceclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|diclofenac|naproxen/.test(g))reasons.push("Dengue context: NSAID-containing medicine is not auto-selected.");
@@ -115,10 +119,13 @@ function renderAssessmentView(a,d,recordHistory){
   $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");
   $("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
   $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
-  $("clinicalSnapshot").innerHTML='<div><span>Patient</span><strong>'+esc(d.patientName||"—")+'</strong></div><div><span>Age / Sex</span><strong>'+esc(d.age||"—")+" / "+esc(d.sex||"—")+'</strong></div><div><span>Vitals</span><strong>BP '+esc(d.bp||"—")+' • Sugar '+esc(d.bloodSugar||"—")+' • Pulse '+esc(d.pulse||"—")+' • SpO₂ '+esc(d.spo2||"—")+' • Temp '+esc(d.temperature||"—")+'</strong></div><div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div>';
+  $("clinicalSnapshot").innerHTML='<div><span>Patient</span><strong>'+esc(d.patientName||"—")+'</strong></div><div><span>Age / Sex</span><strong>'+esc(d.age||"—")+" / "+esc(d.sex||"—")+'</strong></div><div><span>Vitals</span><strong>BP '+esc(d.bp||"—")+' • Sugar '+esc(d.bloodSugar||"—")+' • Pulse '+esc(d.pulse||"—")+' • SpO₂ '+esc(d.spo2||"—")+' • Temp '+esc(d.temperature||"—")+' • Weight '+esc(d.weight||"—")+' kg • Pregnancy '+esc(d.pregnancyStatus||"—")+(d.gestationalWeeks?" • GA "+esc(d.gestationalWeeks)+" wk":"")+"</strong></div><div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div>';
   const rxTitle=a.rx?.protocol?'<div class="protocol-inline"><b>Matched clinic case:</b> '+esc(a.rx.protocol.title)+(a.rx.protocol.source?'<small> • '+esc(a.rx.protocol.source)+'</small>':"")+'</div>':"";
   const rxNotes=(a.rx?.notes||[]).map(x=>'<div class="medicine-warning">'+esc(x)+'</div>').join("");
-  $("possibleDiagnosis").innerHTML=esc(a.possible)+rxTitle+rxNotes+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
+  const pbFactors=(a.patientFactors||[]).map(x=>"<div class=\"protocol-inline\"><b>Patient factor:</b> "+esc(x)+"</div>").join("");
+  const pbInv=(a.investigations||[]).length?"<div class=\"phaseb-box\"><b>Suggested investigations / monitoring:</b><ul>"+a.investigations.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul></div>":"";
+  const pbFollow=a.followUpSuggestion?"<div class=\"phaseb-box\"><b>Follow-up:</b> "+esc(a.followUpSuggestion)+"</div>":"";
+  $("possibleDiagnosis").innerHTML=esc(a.possible)+rxTitle+rxNotes+pbFactors+pbInv+pbFollow+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
   $("medicineMatchCount").textContent=a.matches.length+" matched";
   $("medicineMatchInfo").innerHTML=a.matches.length
     ?'<span>Only medicines recorded in the current clinic inventory are shown.</span> <span>Selection order: clinical/reference match → safety/patient factors → FEFO only within the same suitable stock group.</span>'
@@ -132,7 +139,7 @@ function renderAssessmentView(a,d,recordHistory){
 function runLiveAssessment(){
   const name=$("patientName")?.value.trim(), age=$("age")?.value, complaint=$("complaint")?.value.trim();
   if(!name||!age||!complaint)return;
-  currentCaseData={patientName:name,age,sex:$("sex").value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint,history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
+  currentCaseData={patientName:name,age,sex:$("sex").value,weight:$("weight")?.value,pregnancyStatus:$("pregnancyStatus")?.value||"unknown",gestationalWeeks:$("gestationalWeeks")?.value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint,history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
   const a=buildAssessment(currentCaseData);
   renderAssessmentView(a,currentCaseData,false);
 }
@@ -230,7 +237,7 @@ function printPrescription(){
 
 $("caseForm").addEventListener("submit",e=>{
   e.preventDefault();
-  currentCaseData={patientName:$("patientName").value.trim(),age:$("age").value,sex:$("sex").value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint:$("complaint").value.trim(),history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
+  currentCaseData={patientName:$("patientName").value.trim(),age:$("age").value,sex:$("sex").value,weight:$("weight")?.value,pregnancyStatus:$("pregnancyStatus")?.value||"unknown",gestationalWeeks:$("gestationalWeeks")?.value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint:$("complaint").value.trim(),history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
   const a=buildAssessment(currentCaseData);
   renderAssessmentView(a,currentCaseData,true);
   const h=loadHistory();
@@ -347,4 +354,4 @@ function setupPrescriptionDelegation(){
 }
 setupPrescriptionDelegation();
 setupClinicSecurity();
-refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();setupLiveOpd();
+refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();loadPhaseB();setupLiveOpd();
