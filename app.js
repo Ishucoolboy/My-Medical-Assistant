@@ -1010,21 +1010,10 @@ $("printPrescription")?.addEventListener("click",printPrescription);
 $("clearPrescription")?.addEventListener("click",()=>{selectedPrescriptions=[];renderPrescription();rerenderAssessmentCards()});
 $("clearCase").addEventListener("click",()=>{$("caseForm").reset();selectedPrescriptions=[];});
 
-function renderHistory(){
-  const h=loadHistory(), q=($("historySearch")?.value||"").trim().toLowerCase();
-  const rows=h.filter(x=>!q||[x.patientName,x.mobile,x.village,x.complaint,x.age,x.sex,x.followupStatus,x.data?.investigationsOrdered,x.data?.investigationResults].join(" ").toLowerCase().includes(q));
-  $("historyList").innerHTML=rows.length?rows.map((x,i)=>'<div class="history-item"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><small>'+esc(x.createdAt||"")+' • Age: '+esc(x.age||"—")+' • Sex: '+esc(x.sex||"—")+' • Mobile: '+esc(x.mobile||"—")+' • Village: '+esc(x.village||"—")+'</small><p class="history-complaint">'+esc(x.complaint||"No complaint")+(x.followupDate?" • Follow-up: "+esc(x.followupDate)+" • "+esc(x.followupStatus||"planned"):"")+'</p><button class="btn ghost load-case" data-history-id="'+esc(x.id||"")+'">Open old history</button></div>').join(""):'<div class="empty-list">No matching patient history.</div>';
-  $("historyList").querySelectorAll("[data-history-id]").forEach(b=>b.addEventListener("click",()=>{
-    const x=h.find(v=>v.id===b.dataset.historyId);if(!x)return;
-    const d=x.data||{patientName:x.patientName,mobile:x.mobile,village:x.village,age:x.age,sex:x.sex,complaint:x.complaint};
-    $("patientName").value=d.patientName||"";$("mobile").value=d.mobile||"";$("village").value=d.village||"";$("age").value=d.age||"";$("sex").value=d.sex||"";$("weight").value=d.weight||"";$("pregnancyStatus").value=d.pregnancyStatus||"unknown";$("gestationalWeeks").value=d.gestationalWeeks||"";$("complaint").value=d.complaint||"";
-    $("history").value=d.history||"";$("bp").value=d.bp||"";$("bloodSugar").value=d.bloodSugar||"";$("pulse").value=d.pulse||"";$("spo2").value=d.spo2||"";$("temperature").value=d.temperature||"";$("exam").value=d.exam||"";$("redFlags").value=d.redFlags||"";$("followupDate").value=d.followupDate||"";$("followupStatus").value=d.followupStatus||"planned";$("investigationsOrdered").value=d.investigationsOrdered||"";$("investigationResults").value=d.investigationResults||"";
-    switchTab("assistant");
-  }));
-}
-$("historySearch")?.addEventListener("input",renderHistory);
-$("clearHistory").addEventListener("click",()=>{if(confirm("Clear locally stored case history?")){localStorage.removeItem(HISTORY_KEY);renderHistory();renderDashboard()}});
+function renderHistory(){ return; }
 
+// Old OPD case history was intentionally removed for the treatment workspace rebuild.
+try{localStorage.removeItem(HISTORY_KEY);}catch{}
 let clinicProtocols=[];
 async function loadProtocols(){
  try{const r=await fetch(PROTOCOLS_URL);clinicProtocols=await r.json();}catch{clinicProtocols=[]}
