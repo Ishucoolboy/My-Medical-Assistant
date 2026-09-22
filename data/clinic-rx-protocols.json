@@ -317,21 +317,9 @@
       "jwar",
       "pyrexia"
     ],
-    "medicines": [
-      {
-        "label": "Nimucaff Plus — nimesulide 100 mg + paracetamol 325 mg",
-        "match": [
-          "Nimucaff Plus",
-          "Nimesulide 100 mg + Paracetamol 325 mg"
-        ],
-        "dose": "Label: as directed by physician; use the lowest effective dose for the shortest duration.",
-        "frequency": "As directed",
-        "duration": "Short-term only",
-        "phase": "1",
-        "instruction": "Use only when an NSAID-containing combination is clinically appropriate and dengue/other contraindications have been considered. Avoid duplicate paracetamol/NSAID products and review liver, renal and GI risk."
-      }
-    ],
-    "note": "The source pathway is supportive and does not treat fever alone as proof of bacterial infection. A plain adult paracetamol product is not currently recorded in the GitHub starter inventory, so this stocked combination is only an inventory-based option."
+    "medicines": [],
+    "note": "The uploaded fever reference supports symptomatic evaluation and does not justify automatic antibiotic treatment for fever alone. A plain adult paracetamol product is not currently recorded in the GitHub starter inventory. Because the available recorded adult fever/pain stock includes NSAID-containing combinations, the engine will not substitute those for undifferentiated fever; it will report that no safe automatic medicine match is available until an appropriate reference-matched stock item is recorded.",
+    "allowInventoryFallback": false
   },
   {
     "title": "Body Ache / Myalgia — Stock-aware",
