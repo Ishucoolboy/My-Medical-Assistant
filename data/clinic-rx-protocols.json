@@ -370,7 +370,8 @@
       "rash with fever"
     ],
     "medicines": [],
-    "note": "The source protocol specifies paracetamol, oral fluids/ORS and ondansetron and explicitly advises avoiding NSAIDs/aspirin and IM injections. Because the current recorded GitHub starter inventory does not contain a plain adult paracetamol or ORS stock item, the tool will not substitute a stocked NSAID combination for dengue."
+    "note": "The source protocol specifies paracetamol, oral fluids/ORS and ondansetron and explicitly advises avoiding NSAIDs/aspirin and IM injections. Because the current recorded GitHub starter inventory does not contain a plain adult paracetamol or ORS stock item, the tool will not substitute a stocked NSAID combination for dengue.",
+    "allowInventoryFallback": false
   },
   {
     "title": "Typhoid Fever",
@@ -408,6 +409,7 @@
       "malarial"
     ],
     "medicines": [],
-    "note": "The source requires species-specific antimalarial therapy and testing and lists paracetamol for support. No verified species-specific antimalarial product is currently recorded in the GitHub starter inventory, so the tool must not invent one."
+    "note": "The source requires species-specific antimalarial therapy and testing and lists paracetamol for support. No verified species-specific antimalarial product is currently recorded in the GitHub starter inventory, so the tool must not invent one.",
+    "allowInventoryFallback": false
   }
 ]
