@@ -399,5 +399,32 @@
     "medicines": [],
     "note": "The source requires species-specific antimalarial therapy and testing and lists paracetamol for support. No verified species-specific antimalarial product is currently recorded in the GitHub starter inventory, so the tool must not invent one.",
     "allowInventoryFallback": false
+  },
+  {
+    "title": "Paediatric Fever / Pain — Weight-based",
+    "source": "Pediatric Dosage Simplified — paracetamol dosing reference + clinic stock",
+    "keywords": [
+      "paediatric fever",
+      "pediatric fever",
+      "child fever",
+      "child pain",
+      "paediatric pain",
+      "pediatric pain"
+    ],
+    "medicines": [
+      {
+        "label": "Biocetamol-DS — paracetamol 250 mg/5 mL",
+        "match": [
+          "Biocetamol-DS",
+          "Paracetamol 250 mg per 5 mL"
+        ],
+        "dose": "10–15 mg/kg/dose q4–6h; maximum 60 mg/kg/day",
+        "frequency": "q4–6h PRN",
+        "duration": "As clinically indicated",
+        "phase": "1",
+        "instruction": "Weight-based calculation required. Verify age/weight, indication, liver risk and total daily paracetamol exposure."
+      }
+    ],
+    "note": "Pediatric reference supports paracetamol 10–15 mg/kg/dose q4–6h, maximum 60 mg/kg/day. Fixed-dose combinations should not be substituted automatically."
   }
 ]
