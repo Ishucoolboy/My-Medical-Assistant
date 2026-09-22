@@ -114,3 +114,18 @@ footer{width:min(1240px,calc(100% - 32px));margin:0 auto 30px;color:#718087;font
 .rx-fields [data-rx-compat]{grid-column:span 2}
 @media(max-width:1100px){.rx-fields{grid-template-columns:1fr 1fr 1fr}.rx-fields [data-rx-compat]{grid-column:1/-1}}
 @media(max-width:620px){.rx-fields [data-rx-compat]{grid-column:auto}}
+
+/* IV compatibility checker */
+.iv-checker{display:grid;gap:14px}
+.iv-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.iv-check-grid label{display:grid;gap:7px;font-weight:700}
+.iv-check-grid select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit}
+.iv-result{min-height:70px}
+.iv-status{padding:14px;border-radius:12px;border:1px solid var(--border)}
+.iv-status strong{display:block;margin-bottom:5px}
+.iv-status.compatible{border-color:#2e8b57;background:#f0fbf5}
+.iv-status.do-not-mix{border-color:#c33;background:#fff3f3}
+.iv-status.unverified{border-color:#d39b00;background:#fff9e8}
+.iv-status p{margin:0 0 6px}
+.iv-status small{display:block;margin-top:5px}
+@media(max-width:650px){.iv-check-grid{grid-template-columns:1fr}}
