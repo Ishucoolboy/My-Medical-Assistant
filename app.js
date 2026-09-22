@@ -157,6 +157,8 @@ const starterInventory=[
 
   {id:"seed-neo-becmet-cg",name:"Neo Becmet-CG Cream",type:"Pharma/Brand",generic:"Beclomethasone Dipropionate + Clotrimazole + Neomycin cream",category:"Cream/Gel",form:"Topical Cream",batch:"1016",mfg:"2025-09",expiry:"2027-08-01",stock:21,minStock:0,mrp:93.75,notes:"10 g topical cream. Pack states Beclomethasone Dipropionate, Clotrimazole & Neomycin cream.",use:"Topical treatment of selected inflammatory/infective skin conditions where clinically indicated; verify diagnosis before use.",dose:"Use as directed by physician and product label. Avoid unsupervised prolonged use of topical corticosteroid-containing combinations."},
 
+  {id:"seed-orogard",name:"OroGard Mouth Ulcer Tablet",type:"Pharma/Brand",generic:"Riboflavin 10 mg + Folic Acid 1.5 mg + Niacinamide 100 mg + Lactic Acid Bacillus 60 million spores",category:"Tablet/Capsule",form:"Tablet",batch:"RFLT25010",mfg:"2025-10",expiry:"2027-09-01",stock:100,minStock:0,mrp:65.60,notes:"10-tablet mouth ulcer tablet. Composition recorded from the photographed pack; pack states dosage as directed by physician.",use:"Supportive treatment of mouth ulcers as labelled/clinically indicated.",dose:"Pack: as directed by the physician."},
+
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
