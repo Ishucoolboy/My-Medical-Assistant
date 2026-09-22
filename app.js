@@ -248,34 +248,77 @@ $("storeTabletSearch").addEventListener("input",renderStoreTablets);$("storeTabl
 $("expirySettings").addEventListener("click",()=>{const n=prompt("Near-expiry alert days:",settings.expiryDays);if(n!==null&&Number(n)>0){settings.expiryDays=Number(n);saveSettings();refreshAll()}});
 $("exportPurchase").addEventListener("click",()=>{const rows=getReorder();const header="Medicine,Current Stock,Minimum Stock,Suggested Order,Status";const body=rows.map(m=>[m.name,m.stock||0,m.minStock||0,Math.max(0,(Number(m.minStock)||0)-(Number(m.stock)||0)),stockStatus(m)].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");const csv=header+"\n"+body;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="clinic-reorder-list.csv";a.click();URL.revokeObjectURL(a.href)});
 
+const OPD_SHELVES=[
+  {id:"fever-pain",label:"Fever / Pain",keys:["fever","pain","headache","migraine","body ache","dental","joint","analges"]},
+  {id:"gastric",label:"GI / Acidity / Gas",keys:["gas","acidity","heartburn","gastric","reflux","indigestion","abdomen","abdominal","diarr","constipation","vomit","nausea","stool"]},
+  {id:"respiratory",label:"Cough / Cold / Respiratory",keys:["cough","cold","allerg","rhinitis","nasal","sputum","phlegm","asthma","respir","wheez","bronch"]},
+  {id:"infection",label:"Infective / Antibiotic",keys:["infection","infective","bacterial","typhoid","sinusitis","uti","urinary","diarr","antibiotic"]},
+  {id:"musculoskeletal",label:"Muscle / Joint / Spasm",keys:["muscle","joint","arthritis","spasm","sprain","strain","stiffness","sciatica","inflamm"]},
+  {id:"skin-wound",label:"Skin / Wound",keys:["wound","cut","skin","rash","lesion","antiseptic","dressing"]},
+  {id:"eye-ear",label:"Eye / Ear",keys:["eye","ear","otic","ophthalm","red eye"]},
+  {id:"women",label:"Women's Health",keys:["pregnan","pcod","pcos","menstrual","dysmen","mastalgia","vaginal","leucorr","aubu","bleeding"]},
+  {id:"nutrition",label:"Anaemia / Nutrition",keys:["anaemia","anemia","iron","folic","vitamin","mineral","nutrition"]},
+  {id:"worms",label:"Worm / Parasite",keys:["worm","parasite","helminth","anthelmint"]}
+];
+function opdText(d){return [d.complaint,d.history,d.exam,d.redFlags].join(" ").toLowerCase()}
+function medicineRelevance(m,d){
+  const t=opdText(d), mt=shelfText(m);
+  let score=0, reasons=[];
+  OPD_SHELVES.forEach(s=>{const patientMatch=s.keys.some(k=>t.includes(k));const medMatch=s.keys.some(k=>mt.includes(k));if(patientMatch&&medMatch){score+=3;reasons.push(s.label)}});
+  if(t && m.use && m.use.toLowerCase().split(/[,.;:]/).some(x=>x.trim().length>3&&t.includes(x.trim())))score+=2;
+  if(t.includes("fever")&&mt.includes("fever"))score+=4;
+  if((t.includes("cough")||t.includes("cold"))&&(mt.includes("cough")||mt.includes("cold")||mt.includes("respir")))score+=4;
+  if((t.includes("gas")||t.includes("acidity"))&&(mt.includes("gas")||mt.includes("acid")||mt.includes("gastric")))score+=4;
+  if((t.includes("vomit")||t.includes("nausea"))&&(mt.includes("vomit")||mt.includes("nausea")||mt.includes("antiemetic")))score+=4;
+  if((t.includes("pain")||t.includes("headache"))&&(mt.includes("pain")||mt.includes("analges")||mt.includes("headache")))score+=3;
+  return {score,reasons:[...new Set(reasons)]};
+}
+function ageWarnings(m,d){
+  const t=opdText(d), out=[];
+  if(Number(d.age)<18 && /antibiotic|prescription|ssri|thiocolch|nimesulide|fluoroquinolone|ibuprofen|aceclofenac|etoricoxib/.test((m.generic+" "+m.notes).toLowerCase()))out.push("Paediatric use: verify age/weight and product-specific suitability before use.");
+  if(/pregnan/.test(t) && /nsaid|aceclofenac|ibuprofen|nimesulide|etoricoxib/.test((m.generic+" "+m.notes).toLowerCase()))out.push("Pregnancy context: review medicine-specific pregnancy safety before use.");
+  return out;
+}
 function buildAssessment(d){
-  const t=[d.complaint,d.history,d.exam,d.redFlags].join(" ").toLowerCase();
-  const urgentTerms=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis"];
+  const t=opdText(d);
+  const urgentTerms=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis","anaphylaxis"];
   const urgent=urgentTerms.some(x=>t.includes(x));
-  const possible=d.complaint?"Possible consideration based on the presenting complaint: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
-  const oral=inventory.filter(m=>["Tablet/Capsule","Syrup/Drops","Cream/Gel/Ointment"].includes(m.category));
-  const injectable=inventory.filter(m=>["Injection","IV Fluid","Respule"].includes(m.category));
+  const matches=inventory.map(m=>({...m,_match:medicineRelevance(m,d)})).filter(m=>m._match.score>0).sort((a,b)=>b._match.score-a._match.score||a.name.localeCompare(b.name));
+  const oral=matches.filter(m=>["Tablet/Capsule","Syrup/Drops","Cream/Gel/Ointment","Syrup/Suspension","Gel/Cream","Medical Supply"].includes(m.category));
+  const injectable=matches.filter(m=>["Injection","IV Fluid","Respule"].includes(m.category));
   const checks=["Confirm allergy history and current medicines before prescribing.","Check age/weight, pregnancy status when relevant, renal/hepatic status and contraindications.","Record vitals and examination findings for every symptomatic patient.","Use only medicines from the verified clinic inventory.","Dose and route must be confirmed against the clinic protocol / product information before administration."];
-  if(d.redFlags.trim())checks.unshift("Review the reported red flags carefully: "+d.redFlags.trim());
-  return {urgent,possible,oral,injectable,checks,summary:["Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Complaint: "+(d.complaint||"Not recorded"),"History: "+(d.history||"Not recorded"),"Examination/Vitals: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded")].join("\\n")};
+  if(Number(d.age)<18)checks.unshift("Paediatric case: confirm weight and use a verified age/weight-specific reference before dosing.");
+  if(d.redFlags.trim())checks.unshift("Reported red flags: "+d.redFlags.trim());
+  if(urgent)checks.unshift("Urgent red flag detected: this may need urgent referral / further investigation. Do not delay emergency care for this tool.");
+  const possible=d.complaint?"Possible clinical considerations based on the entered complaint/history: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
+  return {urgent,possible,matches,oral,injectable,checks,summary:["Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Vitals/examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded")].join("\n")};
 }
 function medCard(m){
   const dose=m.dose||Object.entries(DOSE_GUIDE).find(([k])=>m.name.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(m.name.toLowerCase()))?.[1]||"Dose not specified in the provided clinic reference files.";
-  return '<div class="medicine-item"><strong>'+esc(m.name)+'</strong><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+(m.notes?" • "+esc(m.notes):"")+'</small><div class="medicine-dose"><b>Reference dose:</b> '+esc(dose)+'</div></div>'
+  const stock=Number(m.stock)||0, exp=expiryStatus(m);
+  const warn=ageWarnings(m,currentCaseData||{});
+  return '<div class="medicine-item"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
 }
+let currentCaseData=null;
 
 $("caseForm").addEventListener("submit",e=>{
   e.preventDefault();
-  const d={age:$("age").value,sex:$("sex").value,complaint:$("complaint").value.trim(),history:$("history").value.trim(),exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim()};
-  const a=buildAssessment(d);
-  $("emptyResult").classList.add("hidden");$("result").classList.remove("hidden");$("resultState").textContent=a.urgent?"Referral review":"Generated";
+  currentCaseData={age:$("age").value,sex:$("sex").value,complaint:$("complaint").value.trim(),history:$("history").value.trim(),exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim()};
+  const d=currentCaseData,a=buildAssessment(d);
+  $("emptyResult").classList.add("hidden");$("result").classList.remove("hidden");
+  $("resultState").textContent=a.urgent?"Referral review":"Generated";
+  $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");$("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
   $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
+  $("clinicalSnapshot").innerHTML='<div><span>Age</span><strong>'+esc(d.age||"—")+'</strong></div><div><span>Sex</span><strong>'+esc(d.sex||"—")+'</strong></div><div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div><div><span>Vitals / Exam</span><strong>'+esc(d.exam||"Not recorded")+'</strong></div>';
   $("possibleDiagnosis").textContent=a.possible;
-  $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No verified oral/topical medicines are currently loaded in the inventory.</div>';
-  $("phase2").innerHTML=a.injectable.length?a.injectable.map(medCard).join(""):'<div class="empty-list">No verified injections/IV fluids/respules are currently loaded in the inventory.</div>';
+  $("medicineMatchCount").textContent=a.matches.length+" matched";
+  $("medicineMatchInfo").innerHTML=a.matches.length?'<span>Matched from the current clinic inventory using complaint/history keywords and recorded medicine uses.</span> <span>Review each medicine clinically before use.</span>':'<span>No inventory medicine was matched confidently to the entered complaint.</span>';
+  $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
+  $("phase2").innerHTML=a.injectable.length?a.injectable.map(medCard).join(""):'<div class="empty-list">No relevant verified injections/IV fluids/respules matched this case.</div>';
   $("checks").innerHTML=a.checks.map(c=>"<li>"+esc(c)+"</li>").join("");$("summary").textContent=a.summary;
-  const h=loadHistory();h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),complaint:d.complaint,age:d.age,sex:d.sex});saveHistory(h.slice(0,30));
+  const h=loadHistory();h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),complaint:d.complaint,age:d.age,sex:d.sex,summary:a.summary});saveHistory(h.slice(0,30));
 });
+$("printSummary").addEventListener("click",()=>{const text=$("summary")?.textContent||"";const w=window.open("","_blank");if(!w)return;w.document.write("<pre style=\"font:14px Arial;padding:30px;white-space:pre-wrap\">"+esc(text)+"</pre>");w.document.close();w.print()});
 $("clearCase").addEventListener("click",()=>{$("caseForm").reset();$("emptyResult").classList.remove("hidden");$("result").classList.add("hidden");$("resultState").textContent="Waiting"});
 
 function renderHistory(){const h=loadHistory();$("historyList").innerHTML=h.length?h.map(x=>'<div class="history-item"><strong>'+esc(x.complaint||"Unnamed complaint")+'</strong><small>'+esc(x.createdAt)+" • Age: "+esc(x.age||"—")+" • Sex: "+esc(x.sex||"—")+"</small></div>").join(""):'<div class="empty-list">No cases stored in this browser yet.</div>'}
