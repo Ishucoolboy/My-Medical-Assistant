@@ -97,7 +97,7 @@ function villageProblemFor(d,category){
 }
 function villageMedicineSelectionRules(d,category,problem,rx){
   const t=opdText(d);
-  const eligible=(rx?.items||[]).filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&medicineSafetyForAutoRx(m,d,rx.protocol,null).ok);
+  const eligible=inventory.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&medicineSafetyForAutoRx(m,d,rx?.protocol||null,null).ok);
   const g=m=>normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
   const score=m=>{
     const x=g(m);let s=0;
