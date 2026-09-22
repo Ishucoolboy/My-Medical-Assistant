@@ -33,6 +33,7 @@
         <button class="tab" data-tab="required">Required / Reorder</button>
         <button class="tab" data-tab="expiry">Near Expiry</button>
         <button class="tab" data-tab="history">Recent Cases</button>
+        <button class="tab" data-tab="storeTablets">Tablets Available</button>
       </nav>
 
       <section id="dashboard" class="tab-panel active">
@@ -192,6 +193,26 @@
         <article class="card">
           <div class="card-head"><div><h2>Near Expiry & Expired</h2><p>Batch-wise expiry control. Default alert window: 90 days.</p></div><button id="expirySettings" class="btn ghost">Change alert days</button></div>
           <div id="expiryTable" class="table-wrap"></div>
+        </article>
+      </section>
+
+      <section id="storeTablets" class="tab-panel">
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2>Tablets Available at My Store</h2>
+              <p>Quick view of tablet/capsule stock currently recorded in the clinic inventory.</p>
+            </div>
+            <span id="tabletCount" class="badge">0 available</span>
+          </div>
+          <div class="store-tablet-toolbar">
+            <input id="storeTabletSearch" placeholder="Search tablet..." />
+            <select id="storeTabletStock">
+              <option value="available">Available only</option>
+              <option value="all">All tablets</option>
+            </select>
+          </div>
+          <div id="storeTabletsList" class="store-tablets-grid"></div>
         </article>
       </section>
 
