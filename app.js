@@ -779,6 +779,54 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
   return {protocol:p,items,missing,notes};
 }
 
+function selectAutomaticTreatmentFallback(a,d){
+  const t=opdText(d);
+  const symptomOnly=/^(headache|sir dard|pain|pain in legs|leg pain|body pain|joint pain|muscle pain|toothache|dental pain|cough|cold|fever|bukhar|acidity|gas|indigestion|nausea|vomiting)$/i.test(String(d.complaint||"").trim());
+  const candidates=(a.matches||[]).filter(m=>
+    (Number(m.stock)||0)>0 &&
+    expiryStatus(m)!=="expired" &&
+    !["Injection","IV Fluid","Respule"].includes(m.category) &&
+    medicineSafetyForAutoRx(m,d,a.rx?.protocol,null).ok
+  );
+  if(!candidates.length)return null;
+  const rank=(m)=>{
+    const g=normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+    let score=medicineRelevance(m,d).score*10;
+    if(/pain in legs|leg pain|joint pain|muscle pain|body pain|sprain|strain|spasm/.test(t)){
+      if(/musculoskeletal|joint pain|muscle|spasm|sprain|strain/.test(g))score+=30;
+      if(/^KLOZ$/i.test(m.name))score+=8;
+      if(/^Tromanil-Forte$/i.test(m.name))score+=7;
+      if(/^Powerflam MR$/i.test(m.name)&&/spasm|stiffness/.test(t))score+=8;
+    }
+    if(/headache|migraine/.test(t)){
+      if(/severe headache|migraine|headache/.test(g))score+=30;
+      if(/^Tromanil Plus$/i.test(m.name))score+=8;
+      if(/^Nimucaff$/i.test(m.name)&&/cold|allerg|rhinitis/.test(t))score+=6;
+    }
+    if(/toothache|dental pain|tooth pain/.test(t)){
+      if(/toothache|dental/.test(g))score+=30;
+      if(/^Sigma Clove Oil$/i.test(m.name))score+=10;
+    }
+    if(/cough|cold|sore throat/.test(t)&&/cough|cold|sore throat|respir|rhinitis/.test(g))score+=25;
+    if(/acidity|heartburn|gastric|gas|indigestion/.test(t)&&/acid|gastric|antacid|reflux|indigestion/.test(g))score+=25;
+    if(/nausea|vomit/.test(t)&&/nausea|vomit|antiemetic/.test(g))score+=25;
+    if(/fever|bukhar|taav|jwar/.test(t)&&/fever|antipyretic/.test(g))score+=25;
+    if(symptomOnly && /antibiotic|ciprofloxacin|cefixime|azithromycin|ofloxacin|amoxicillin|metronidazole/.test(g))score-=100;
+    return score;
+  };
+  candidates.sort((x,y)=>rank(y)-rank(x)||daysUntil(x.expiry)-daysUntil(y.expiry)||x.name.localeCompare(y.name));
+  const m=candidates[0];
+  return {...m,
+    rxPhase:prescriptionPhase(m),
+    rxDose:m.dose||"",
+    rxFreq:"",
+    rxDuration:"",
+    rxInstruction:"Automatically selected from stocked clinic inventory based on the entered complaint and recorded indication. Verify diagnosis, contraindications and exact regimen before signing.",
+    rxSource:"Automatic clinic-inventory treatment match",
+    rxSelectionType:"AUTOMATIC_TREATMENT_MATCH"
+  };
+}
+
 function renderAssessmentView(a,d,recordHistory){
   $("emptyResult").classList.add("hidden");
   $("result").classList.remove("hidden");
@@ -799,7 +847,7 @@ function renderAssessmentView(a,d,recordHistory){
       '<div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div>';
   }
 
-  const autoRxItems=a.rx?.items||[];
+  const autoRxItems=(a.rx?.items&&a.rx.items.length)?a.rx.items:(selectAutomaticTreatmentFallback(a,d)?[selectAutomaticTreatmentFallback(a,d)]:[]);
   const autoP1=autoRxItems.filter(m=>prescriptionPhase(m)==="1");
   const autoP2=autoRxItems.filter(m=>prescriptionPhase(m)==="2");
 
