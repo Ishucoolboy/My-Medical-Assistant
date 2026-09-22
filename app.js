@@ -159,6 +159,8 @@ const starterInventory=[
 
   {id:"seed-orogard",name:"OroGard Mouth Ulcer Tablet",type:"Pharma/Brand",generic:"Riboflavin 10 mg + Folic Acid 1.5 mg + Niacinamide 100 mg + Lactic Acid Bacillus 60 million spores",category:"Tablet/Capsule",form:"Tablet",batch:"RFLT25010",mfg:"2025-10",expiry:"2027-09-01",stock:100,minStock:0,mrp:65.60,notes:"10-tablet mouth ulcer tablet. Composition recorded from the photographed pack; pack states dosage as directed by physician.",use:"Supportive treatment of mouth ulcers as labelled/clinically indicated.",dose:"Pack: as directed by the physician."},
 
+  {id:"seed-sigma-clove-oil",name:"Sigma Clove Oil",type:"Ayurvedic Medicine",generic:"Clove oil",category:"Other",form:"Oral/Topical Oil",batch:"25S01",mfg:"2025-01",expiry:"2027-12-01",stock:6,minStock:0,mrp:50,notes:"5 mL Ayurvedic proprietary medicine for toothache. Pack states fast pain relief.",use:"Symptomatic relief of toothache as labelled; dental assessment is needed for persistent, severe or recurrent dental pain.",dose:"Use strictly as directed on the product label/physician advice; avoid swallowing or excessive application."},
+
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
