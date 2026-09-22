@@ -436,9 +436,28 @@ function suggestedOpdTests(d){
   const bpNeeded=hasAny(["headache","dizziness","chest pain","breathlessness","palpitation","pregnan","hypertension","high bp","blood pressure","weakness"]) || (Number.isFinite(age)&&age>=30);
   const sugarNeeded=hasAny(["polyuria","polydipsia","thirst","frequent urination","weight loss","diabetes","sugar","blurred vision","recurrent infection","weakness","fatigue"]);
   const pulseNeeded=hasAny(["fever","dizziness","weakness","breathlessness","chest pain","palpitation","vomit","vomiting","diarr","dehydration","bleeding","shock"]);
+  const feverPresent=hasAny(["fever","bukhar","taav","jwar","pyrexia"]);
+  const feverDurationMatch=t.match(/(?:fever|bukhar|taav|jwar|pyrexia)[^0-9]{0,20}(?:for|since|from)?[^0-9]{0,10}(\\d+(?:\\.\\d+)?)\\s*(day|days|din|d)/i)
+    || t.match(/(\\d+(?:\\.\\d+)?)\\s*(day|days|din|d)[^a-z0-9]{0,15}(?:fever|bukhar|taav|jwar|pyrexia)/i);
+  const feverDays=feverDurationMatch?Number(feverDurationMatch[1]):null;
   if(bpNeeded)tests.push({name:"BP",reason:"BP check is relevant to the entered complaint/risk context. Measure correctly and repeat abnormal readings as clinically appropriate."});
   if(sugarNeeded)tests.push({name:"Blood sugar",reason:"Check glucose because the complaint/history contains a diabetes/hyperglycaemia-related feature or symptom."});
   if(pulseNeeded)tests.push({name:"Pulse",reason:"Pulse assessment is relevant because the complaint/history contains a systemic, cardiovascular or dehydration-related feature."});
+
+  if(feverPresent && Number.isFinite(feverDays) && feverDays>=3){
+    tests.push({name:"CBC",reason:"Fever duration is "+feverDays+" days; CBC can help assess leukocyte/platelet pattern and severity when clinically indicated."});
+    tests.push({name:"Malaria test (RDT / peripheral smear)",reason:"Consider when malaria exposure/endemic risk or compatible symptoms are present; fever alone does not establish malaria."});
+    tests.push({name:"Dengue testing",reason:"Consider when dengue is clinically compatible. In the first week, direct detection such as NS1/NAAT can be useful; antibody testing becomes more informative as illness progresses. Interpret with local prevalence and clinical findings."});
+  } else if(feverPresent){
+    tests.push({name:"Clinical fever assessment",reason:"Record measured temperature, pulse and hydration status; add targeted investigations according to the associated symptoms and examination."});
+  }
+
+  if(hasAny(["burning urine","dysuria","frequent urination","urine","flank pain","loin pain"])){
+    tests.push({name:"Urine routine / microscopy",reason:"Urinary symptoms are present; evaluate for urinary infection before selecting antibiotics."});
+  }
+  if(hasAny(["cough","sore throat","runny nose","breathlessness"])){
+    tests.push({name:"Respiratory assessment",reason:"Respiratory symptoms are present; assess oxygen saturation, respiratory rate and chest findings, with targeted testing/imaging if clinically indicated."});
+  }
   if(!tests.length)tests.push({name:"No extra BP / sugar / pulse test auto-suggested",reason:"Add BP, blood sugar or pulse when examination, symptoms, age/risk factors or clinical judgment indicate it."});
   return tests;
 }
