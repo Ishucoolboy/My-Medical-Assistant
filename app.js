@@ -438,7 +438,7 @@ function buildInventoryPrescription(d){
     });
     if(p.note)notes.push(p.note);
   }
-  if(!items.length){
+  if(!items.length&&(!p||p.allowInventoryFallback!==false)){
     const fallback=inventory.map(m=>({...m,_match:medicineRelevance(m,d)})).filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&m._match.score>=4).sort((a,b)=>b._match.score-a._match.score||daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name)).slice(0,1);
     fallback.forEach(m=>items.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"Short course / as clinically indicated",rxInstruction:"Selected from verified clinic inventory because the recorded use matches the entered complaint. Confirm indication, contraindications and product label before signing.",rxSource:"Inventory use + clinic reference matching"}));
   }
@@ -568,20 +568,10 @@ $("caseForm").addEventListener("submit",e=>{
   e.preventDefault();
   currentCaseData={patientName:$("patientName").value.trim(),age:$("age").value,sex:$("sex").value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint:$("complaint").value.trim(),history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
   const a=buildAssessment(currentCaseData);
-  $("emptyResult").classList.add("hidden");$("result").classList.remove("hidden");
-  $("resultState").textContent=a.urgent?"Referral review":"Generated";
-  $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");$("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
-  $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
-  $("clinicalSnapshot").innerHTML='<div><span>Patient</span><strong>'+esc(currentCaseData.patientName||"—")+'</strong></div><div><span>Age / Sex</span><strong>'+esc(currentCaseData.age||"—")+" / "+esc(currentCaseData.sex||"—")+'</strong></div><div><span>Vitals</span><strong>BP '+esc(currentCaseData.bp||"—")+' • Sugar '+esc(currentCaseData.bloodSugar||"—")+' • Pulse '+esc(currentCaseData.pulse||"—")+' • SpO₂ '+esc(currentCaseData.spo2||"—")+' • Temp '+esc(currentCaseData.temperature||"—")+'</strong></div><div><span>Complaint</span><strong>'+esc(currentCaseData.complaint||"—")+'</strong></div>';
-  $("possibleDiagnosis").innerHTML=esc(a.possible)+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
-  $("medicineMatchCount").textContent=a.matches.length+" matched";
-  $("medicineMatchInfo").innerHTML=a.matches.length?'<span>Matched from the current clinic inventory using complaint/history keywords and recorded medicine uses.</span> <span>Review each medicine clinically before use.</span>':"<span>No inventory medicine was matched confidently to the entered complaint.</span>";
-  $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
-  $("phase2").innerHTML=a.injectable.length?a.injectable.map(medCard).join(""):'<div class="empty-list">No relevant verified injections/IV fluids/respules matched this case.</div>';
-  $("checks").innerHTML=a.checks.map(c=>"<li>"+esc(c)+"</li>").join("");
-  if($("summary"))$("summary").textContent=a.summary;
-  selectedPrescriptions=(a.rx?.items||[]).map(x=>({...x}));renderPrescription();
-  const h=loadHistory();h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),dateKey:new Date().toISOString().slice(0,10),followupDate:currentCaseData.followupDate,patientName:currentCaseData.patientName,mobile:currentCaseData.mobile,village:currentCaseData.village,complaint:currentCaseData.complaint,age:currentCaseData.age,sex:currentCaseData.sex,data:{...currentCaseData},summary:a.summary});saveHistory(h.slice(0,100));
+  renderAssessmentView(a,currentCaseData,true);
+  const h=loadHistory();
+  h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),dateKey:new Date().toISOString().slice(0,10),followupDate:currentCaseData.followupDate,patientName:currentCaseData.patientName,mobile:currentCaseData.mobile,village:currentCaseData.village,complaint:currentCaseData.complaint,age:currentCaseData.age,sex:currentCaseData.sex,data:{...currentCaseData},summary:a.summary});
+  saveHistory(h.slice(0,100));
   logAudit("OPD case recorded",(currentCaseData.patientName||"Unnamed patient")+" • "+(currentCaseData.complaint||"Unnamed complaint"));
   renderHistory();renderDashboard();
 });
