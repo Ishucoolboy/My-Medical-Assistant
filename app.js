@@ -669,15 +669,15 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
   }
   // Direct clinical-use selection: when the stocked medicine explicitly lists the
   // patient's symptom/condition as an indication, prefer that medicine over generic matches.
-  const caseText=opdText(d);
+  const directCaseText=opdText(d);
   const directTerms=[];
-  if(/headache|migraine/.test(caseText))directTerms.push("headache","migraine");
-  if(/cough|cold|sore throat|sputum|phlegm/.test(caseText))directTerms.push("cough","cold","sore throat");
-  if(/fever|bukhar|taav|jwar/.test(caseText))directTerms.push("fever","antipyretic");
-  if(/toothache|dental pain|tooth pain/.test(caseText))directTerms.push("toothache","dental");
-  if(/joint pain|arthritis|muscle pain|sprain|strain|spasm/.test(caseText))directTerms.push("musculoskeletal","joint pain","muscle","spasm","sprain","strain");
-  if(/acidity|heartburn|gastric|gas|indigestion/.test(caseText))directTerms.push("acidity","heartburn","gastric","gas","indigestion");
-  if(/nausea|vomit|vomiting/.test(caseText))directTerms.push("nausea","vomit","antiemetic");
+  if(/headache|migraine/.test(directCaseText))directTerms.push("headache","migraine");
+  if(/cough|cold|sore throat|sputum|phlegm/.test(directCaseText))directTerms.push("cough","cold","sore throat");
+  if(/fever|bukhar|taav|jwar/.test(directCaseText))directTerms.push("fever","antipyretic");
+  if(/toothache|dental pain|tooth pain/.test(directCaseText))directTerms.push("toothache","dental");
+  if(/joint pain|arthritis|muscle pain|sprain|strain|spasm/.test(directCaseText))directTerms.push("musculoskeletal","joint pain","muscle","spasm","sprain","strain");
+  if(/acidity|heartburn|gastric|gas|indigestion/.test(directCaseText))directTerms.push("acidity","heartburn","gastric","gas","indigestion");
+  if(/nausea|vomit|vomiting/.test(directCaseText))directTerms.push("nausea","vomit","antiemetic");
 
   if(directTerms.length){
     const direct=inventory.filter(m=>{
