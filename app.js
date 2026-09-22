@@ -612,17 +612,41 @@ function inventoryTreatmentEligibility(m,d,p){
 function addRelevantInventoryOptions(items,d,p){
   const existing=new Set(items.map(x=>x.id));
   const candidates=inventory.map(m=>({...m,_match:medicineRelevance(m,d)}))
-    .filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&!existing.has(m.id)&&m._match.score>=6&&inventoryTreatmentEligibility(m,d,p))
+    .filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&!existing.has(m.id)&&m._match.score>=5&&inventoryTreatmentEligibility(m,d,p))
     .sort((a,b)=>b._match.score-a._match.score||daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
+
   const added=[];
+  const caseText=opdText(d);
+  const coughCase=/cough|cold|sore throat|sputum|phlegm|respir|wheez/.test(caseText);
+  const feverCase=/fever|bukhar|taav|jwar|pyrexia/.test(caseText);
+  const painCase=/pain|headache|migraine|body ache|dard/.test(caseText);
+  const gastricCase=/gas|acidity|heartburn|gastric|reflux|indigestion|abdomen|abdominal|nausea|vomit/.test(caseText);
+
   for(const m of candidates){
-    if(added.length>=3)break;
+    const g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
+    if(coughCase && !/cough|cold|respir|sputum|phlegm|allerg|rhinitis/.test(g))continue;
+    if(feverCase && /nsaid|aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin/.test(g))continue;
+    if(painCase && !coughCase && !feverCase && !/pain|analges|headache|muscle|joint|spasm|inflamm/.test(g))continue;
+    if(gastricCase && !/gas|acid|gastric|antacid|reflux|indigestion|nausea|vomit|antiemetic|stool|constipat|diarr/.test(g))continue;
     if(added.some(x=>sameClinicalStockGroup(x,m)))continue;
-    added.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"As clinically indicated",rxInstruction:"Inventory-supported treatment option matched from the medicine's recorded clinical use. Confirm indication, contraindications and exact product dose before signing.",rxSource:"Clinic inventory clinical-use match",rxSelectionType:"INVENTORY_USE_MATCH"});
+
+    added.push({
+      ...m,
+      rxPhase:prescriptionPhase(m),
+      rxDose:m.dose||"",
+      rxFreq:"",
+      rxDuration:"",
+      rxInstruction:"Clinically relevant inventory option. Confirm exact product dose, frequency, duration, contraindications and patient-specific factors before signing.",
+      rxSource:"Clinic inventory clinical-use match",
+      rxSelectionType:"INVENTORY_USE_MATCH"
+    });
+
+    // Do not fill a prescription with several medicines merely because they match
+    // the same symptom. Start with the strongest distinct inventory match.
+    if(added.length>=2)break;
   }
   return added;
 }
-
 function buildInventoryPrescription(d,triage=clinicalTriage(d)){
   const p=findProtocolForCase(d),items=[],missing=[],notes=[];
   if(triage.urgent){
