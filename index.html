@@ -17,7 +17,10 @@
         <h1>My Medical Assistant</h1>
         <p class="subtitle">Structured OPD support • Inventory-aware • Hinglish friendly</p>
       </div>
-      <div class="status-pill"><span class="dot"></span> Local mode</div>
+      <div class="header-actions">
+        <div class="global-search"><input id="globalMedicineSearch" placeholder="Search medicine / composition / use..." aria-label="Search medicines" /></div>
+        <div class="status-pill"><span class="dot"></span> Local mode</div>
+      </div>
     </header>
 
     <main class="container">
@@ -33,6 +36,10 @@
         <button class="tab" data-tab="expiry">Near Expiry</button>
         <button class="tab" data-tab="history">Recent Cases</button>
         <button class="tab" data-tab="storeTablets">Medicine Available</button>
+        <button class="tab" data-tab="protocols">Clinic Protocols</button>
+        <button class="tab" data-tab="pediatric">Paediatric Calculator</button>
+        <button class="tab" data-tab="reports">Reports</button>
+        <button class="tab" data-tab="dataCenter">Backup & Data</button>
       </nav>
 
       <section id="dashboard" class="tab-panel active">
@@ -40,7 +47,15 @@
     <article class="stat-card"><span>Total Items</span><strong id="statTotal">0</strong><small>Medicine records</small></article>
     <article class="stat-card"><span>Low / Reorder</span><strong id="statLow">0</strong><small>At or below minimum stock</small></article>
     <article class="stat-card"><span>Out of Stock</span><strong id="statOut">0</strong><small>Immediate purchase attention</small></article>
-    <article class="stat-card"><span>Near Expiry</span><strong id="statExpiry">0</strong><small>Within configured alert window</small></article>
+    <article class="stat-card"><span>Near Expiry</span><strong id="statExpiry">0</strong><small>Within 6 months</small></article>
+    <article class="stat-card"><span>Expired</span><strong id="statExpired">0</strong><small>Do not dispense</small></article>
+    <article class="stat-card"><span>Stock Units</span><strong id="statUnits">0</strong><small>Total recorded quantity</small></article>
+  </div>
+  <div class="quick-actions">
+    <button class="btn primary" data-quick-tab="assistant">👨‍⚕️ New OPD Case</button>
+    <button class="btn ghost" data-quick-tab="storeTablets">💊 Find Medicine</button>
+    <button class="btn ghost" data-quick-tab="required">🛒 Reorder</button>
+    <button class="btn ghost" data-quick-tab="expiry">⚠️ Expiry Control</button>
   </div>
 
   <div class="grid two">
@@ -212,7 +227,63 @@
   </article>
 </section>
 
-      <section id="history" class="tab-panel">
+      
+<section id="protocols" class="tab-panel">
+  <article class="card">
+    <div class="card-head"><div><h2>Clinic Protocols</h2><p>Quick-reference pathways linked to the clinic workflow. Always correlate with examination, investigations and current clinical guidance.</p></div><span id="protocolCount" class="badge">0 protocols</span></div>
+    <div class="protocol-toolbar"><input id="protocolSearch" placeholder="Search protocol / symptom..." /></div>
+    <div id="protocolList" class="protocol-list"></div>
+  </article>
+</section>
+
+<section id="pediatric" class="tab-panel">
+  <div class="grid two">
+    <article class="card">
+      <div class="card-head"><div><h2>Paediatric Dose Reference</h2><p>Weight-based calculation helper. Verify the formulation, indication and maximum dose before administration.</p></div></div>
+      <form id="pediatricForm">
+        <label>Weight (kg)<input id="pedWeight" type="number" min="0.1" step="0.1" placeholder="e.g. 16" required></label>
+        <label>Medicine / reference
+          <select id="pedMedicine"></select>
+        </label>
+        <label>Target dose (mg/kg/dose)<input id="pedDose" type="number" min="0" step="0.1" placeholder="e.g. 15" required></label>
+        <label>Product strength (mg/mL)<input id="pedStrength" type="number" min="0.01" step="0.01" placeholder="e.g. 50" required></label>
+        <label>Maximum daily dose (mg/kg/day, optional)<input id="pedMax" type="number" min="0" step="0.1" placeholder="Optional"></label>
+        <button class="btn primary" type="submit">Calculate reference volume</button>
+      </form>
+    </article>
+    <article class="card">
+      <div class="card-head"><div><h2>Calculation</h2><p>Calculation only — not an automatic prescription.</p></div></div>
+      <div id="pedResult" class="empty"><div class="empty-icon">👶</div><h3>No calculation yet</h3><p>Enter weight, dose and formulation strength.</p></div>
+    </article>
+  </div>
+</section>
+
+<section id="reports" class="tab-panel">
+  <article class="card">
+    <div class="card-head"><div><h2>Clinic Reports</h2><p>Local stock and case activity summary.</p></div><button id="exportReport" class="btn ghost">Export report</button></div>
+    <div id="reportCards" class="report-grid"></div>
+    <div id="reportTables" class="report-tables"></div>
+  </article>
+</section>
+
+<section id="dataCenter" class="tab-panel">
+  <div class="grid two">
+    <article class="card">
+      <div class="card-head"><div><h2>Backup & Restore</h2><p>All important local data can be backed up before changing devices or browsers.</p></div></div>
+      <div class="backup-actions">
+        <button id="backupAll" class="btn primary">Download full backup</button>
+        <label class="btn ghost file-btn">Restore backup<input id="restoreBackup" type="file" accept=".json,application/json" hidden></label>
+      </div>
+      <div class="backup-note">Backup includes inventory, settings, case history and local audit log. Cloud sync/login is intentionally not faked in this static version.</div>
+    </article>
+    <article class="card">
+      <div class="card-head"><div><h2>Local Audit Log</h2><p>Recent changes made in this browser.</p></div><button id="clearAudit" class="btn danger-outline">Clear</button></div>
+      <div id="auditList" class="history-list"></div>
+    </article>
+  </div>
+</section>
+
+<section id="history" class="tab-panel">
         <article class="card">
           <div class="card-head">
             <div>
@@ -232,5 +303,13 @@
     </footer>
   </div>
   <script src="app.js"></script>
+<div id="medicineModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close-modal></div>
+  <div class="modal-card">
+    <div class="modal-head"><div><span class="mini-label">MEDICINE DETAILS</span><h2 id="modalMedicineName">Medicine</h2></div><button class="btn ghost" data-close-modal>Close</button></div>
+    <div id="medicineModalBody"></div>
+  </div>
+</div>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));}</script>
 </body>
 </html>
