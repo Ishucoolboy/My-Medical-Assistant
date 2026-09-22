@@ -118,8 +118,18 @@
             <div id="result" class="hidden">
               <div id="referralBox"></div>
               <section class="result-section">
-                <h3>Possible clinical considerations</h3>
+                <div class="opd-section-head"><div><span class="mini-label">1 • TRIAGE</span><h3>Clinical snapshot</h3></div><span id="triageStatus" class="status-tag ok">ROUTINE REVIEW</span></div>
+                <div id="clinicalSnapshot" class="clinical-snapshot"></div>
+              </section>
+
+              <section class="result-section">
+                <div class="opd-section-head"><div><span class="mini-label">2 • CONSIDER</span><h3>Possible clinical considerations</h3></div></div>
                 <p id="possibleDiagnosis"></p>
+              </section>
+
+              <section class="result-section">
+                <div class="opd-section-head"><div><span class="mini-label">3 • REFERENCE</span><h3>Relevant clinic medicines</h3></div><span id="medicineMatchCount" class="badge">0 matched</span></div>
+                <div id="medicineMatchInfo" class="match-info"></div>
               </section>
 
               <section class="result-section">
@@ -128,17 +138,17 @@
               </section>
 
               <section class="result-section">
-                <div class="phase-title"><span>PHASE 2</span><h3>Injections / IV fluids</h3></div>
+                <div class="phase-title"><span>PHASE 2</span><h3>Injections / IV fluids / respules</h3></div>
                 <div id="phase2" class="medicine-list"></div>
               </section>
 
               <section class="result-section">
-                <h3>Important checks</h3>
+                <div class="opd-section-head"><div><span class="mini-label">4 • SAFETY</span><h3>Important checks & red flags</h3></div></div>
                 <ul id="checks" class="checks"></ul>
               </section>
 
               <section class="result-section">
-                <h3>Documentation</h3>
+                <div class="opd-section-head"><div><span class="mini-label">5 • DOCUMENT</span><h3>Patient summary</h3></div><button id="printSummary" class="btn ghost" type="button">Print summary</button></div>
                 <pre id="summary" class="summary"></pre>
               </section>
             </div>
