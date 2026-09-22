@@ -271,7 +271,7 @@ function renderInventory(){
 }
 $("storeTabletSearch").addEventListener("input",renderStoreTablets);$("storeTabletStock").addEventListener("change",renderStoreTablets);
 
-$("expirySettings").addEventListener("click",()=>{const n=prompt("Near-expiry alert days:",settings.expiryDays);if(n!==null&&Number(n)>0){settings.expiryDays=Number(n);saveSettings();refreshAll()}});
+$("expirySettings").addEventListener("click",()=>{alert("Expiry alerts are fixed to medicines expiring within 6 months, with nearest expiry shown first.")});
 $("exportPurchase").addEventListener("click",()=>{const rows=getReorder();const header="Medicine,Current Stock,Minimum Stock,Suggested Order,Status";const body=rows.map(m=>[m.name,m.stock||0,m.minStock||0,Math.max(0,(Number(m.minStock)||0)-(Number(m.stock)||0)),stockStatus(m)].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");const csv=header+"\n"+body;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="clinic-reorder-list.csv";a.click();URL.revokeObjectURL(a.href)});
 
 const OPD_SHELVES=[
@@ -401,7 +401,7 @@ $("exportReport")?.addEventListener("click",()=>downloadJson("clinic-report.json
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.tab==="protocols")renderProtocols();if(b.dataset.tab==="pediatric")renderPedMedicineOptions();if(b.dataset.tab==="reports")renderReports();if(b.dataset.tab==="dataCenter")renderAudit()}));
 document.addEventListener("click",e=>{const b=e.target.closest(".medicine-item[data-med-id]");if(b)openMedicineModal(b.dataset.medId)});
 
-refreshAll();renderReports();renderAudit();alert("Backup restored successfully.");}catch(e){alert("Backup could not be restored. Please select a valid My Medical Assistant backup.");}};r.readAsText(file);
+refreshAll();renderReports();renderAudit();loadProtocols();alert("Backup restored successfully.");}catch(e){alert("Backup could not be restored. Please select a valid My Medical Assistant backup.");}};r.readAsText(file);
 }
 
-refreshAll();
+refreshAll();loadProtocols();
