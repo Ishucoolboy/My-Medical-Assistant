@@ -161,6 +161,8 @@ const starterInventory=[
 
   {id:"seed-sigma-clove-oil",name:"Sigma Clove Oil",type:"Ayurvedic Medicine",generic:"Clove oil",category:"Other",form:"Oral/Topical Oil",batch:"25S01",mfg:"2025-01",expiry:"2027-12-01",stock:6,minStock:0,mrp:50,notes:"5 mL Ayurvedic proprietary medicine for toothache. Pack states fast pain relief.",use:"Symptomatic relief of toothache as labelled; dental assessment is needed for persistent, severe or recurrent dental pain.",dose:"Use strictly as directed on the product label/physician advice; avoid swallowing or excessive application."},
 
+  {id:"seed-fcn-200",name:"FCN 200",type:"Pharma/Brand",generic:"Fluconazole 200 mg",category:"Tablet/Capsule",form:"Tablet",batch:"SOT-8611",mfg:"2025-08",expiry:"2027-07-01",stock:2,minStock:0,mrp:39.77,notes:"Fluconazole 200 mg tablets. Pack contains 1 x 2 tablets; Schedule H prescription medicine.",use:"Antifungal treatment for susceptible fungal infections where clinically indicated.",dose:"Use only according to the appropriate indication and physician-directed regimen; verify infection site, interactions and hepatic considerations before prescribing."},
+
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
