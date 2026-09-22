@@ -1,0 +1,57 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - 'index.html'
+      - 'styles.css'
+      - 'app.js'
+      - 'data/**'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Copy current web app into Android assets
+        run: |
+          mkdir -p android/app/src/main/assets/web/data
+          cp index.html styles.css app.js manifest.json android/app/src/main/assets/web/
+          cp data/*.json android/app/src/main/assets/web/data/
+
+      - name: Download Gradle
+        run: |
+          curl -L https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp/gradle
+          echo "GRADLE_HOME=/tmp/gradle/gradle-8.10.2" >> "$GITHUB_ENV"
+          echo "/tmp/gradle/gradle-8.10.2/bin" >> "$GITHUB_PATH"
+
+      - name: Build debug APK
+        working-directory: android
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: My-Medical-Assistant-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
