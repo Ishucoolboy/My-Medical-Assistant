@@ -252,6 +252,10 @@ function medicineRow(m,mode="inventory"){
   return {m,status,exp,need};
 }
 function renderDashboard(){
+  if(!Array.isArray(inventory)||inventory.length===0){
+    inventory=starterInventory.map(m=>({...m}));
+    try{localStorage.setItem(INVENTORY_KEY,JSON.stringify(inventory))}catch{}
+  }
   const reorder=getReorder(), expiry=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
   const today=new Date().toISOString().slice(0,10), history=loadHistory();
   const todayCases=history.filter(x=>x.dateKey===today);
