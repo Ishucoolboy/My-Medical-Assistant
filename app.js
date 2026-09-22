@@ -240,7 +240,8 @@ function renderDashboard(){
   if($("statTodayCases"))$("statTodayCases").textContent=todayCases.length;
   if($("statFollowups"))$("statFollowups").textContent=due.length;
   if($("dashboardFollowups"))$("dashboardFollowups").innerHTML=due.length?due.slice(0,12).map(x=>'<div class="alert-row"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><span>'+esc(x.followupDate||"—")+' • '+esc(x.mobile||"")+' • '+esc(x.complaint||"")+'</span></div>').join(""):'<div class="empty-list">No follow-ups due.</div>';
-  $("statTotal").textContent=inventory.length;
+  const totalItems=Array.isArray(inventory)?inventory.length:0;
+  $("statTotal").textContent=totalItems;
   $("statLow").textContent=reorder.filter(x=>stockStatus(x)==="low").length;
   $("statOut").textContent=reorder.filter(x=>stockStatus(x)==="out").length;
   $("statExpiry").textContent=expiry.length;
