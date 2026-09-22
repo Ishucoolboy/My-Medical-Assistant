@@ -153,6 +153,8 @@ const starterInventory=[
 
   {id:"seed-silvez-plus",name:"Silvez Plus Cream",type:"Pharma/Brand",generic:"Silver Sulphadiazine + Chlorhexidine Gluconate + Lignocaine cream",category:"Cream/Gel",form:"Topical Cream",batch:"PZL002",mfg:"2025-01",expiry:"2026-12-01",stock:5,minStock:0,mrp:102.30,notes:"Topical burn and cut cream. Pack states Silver Sulphadiazine, Chlorhexidine Gluconate and Lignocaine; 15 g pack.",use:"Topical management/support for burns and cuts as clinically indicated; assess burn depth, extent and infection risk.",dose:"Apply/use as directed by physician and product label. Verify wound type, burn depth, allergy history and need for referral before use."},
 
+  {id:"seed-clinsol-gel",name:"Clinsol Gel",type:"Pharma/Brand",generic:"Clindamycin Phosphate + Nicotinamide topical gel",category:"Cream/Gel",form:"Topical Gel",batch:"Not clearly legible on provided photograph",mfg:"2025-11",expiry:"2027-11-01",stock:1,minStock:0,mrp:99,notes:"15 g topical gel. Pack states Clindamycin Phosphate & Nicotinamide Gel.",use:"Topical treatment of acne where clinically indicated.",dose:"Use as directed by physician and product label. Verify exact strength and patient-specific skin considerations before use."},
+
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
