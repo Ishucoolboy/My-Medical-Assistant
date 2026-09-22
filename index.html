@@ -195,6 +195,18 @@
                 </div>
               </section>
               <section class="result-section">
+                <div class="opd-section-head"><div><span class="mini-label">5 • IV SAFETY</span><h3>Injection / IV compatibility check</h3></div></div>
+                <div class="iv-checker">
+                  <div class="iv-check-grid">
+                    <label>Medicine / injection<select id="ivMedicineSelect"><option value="">Select injection / IV medicine</option></select></label>
+                    <label>Diluent<select id="ivDiluentSelect"><option value="">Select diluent</option></select></label>
+                  </div>
+                  <button id="checkIvCompatibility" class="btn primary" type="button">Check compatibility</button>
+                  <div id="ivCompatibilityResult" class="iv-result"><div class="empty-list">Select a medicine and diluent. Unknown combinations will remain UNVERIFIED.</div></div>
+                  <div class="medicine-warning">Never assume NS/RL/DNS compatibility. This checker only uses explicitly verified entries in the clinic database and does not replace the product insert or pharmacy/institutional compatibility reference.</div>
+                </div>
+              </section>
+              <section class="result-section">
                 <div class="opd-section-head"><div><span class="mini-label">5 • SAFETY</span><h3>Important checks & red flags</h3></div></div>
                 <ul id="checks" class="checks"></ul>
               </section>
