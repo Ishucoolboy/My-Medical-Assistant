@@ -2,6 +2,7 @@ const INVENTORY_KEY="mma_inventory_v2";
 const SETTINGS_KEY="mma_settings_v1";
 const HISTORY_KEY="mma_history_v1";
 const AUDIT_KEY="mma_audit_v1";
+const PIN_KEY="mma_clinic_pin_v1";
 const PROTOCOLS_URL="./data/protocols.json";
 function loadAudit(){try{const x=JSON.parse(localStorage.getItem(AUDIT_KEY));return Array.isArray(x)?x:[]}catch{return[]}}
 function logAudit(action,detail){const x=loadAudit();x.unshift({at:new Date().toLocaleString(),action,detail});localStorage.setItem(AUDIT_KEY,JSON.stringify(x.slice(0,100)));renderAudit()}
@@ -13,9 +14,19 @@ function openMedicineModal(id){
  const modal=$("medicineModal");$("modalMedicineName").textContent=m.name;
  const dose=m.dose||"Dose not specified in the provided clinic reference files.";
  const exp=expiryStatus(m),stock=Number(m.stock)||0;
- $("medicineModalBody").innerHTML='<div class="detail-grid"><div><span>Generic / composition</span><strong>'+esc(m.generic||"—")+'</strong></div><div><span>Form</span><strong>'+esc(m.form||m.category||"—")+'</strong></div><div><span>Main use</span><strong>'+esc(m.use||m.notes||"—")+'</strong></div><div><span>Reference dose</span><strong>'+esc(dose)+'</strong></div><div><span>Batch</span><strong>'+esc(m.batch||"—")+'</strong></div><div><span>Expiry</span><strong class="'+(exp==="expired"?"expiry-bad":"")+'">'+esc(m.expiry||"—")+(m.expiry?" • "+expiryTimeLabel(m):"")+'</strong></div></div><div class="stock-editor"><strong>Stock: <span id="modalStockValue">'+stock+'</span></strong><button class="btn ghost" data-stock-action="minus">− 1</button><button class="btn primary" data-stock-action="plus">+ 1</button><input id="modalStockInput" type="number" min="0" value="'+stock+'"><button class="btn ghost" data-stock-action="set">Set</button></div><div class="medicine-warning">Always verify indication, contraindications, formulation strength and patient-specific dose before use.</div>';
+ $("medicineModalBody").innerHTML='<div class="detail-grid"><div><span>Generic / composition</span><strong>'+esc(m.generic||"—")+'</strong></div><div><span>Form</span><strong>'+esc(m.form||m.category||"—")+'</strong></div><div><span>Main use</span><strong>'+esc(m.use||m.notes||"—")+'</strong></div><div><span>Reference dose</span><strong>'+esc(dose)+'</strong></div><div><span>Batch</span><strong>'+esc(m.batch||"—")+'</strong></div><div><span>Expiry</span><strong class="'+(exp==="expired"?"expiry-bad":"")+'">'+esc(m.expiry||"—")+(m.expiry?" • "+expiryTimeLabel(m):"")+'</strong></div></div><div class="stock-editor"><strong>Stock: <span id="modalStockValue">'+stock+'</span></strong><button class="btn ghost" data-stock-action="minus">− 1</button><button class="btn primary" data-stock-action="plus">+ 1</button><input id="modalStockInput" type="number" min="0" value="'+stock+'"><button class="btn ghost" data-stock-action="set">Set</button><button class="btn primary" data-stock-action="dispense-fefo">Dispense 1 (FEFO)</button></div><div class="medicine-warning">Always verify indication, contraindications, formulation strength and patient-specific dose before use.</div>';
  modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");
- modal.querySelectorAll("[data-stock-action]").forEach(b=>b.addEventListener("click",()=>{const action=b.dataset.stockAction;let n=Number(m.stock)||0;if(action==="minus")n=Math.max(0,n-1);if(action==="plus")n=n+1;if(action==="set")n=Math.max(0,Number($("modalStockInput").value)||0);m.stock=n;saveInventory(inventory);$("modalStockValue").textContent=n;$("modalStockInput").value=n;logAudit("Stock adjusted",m.name+" → "+n);refreshAll()}));
+ modal.querySelectorAll("[data-stock-action]").forEach(b=>b.addEventListener("click",()=>{const action=b.dataset.stockAction;let n=Number(m.stock)||0;if(action==="minus")n=Math.max(0,n-1);if(action==="plus")n=n+1;if(action==="set")n=Math.max(0,Number($("modalStockInput").value)||0);
+if(action==="dispense-fefo"){
+  const group=inventory.filter(x=>(x.name||"").toLowerCase()===(m.name||"").toLowerCase()&&(x.generic||"").toLowerCase()===(m.generic||"").toLowerCase()&&(Number(x.stock)||0)>0&&!["expired"].includes(expiryStatus(x))).sort((x,y)=>daysUntil(x.expiry)-daysUntil(y.expiry));
+  const target=group[0]||m;
+  if(!target || (Number(target.stock)||0)<=0){alert("No usable stock available for FEFO dispensing.");return}
+  target.stock=Math.max(0,(Number(target.stock)||0)-1);
+  saveInventory(inventory);logAudit("Medicine dispensed",target.name+" • FEFO batch "+(target.batch||"—")+" • remaining "+target.stock);refreshAll();
+  if(target.id!==m.id){openMedicineModal(target.id);return}
+  n=target.stock;
+}
+m.stock=n;saveInventory(inventory);$("modalStockValue").textContent=n;$("modalStockInput").value=n;logAudit("Stock adjusted",m.name+" → "+n);refreshAll()}));
 }
 function closeMedicineModal(){const modal=$("medicineModal");if(modal){modal.classList.add("hidden");modal.setAttribute("aria-hidden","true")}}
 function renderGlobalSearch(q){
@@ -165,6 +176,12 @@ function medicineRow(m,mode="inventory"){
 }
 function renderDashboard(){
   const reorder=getReorder(), expiry=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
+  const today=new Date().toISOString().slice(0,10), history=loadHistory();
+  const todayCases=history.filter(x=>x.dateKey===today);
+  const due=history.filter(x=>x.followupDate&&x.followupDate<=today);
+  if($("statTodayCases"))$("statTodayCases").textContent=todayCases.length;
+  if($("statFollowups"))$("statFollowups").textContent=due.length;
+  if($("dashboardFollowups"))$("dashboardFollowups").innerHTML=due.length?due.slice(0,12).map(x=>'<div class="alert-row"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><span>'+esc(x.followupDate||"—")+' • '+esc(x.mobile||"")+' • '+esc(x.complaint||"")+'</span></div>').join(""):'<div class="empty-list">No follow-ups due.</div>';
   $("statTotal").textContent=inventory.length;
   $("statLow").textContent=reorder.filter(x=>stockStatus(x)==="low").length;
   $("statOut").textContent=reorder.filter(x=>stockStatus(x)==="out").length;
@@ -320,37 +337,123 @@ function buildAssessment(d){
   const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
   return {urgent,possible,protocolMatches,matches,oral,injectable,checks,summary:["Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Vitals/examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded")].join("\n")};
 }
+function duplicateSafetyWarnings(matches){
+  const text=matches.map(m=>(m.generic+" "+m.use+" "+m.notes).toLowerCase()).join(" ");
+  const warnings=[];
+  const para=matches.filter(m=>/paracetamol/.test((m.generic+" "+m.notes).toLowerCase()));
+  const nsaid=matches.filter(m=>/aceclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|diclofenac|naproxen/.test((m.generic+" "+m.notes).toLowerCase()));
+  const abx=matches.filter(m=>/antibiotic|ciprofloxacin|cefixime|cefpodoxime|azithromycin|amoxicillin|ofloxacin|metronidazole|norfloxacin/.test((m.generic+" "+m.notes+" "+m.use).toLowerCase()));
+  if(para.length>1)warnings.push("Multiple paracetamol-containing medicines matched. Check total daily paracetamol exposure and avoid duplicate combination products.");
+  if(nsaid.length>1)warnings.push("Multiple NSAID/anti-inflammatory medicines matched. Avoid duplicate NSAID therapy unless specifically justified.");
+  if(abx.length>1)warnings.push("Multiple antimicrobial medicines matched. Do not combine antibiotics routinely; confirm indication, site, allergy, renal/hepatic factors and antimicrobial appropriateness.");
+  if(text.includes("nimesulide"))warnings.push("Nimesulide-containing products require short-term, indication-specific use and liver-risk review.");
+  return [...new Set(warnings)];
+}
 function medCard(m){
   const dose=m.dose||Object.entries(DOSE_GUIDE).find(([k])=>m.name.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(m.name.toLowerCase()))?.[1]||"Dose not specified in the provided clinic reference files.";
-  const stock=Number(m.stock)||0, exp=expiryStatus(m);
-  const warn=ageWarnings(m,currentCaseData||{});
-  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
+  const stock=Number(m.stock)||0, exp=expiryStatus(m), warn=ageWarnings(m,currentCaseData||{});
+  const selected=selectedPrescriptions.some(x=>x.id===m.id);
+  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'">'+(selected?"✓ Added to prescription":"Add to prescription")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
 }
 let currentCaseData=null;
+function renderPrescription(){
+  const list=$("selectedPrescriptionList"), warnEl=$("prescriptionWarnings");
+  if(!list)return;
+  list.innerHTML=selectedPrescriptions.length?selectedPrescriptions.map((m,i)=>'<div class="rx-row"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><div class="rx-fields"><input data-rx-dose="'+i+'" placeholder="Dose / strength" value="'+esc(m.rxDose||"")+'"><input data-rx-freq="'+i+'" placeholder="Frequency" value="'+esc(m.rxFreq||"")+'"><input data-rx-duration="'+i+'" placeholder="Duration" value="'+esc(m.rxDuration||"")+'"><input data-rx-instruction="'+i+'" placeholder="Instructions" value="'+esc(m.rxInstruction||"")+'"><button type="button" class="btn danger-outline remove-rx" data-rx-remove="'+i+'">Remove</button></div></div>').join(""):'<div class="empty-list">Assessment se medicine par “Add to prescription” click karein. Dose/frequency/duration clinician verify karke fill karein.</div>';
+  const warnings=duplicateSafetyWarnings(selectedPrescriptions);
+  warnEl.innerHTML=warnings.length?'<div class="medicine-warning"><b>Prescription safety check:</b> '+warnings.map(esc).join(" ")+'</div>':"";
+  list.querySelectorAll("[data-rx-remove]").forEach(b=>b.addEventListener("click",()=>{selectedPrescriptions.splice(Number(b.dataset.rxRemove),1);renderPrescription();}));
+  list.querySelectorAll("[data-rx-dose],[data-rx-freq],[data-rx-duration],[data-rx-instruction]").forEach(inp=>inp.addEventListener("input",()=>{
+    const i=Number(inp.dataset.rxDose??inp.dataset.rxFreq??inp.dataset.rxDuration??inp.dataset.rxInstruction);
+    if(inp.dataset.rxDose!==undefined)selectedPrescriptions[i].rxDose=inp.value;
+    if(inp.dataset.rxFreq!==undefined)selectedPrescriptions[i].rxFreq=inp.value;
+    if(inp.dataset.rxDuration!==undefined)selectedPrescriptions[i].rxDuration=inp.value;
+    if(inp.dataset.rxInstruction!==undefined)selectedPrescriptions[i].rxInstruction=inp.value;
+  }));
+}
+function addPrescription(id){
+  const m=inventory.find(x=>x.id===id);if(!m)return;
+  if(!selectedPrescriptions.some(x=>x.id===id))selectedPrescriptions.push({...m});
+  renderPrescription();
+  if(currentCaseData) rerenderAssessmentCards();
+}
+function rerenderAssessmentCards(){
+  if(!currentCaseData)return;
+  const a=buildAssessment(currentCaseData);
+  $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
+  $("phase2").innerHTML=a.injectable.length?a.injectable.map(medCard).join(""):'<div class="empty-list">No relevant verified injections/IV fluids/respules matched this case.</div>';
+}
+function printPrescription(){
+  if(!selectedPrescriptions.length){alert("Please add at least one medicine to the prescription.");return}
+  const d=currentCaseData||{};
+  const rows=selectedPrescriptions.map((m,i)=>{
+    const dose=m.rxDose||m.dose||"Verify dose";
+    return (i+1)+". "+m.name+"\n   Dose: "+dose+"\n   Frequency: "+(m.rxFreq||"Verify")+
+      "\n   Duration: "+(m.rxDuration||"Verify")+"\n   Instructions: "+(m.rxInstruction||"—");
+  }).join("\n\n");
+  const w=window.open("","_blank");if(!w)return;
+  w.document.write("<html><head><title>Prescription</title><style>body{font:14px Arial;padding:30px;max-width:800px;margin:auto}h1{margin-bottom:4px}.muted{color:#666}.line{border-bottom:1px solid #ddd;margin:15px 0}</style></head><body><h1>My Medical Assistant</h1><div class='muted'>Clinic prescription draft</div><div class='line'></div><p><b>Patient:</b> "+esc(d.patientName||"—")+" &nbsp; <b>Age:</b> "+esc(d.age||"—")+" &nbsp; <b>Sex:</b> "+esc(d.sex||"—")+"</p><p><b>Mobile:</b> "+esc(d.mobile||"—")+" &nbsp; <b>Village:</b> "+esc(d.village||"—")+"</p><p><b>Complaint:</b> "+esc(d.complaint||"—")+"</p><div class='line'></div><pre style='white-space:pre-wrap;font:14px Arial'>"+esc(rows)+"</pre><p class='muted'>Prescription draft — verify indication, dose, contraindications and patient-specific factors before signing.</p></body></html>");
+  w.document.close();w.print();
+}
+function buildAssessment(d){
+  const t=opdText(d);
+  const urgentTerms=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis","anaphylaxis"];
+  const urgent=urgentTerms.some(x=>t.includes(x));
+  const matches=inventory.map(m=>({...m,_match:medicineRelevance(m,d)})).filter(m=>m._match.score>0).sort((a,b)=>b._match.score-a._match.score||a.name.localeCompare(b.name));
+  const oral=matches.filter(m=>["Tablet/Capsule","Syrup/Drops","Cream/Gel/Ointment","Syrup/Suspension","Gel/Cream","Medical Supply"].includes(m.category));
+  const injectable=matches.filter(m=>["Injection","IV Fluid","Respule"].includes(m.category));
+  const checks=["Confirm allergy history and current medicines before prescribing.","Check age/weight, pregnancy status when relevant, renal/hepatic status and contraindications.","Record the available vital signs and examination findings.","Use only medicines from the verified clinic inventory.","Dose and route must be confirmed against the clinic protocol / product information before administration."];
+  if(Number(d.age)<18)checks.unshift("Paediatric case: confirm weight and use a verified age/weight-specific reference before dosing.");
+  if(d.redFlags.trim())checks.unshift("Reported red flags: "+d.redFlags.trim());
+  if(urgent)checks.unshift("Urgent red flag detected: this may need urgent referral / further investigation. Do not delay emergency care for this tool.");
+  const safety=duplicateSafetyWarnings(matches);
+  safety.forEach(x=>checks.unshift(x));
+  const possible=d.complaint?"Possible clinical considerations based on the entered complaint/history: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
+  const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
+  return {urgent,possible,protocolMatches,matches,oral,injectable,checks,safety,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
+}
 
 $("caseForm").addEventListener("submit",e=>{
   e.preventDefault();
-  currentCaseData={age:$("age").value,sex:$("sex").value,complaint:$("complaint").value.trim(),history:$("history").value.trim(),exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim()};
-  const d=currentCaseData,a=buildAssessment(d);
+  currentCaseData={patientName:$("patientName").value.trim(),age:$("age").value,sex:$("sex").value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint:$("complaint").value.trim(),history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
+  const a=buildAssessment(currentCaseData);
   $("emptyResult").classList.add("hidden");$("result").classList.remove("hidden");
   $("resultState").textContent=a.urgent?"Referral review":"Generated";
   $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");$("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
   $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
-  $("clinicalSnapshot").innerHTML='<div><span>Age</span><strong>'+esc(d.age||"—")+'</strong></div><div><span>Sex</span><strong>'+esc(d.sex||"—")+'</strong></div><div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div><div><span>Vitals / Exam</span><strong>'+esc(d.exam||"Not recorded")+'</strong></div>';
+  $("clinicalSnapshot").innerHTML='<div><span>Patient</span><strong>'+esc(currentCaseData.patientName||"—")+'</strong></div><div><span>Age / Sex</span><strong>'+esc(currentCaseData.age||"—")+" / "+esc(currentCaseData.sex||"—")+'</strong></div><div><span>Vitals</span><strong>BP '+esc(currentCaseData.bp||"—")+' • Sugar '+esc(currentCaseData.bloodSugar||"—")+' • Pulse '+esc(currentCaseData.pulse||"—")+' • SpO₂ '+esc(currentCaseData.spo2||"—")+' • Temp '+esc(currentCaseData.temperature||"—")+'</strong></div><div><span>Complaint</span><strong>'+esc(currentCaseData.complaint||"—")+'</strong></div>';
   $("possibleDiagnosis").innerHTML=esc(a.possible)+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
   $("medicineMatchCount").textContent=a.matches.length+" matched";
-  $("medicineMatchInfo").innerHTML=a.matches.length?'<span>Matched from the current clinic inventory using complaint/history keywords and recorded medicine uses.</span> <span>Review each medicine clinically before use.</span>':'<span>No inventory medicine was matched confidently to the entered complaint.</span>';
+  $("medicineMatchInfo").innerHTML=a.matches.length?'<span>Matched from the current clinic inventory using complaint/history keywords and recorded medicine uses.</span> <span>Review each medicine clinically before use.</span>':"<span>No inventory medicine was matched confidently to the entered complaint.</span>";
   $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
   $("phase2").innerHTML=a.injectable.length?a.injectable.map(medCard).join(""):'<div class="empty-list">No relevant verified injections/IV fluids/respules matched this case.</div>';
-  $("checks").innerHTML=a.checks.map(c=>"<li>"+esc(c)+"</li>").join("");$("summary").textContent=a.summary;
-  const h=loadHistory();h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),complaint:d.complaint,age:d.age,sex:d.sex,summary:a.summary});saveHistory(h.slice(0,30));logAudit("OPD case recorded",d.complaint||"Unnamed complaint");
+  $("checks").innerHTML=a.checks.map(c=>"<li>"+esc(c)+"</li>").join("");
+  $("summary").textContent=a.summary;
+  selectedPrescriptions=[];renderPrescription();
+  const h=loadHistory();h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),dateKey:new Date().toISOString().slice(0,10),followupDate:currentCaseData.followupDate,patientName:currentCaseData.patientName,mobile:currentCaseData.mobile,village:currentCaseData.village,complaint:currentCaseData.complaint,age:currentCaseData.age,sex:currentCaseData.sex,data:{...currentCaseData},summary:a.summary});saveHistory(h.slice(0,100));
+  logAudit("OPD case recorded",(currentCaseData.patientName||"Unnamed patient")+" • "+(currentCaseData.complaint||"Unnamed complaint"));
+  renderHistory();renderDashboard();
 });
+
 $("printSummary").addEventListener("click",()=>{const text=$("summary")?.textContent||"";const w=window.open("","_blank");if(!w)return;w.document.write("<pre style=\"font:14px Arial;padding:30px;white-space:pre-wrap\">"+esc(text)+"</pre>");w.document.close();w.print()});
-$("clearCase").addEventListener("click",()=>{$("caseForm").reset();$("emptyResult").classList.remove("hidden");$("result").classList.add("hidden");$("resultState").textContent="Waiting"});
+$("printPrescription")?.addEventListener("click",printPrescription);
+$("clearPrescription")?.addEventListener("click",()=>{selectedPrescriptions=[];renderPrescription();rerenderAssessmentCards()});
+$("clearCase").addEventListener("click",()=>{$("caseForm").reset();selectedPrescriptions=[];renderPrescription();$("emptyResult").classList.remove("hidden");$("result").classList.add("hidden");$("resultState").textContent="Waiting"});
 
-function renderHistory(){const h=loadHistory();$("historyList").innerHTML=h.length?h.map(x=>'<div class="history-item"><strong>'+esc(x.complaint||"Unnamed complaint")+'</strong><small>'+esc(x.createdAt)+" • Age: "+esc(x.age||"—")+" • Sex: "+esc(x.sex||"—")+"</small></div>").join(""):'<div class="empty-list">No cases stored in this browser yet.</div>'}
-$("clearHistory").addEventListener("click",()=>{if(confirm("Clear locally stored case history?")){localStorage.removeItem(HISTORY_KEY);renderHistory()}});
-
+function renderHistory(){
+  const h=loadHistory(), q=($("historySearch")?.value||"").trim().toLowerCase();
+  const rows=h.filter(x=>!q||[x.patientName,x.mobile,x.village,x.complaint,x.age,x.sex].join(" ").toLowerCase().includes(q));
+  $("historyList").innerHTML=rows.length?rows.map((x,i)=>'<div class="history-item"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><small>'+esc(x.createdAt||"")+' • Age: '+esc(x.age||"—")+' • Sex: '+esc(x.sex||"—")+' • Mobile: '+esc(x.mobile||"—")+' • Village: '+esc(x.village||"—")+'</small><p class="history-complaint">'+esc(x.complaint||"No complaint")+(x.followupDate?" • Follow-up: "+esc(x.followupDate):"")+'</p><button class="btn ghost load-case" data-history-id="'+esc(x.id||"")+'">Open old history</button></div>').join(""):'<div class="empty-list">No matching patient history.</div>';
+  $("historyList").querySelectorAll("[data-history-id]").forEach(b=>b.addEventListener("click",()=>{
+    const x=h.find(v=>v.id===b.dataset.historyId);if(!x)return;
+    const d=x.data||{patientName:x.patientName,mobile:x.mobile,village:x.village,age:x.age,sex:x.sex,complaint:x.complaint};
+    $("patientName").value=d.patientName||"";$("mobile").value=d.mobile||"";$("village").value=d.village||"";$("age").value=d.age||"";$("sex").value=d.sex||"";$("complaint").value=d.complaint||"";
+    $("history").value=d.history||"";$("bp").value=d.bp||"";$("bloodSugar").value=d.bloodSugar||"";$("pulse").value=d.pulse||"";$("spo2").value=d.spo2||"";$("temperature").value=d.temperature||"";$("exam").value=d.exam||"";$("redFlags").value=d.redFlags||"";$("followupDate").value=d.followupDate||"";
+    switchTab("assistant");
+  }));
+}
+$("historySearch")?.addEventListener("input",renderHistory);
+$("clearHistory").addEventListener("click",()=>{if(confirm("Clear locally stored case history?")){localStorage.removeItem(HISTORY_KEY);renderHistory();renderDashboard()}});
 
 let clinicProtocols=[];
 async function loadProtocols(){
@@ -405,4 +508,30 @@ document.addEventListener("click",e=>{const b=e.target.closest(".medicine-item[d
 refreshAll();renderReports();renderAudit();loadProtocols();alert("Backup restored successfully.");}catch(e){alert("Backup could not be restored. Please select a valid My Medical Assistant backup.");}};r.readAsText(file);
 }
 
-refreshAll();loadProtocols();
+function setupClinicSecurity(){
+  const pin=localStorage.getItem(PIN_KEY),lock=$("pinLock");
+  if(!lock)return;
+  if(pin){lock.classList.remove("hidden");}
+  $("pinUnlock")?.addEventListener("click",()=>{
+    if(($("pinInput").value||"")===localStorage.getItem(PIN_KEY)){lock.classList.add("hidden");$("pinInput").value="";$("pinError").textContent="";sessionStorage.setItem("mma_unlocked","1");}
+    else $("pinError").textContent="Incorrect PIN.";
+  });
+  $("pinInput")?.addEventListener("keydown",e=>{if(e.key==="Enter")$("pinUnlock")?.click()});
+  $("setPin")?.addEventListener("click",()=>{
+    const p=($("newPin").value||"").trim();
+    if(!/^\d{4,8}$/.test(p)){alert("PIN 4–8 digits ka hona chahiye.");return}
+    localStorage.setItem(PIN_KEY,p);$("newPin").value="";alert("Clinic PIN set ho gaya.");
+  });
+  $("removePin")?.addEventListener("click",()=>{
+    if(confirm("Remove clinic PIN from this browser?")){localStorage.removeItem(PIN_KEY);lock.classList.add("hidden");}
+  });
+}
+function setupPrescriptionDelegation(){
+  document.addEventListener("click",e=>{
+    const b=e.target.closest("[data-add-rx]");
+    if(b){e.preventDefault();e.stopPropagation();addPrescription(b.dataset.addRx);}
+  });
+}
+setupPrescriptionDelegation();
+setupClinicSecurity();
+refreshAll();renderReports();renderAudit();loadProtocols();
