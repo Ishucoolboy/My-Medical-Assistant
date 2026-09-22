@@ -511,7 +511,7 @@ refreshAll();renderReports();renderAudit();loadProtocols();alert("Backup restore
 function setupClinicSecurity(){
   const pin=localStorage.getItem(PIN_KEY),lock=$("pinLock");
   if(!lock)return;
-  if(pin){lock.classList.remove("hidden");}
+  if(pin && sessionStorage.getItem("mma_unlocked")!=="1"){lock.classList.remove("hidden");} else {lock.classList.add("hidden");}
   $("pinUnlock")?.addEventListener("click",()=>{
     if(($("pinInput").value||"")===localStorage.getItem(PIN_KEY)){lock.classList.add("hidden");$("pinInput").value="";$("pinError").textContent="";sessionStorage.setItem("mma_unlocked","1");}
     else $("pinError").textContent="Incorrect PIN.";
@@ -523,7 +523,7 @@ function setupClinicSecurity(){
     localStorage.setItem(PIN_KEY,p);$("newPin").value="";alert("Clinic PIN set ho gaya.");
   });
   $("removePin")?.addEventListener("click",()=>{
-    if(confirm("Remove clinic PIN from this browser?")){localStorage.removeItem(PIN_KEY);lock.classList.add("hidden");}
+    if(confirm("Remove clinic PIN from this browser?")){localStorage.removeItem(PIN_KEY);sessionStorage.removeItem("mma_unlocked");lock.classList.add("hidden");}
   });
 }
 function setupPrescriptionDelegation(){
