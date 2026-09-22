@@ -33,7 +33,7 @@
         <button class="tab" data-tab="required">Required / Reorder</button>
         <button class="tab" data-tab="expiry">Near Expiry</button>
         <button class="tab" data-tab="history">Recent Cases</button>
-        <button class="tab" data-tab="storeTablets">Tablets Available</button>
+        <button class="tab" data-tab="storeTablets">Medicine Available</button>
       </nav>
 
       <section id="dashboard" class="tab-panel active">
@@ -200,23 +200,23 @@
         <article class="card">
           <div class="card-head">
             <div>
-              <h2>Tablets Available at My Store</h2>
-              <p>Quick view of tablet/capsule stock currently recorded in the clinic inventory.</p>
+              <h2>Medicine Available at My Store</h2>
+              <p>Quick view of all medicines currently recorded in the clinic inventory.</p>
             </div>
             <span id="tabletCount" class="badge">0 available</span>
           </div>
           <div class="store-tablet-toolbar">
-            <input id="storeTabletSearch" placeholder="Search tablet..." />
+            <input id="storeTabletSearch" placeholder="Search medicine..." />
             <select id="storeTabletStock">
               <option value="available">Available only</option>
-              <option value="all">All tablets</option>
+              <option value="all">All medicines</option>
             </select>
           </div>
           <div class="table-wrap">
   <table class="store-tablets-table">
     <thead>
       <tr>
-        <th>Tablet Name</th><th>Main Use</th><th>Dose</th><th>Expiry</th><th>Availability Number</th>
+        <th>Medicine Name</th><th>Main Use</th><th>Dose</th><th>Expiry</th><th>Availability Number</th>
       </tr>
     </thead>
     <tbody id="storeTabletsList"></tbody>
