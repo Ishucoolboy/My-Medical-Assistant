@@ -108,3 +108,9 @@ footer{width:min(1240px,calc(100% - 32px));margin:0 auto 30px;color:#718087;font
 .pin-card h2{margin:8px 0}.pin-card p{color:var(--muted);font-size:13px}.pin-card input{width:100%;margin:10px 0}.pin-error{display:block;color:var(--danger);min-height:18px;margin-top:8px}
 @media(max-width:900px){.vitals-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.rx-fields{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.patient-grid,.vitals-grid{grid-template-columns:1fr}.rx-fields{grid-template-columns:1fr}.security-actions{flex-direction:column}.security-actions input{max-width:none}}
+
+/* Prescription phase controls */
+.rx-fields select{min-width:0;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;font:inherit}
+.rx-fields [data-rx-compat]{grid-column:span 2}
+@media(max-width:1100px){.rx-fields{grid-template-columns:1fr 1fr 1fr}.rx-fields [data-rx-compat]{grid-column:1/-1}}
+@media(max-width:620px){.rx-fields [data-rx-compat]{grid-column:auto}}
