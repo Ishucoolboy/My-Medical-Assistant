@@ -1,7 +1,9 @@
 const INVENTORY_KEY="mma_inventory_v2";
 const SETTINGS_KEY="mma_settings_v1";
 const HISTORY_KEY="mma_history_v1";
-const starterInventory=[];
+const starterInventory=[
+  {id:"seed-cyclofen-mr",name:"Cyclofen-MR",type:"Pharma/Brand",generic:"Aceclofenac 100 mg + Paracetamol 325 mg + Chlorzoxazone 250 mg",category:"Tablet/Capsule",form:"Tablet",batch:"SPA252687",expiry:"2027-10-01",stock:40,minStock:0,notes:"Pain/inflammation with muscle spasm; use only for appropriate musculoskeletal indications.",use:"Musculoskeletal pain, inflammation and muscle spasm/stiffness.",dose:"100 mg aceclofenac + 325 mg paracetamol + 250 mg chlorzoxazone; reference protocol: 1 tablet BD after food where indicated. Verify patient-specific contraindications before use."}
+];
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
@@ -53,7 +55,7 @@ const DOSE_GUIDE={
 };
 
 const $=id=>document.getElementById(id);
-function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));if(!Array.isArray(s))return[];const legacySeedIds=new Set(["seed-prevent-n","seed-naproxen-250","seed-naproxen-500"]);const cleaned=s.filter(m=>!legacySeedIds.has(m?.id));if(cleaned.length!==s.length)localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{return[]}}
+function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));const base=Array.isArray(s)?s:[];const legacySeedIds=new Set(["seed-prevent-n","seed-naproxen-250","seed-naproxen-500"]);let cleaned=base.filter(m=>!legacySeedIds.has(m?.id));let changed=cleaned.length!==base.length;for(const seed of starterInventory){if(!cleaned.some(m=>m?.id===seed.id)){cleaned.push({...seed});changed=true}}if(changed||!Array.isArray(s))localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{return starterInventory.map(m=>({...m}))}}
 function saveInventory(items){localStorage.setItem(INVENTORY_KEY,JSON.stringify(items))}
 function loadHistory(){try{const s=JSON.parse(localStorage.getItem(HISTORY_KEY));return Array.isArray(s)?s:[]}catch{return []}}
 function saveHistory(items){localStorage.setItem(HISTORY_KEY,JSON.stringify(items))}
