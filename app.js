@@ -97,11 +97,27 @@ function villageProblemFor(d,category){
 }
 function villageMedicineSelectionRules(d,category,problem,rx){
   const t=opdText(d);
-  const eligible=inventory.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&medicineSafetyForAutoRx(m,d,rx?.protocol||null,null).ok);
+  const age=Number(d.age);
+  // Age-safety gate: paediatric-only products must never be auto-selected for adults.
+  // Adult patients should only receive an inventory item when its recorded use/formulation
+  // is compatible with adult use; if no adult product is available, return no automatic match.
+  const isPaediatricOnly=m=>{
+    const x=normalizeRxText((m.name||"")+" "+(m.generic||"")+" "+(m.use||"")+" "+(m.notes||""));
+    return /paediatric|pediatric|children only|child only|infant only|for children|for child|paediatric use|pediatric use/.test(x)
+      || /biocetamol.?ds|kold.?2.?kold.?drops/.test(x);
+  };
+  const adultPatient=Number.isFinite(age)&&age>=18;
+  const eligible=inventory.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&(!adultPatient||!isPaediatricOnly(m))&&medicineSafetyForAutoRx(m,d,rx?.protocol||null,null).ok);
   const g=m=>normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+  const hasColdOrRespiratorySymptoms=/cough|khaansi|cold|jukam|runny nose|naak bahe|sore throat|gala dard|phlegm|sputum|wheeze|saans|breathlessness/i.test(t);
   const score=m=>{
     const x=g(m);let s=0;
-    if(category?.id==="fever"){if(/paracetamol/.test(x)&&!/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s+=20;if(/antibiotic|ciprofloxacin|cefixime|azithromycin|amoxicillin|ofloxacin|norfloxacin|metronidazole/.test(x))s-=20;if(/dengue/.test(t)&&/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s-=100;}
+    if(category?.id==="fever"){
+      if(/paracetamol/.test(x)&&!/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s+=20;
+      if(/antibiotic|ciprofloxacin|cefixime|azithromycin|amoxicillin|ofloxacin|norfloxacin|metronidazole/.test(x))s-=20;
+      if(/phenylephrine|chlorpheniramine|decongestant|cold|cough/.test(x)&&!hasColdOrRespiratorySymptoms)s-=100;
+      if(/dengue/.test(t)&&/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s-=100;
+    }
     if(category?.id==="pain"){if(/paracetamol/.test(x))s+=10;if(/aceclofenac|diclofenac|naproxen|etoricoxib|nimesulide|mefenamic/.test(x))s+=problem.includes("Musculoskeletal")?8:2;if(/chlorzoxazone|thiocolchicoside|drotaverine/.test(x)&&/spasm|sprain|strain|musculoskeletal/.test(problem.toLowerCase()))s+=8;}
     if(category?.id==="respiratory"){if(/montelukast|levocetirizine|fexofenadine|dextromethorphan|guaifenesin|phenylephrine/.test(x))s+=8;if(/antibiotic/.test(x))s-=15;}
     if(category?.id==="gi"){const pl=problem.toLowerCase();if(/omeprazole|rabeprazole|pantoprazole/.test(x)&&/acidity|dyspepsia/.test(pl))s+=12;if(/omeprazole|rabeprazole|pantoprazole|antacid|gastric|heartburn|reflux|indigestion|simethicone/.test(x)&&/abdominal pain/.test(pl))s+=8;if(/ondansetron|domperidone/.test(x)&&/nausea|vomiting/.test(pl))s+=12;if(/lactulose|bisacodyl|sodium picosulfate/.test(x)&&/constipation/.test(pl))s+=12;if(/loperamide/.test(x)&&/diarr/.test(pl))s+=6;}
