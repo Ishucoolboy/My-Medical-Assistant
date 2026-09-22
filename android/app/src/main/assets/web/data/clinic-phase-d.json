@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "lastReviewed": "2026-09-22",
+  "features": {
+    "investigationTracking": {
+      "fields": [
+        "investigationsOrdered",
+        "investigationResults"
+      ],
+      "rule": "Record requested tests and available results separately; do not infer a diagnosis from missing results."
+    },
+    "followUpTracking": {
+      "fields": [
+        "followupDate",
+        "followupStatus"
+      ],
+      "statuses": [
+        "planned",
+        "completed",
+        "missed",
+        "not-required"
+      ],
+      "rule": "Follow-up status is clinician-entered; overdue is calculated only from date and status."
+    },
+    "timeline": {
+      "rule": "History remains patient-case based and each saved encounter is independent; no automatic merging of diagnoses or medicines between encounters."
+    }
+  }
+}
