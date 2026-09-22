@@ -683,6 +683,13 @@ function findProtocolForCase(d){
   });
   return bestScore>0?best:null;
 }
+function verifiedRegimenForMedicine(m,p){
+  if(!m||!p||!Array.isArray(p.medicines))return null;
+  const rx=p.medicines.find(x=>inventoryCandidateMatch(m,x));
+  if(!rx)return null;
+  if(!String(rx.dose||"").trim()&&!String(rx.frequency||"").trim()&&!String(rx.duration||"").trim())return null;
+  return {dose:rx.dose||"",frequency:rx.frequency||"",duration:rx.duration||"",instruction:rx.instruction||"",source:rx.source||p.source||p.title||"Clinic reference",title:p.title||"Clinic reference"};
+}
 function clinicalTriage(d){
   const t=opdText(d), reasons=[];
   const explicit=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis","anaphylaxis","severe abdominal pain","persistent vomiting","blood in vomit","blood in stool","black stool","bleeding gums","rapid breathing","cold clammy","very low urine","no urine"];
@@ -784,16 +791,8 @@ function addRelevantInventoryOptions(items,d,p){
     if(gastricCase && !/gas|acid|gastric|antacid|reflux|indigestion|nausea|vomit|antiemetic|stool|constipat|diarr/.test(g))continue;
     if(added.some(x=>sameClinicalStockGroup(x,m)))continue;
 
-    added.push({
-      ...m,
-      rxPhase:prescriptionPhase(m),
-      rxDose:m.dose||"",
-      rxFreq:"",
-      rxDuration:"",
-      rxInstruction:"Clinically relevant inventory option. Confirm exact product dose, frequency, duration, contraindications and patient-specific factors before signing.",
-      rxSource:"Clinic inventory clinical-use match",
-      rxSelectionType:"INVENTORY_USE_MATCH"
-    });
+    const regimen=verifiedRegimenForMedicine(m,p,d);
+    added.push({...m,rxPhase:prescriptionPhase(m),rxDose:regimen?.dose||m.dose||"",rxFreq:regimen?.frequency||"",rxDuration:regimen?.duration||"",rxInstruction:regimen?.instruction||"Clinically relevant inventory option. No problem-specific verified regimen is loaded for this exact match; clinician must confirm the regimen before signing.",rxSource:regimen?.source||"Clinic inventory clinical-use match",rxSourceRef:regimen?.title||"",rxSelectionType:regimen?"REFERENCE_MATCH":"INVENTORY_USE_MATCH"});
 
     // Do not fill a prescription with several medicines merely because they match
     // the same symptom. Start with the strongest distinct inventory match.
@@ -834,8 +833,9 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
     });
     if(direct.length){
       const m=direct[0];
-      items.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"",rxInstruction:"Direct clinical-use match from the verified clinic inventory. Confirm patient-specific contraindications and exact regimen before signing.",rxSource:"Direct inventory indication match",rxSelectionType:"DIRECT_CLINICAL_USE_MATCH"});
-      notes.push("Treatment selected from a stocked medicine whose recorded clinical use directly matches the patient's entered complaint.");
+      const regimen=verifiedRegimenForMedicine(m,p,d);
+      items.push({...m,rxPhase:prescriptionPhase(m),rxDose:regimen?.dose||m.dose||"",rxFreq:regimen?.frequency||"",rxDuration:regimen?.duration||"",rxInstruction:regimen?.instruction||"Direct clinical-use match from the verified clinic inventory. No problem-specific regimen was loaded for this exact match; clinician must confirm the regimen before signing.",rxSource:regimen?.source||"Direct inventory indication match",rxSourceRef:regimen?.title||"",rxSelectionType:regimen?"REFERENCE_MATCH":"DIRECT_CLINICAL_USE_MATCH"});
+      notes.push(regimen?"Treatment selected with an exact problem-specific regimen from the matched clinic reference.":"Treatment selected from a stocked medicine whose recorded clinical use directly matches the patient's entered complaint; no exact problem-specific regimen was loaded for this medicine.");
     }
   }
 
@@ -904,9 +904,8 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
         .sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
       if(fm.length){
         const m=fm[0];
-        items.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"",
-          rxInstruction:"Explicit inventory-indication match. Verify diagnosis, contraindications, exact regimen and patient-specific factors before signing.",
-          rxSource:"Clinic inventory indication fallback",rxSelectionType:"DIRECT_CLINICAL_USE_MATCH"});
+        const regimen=verifiedRegimenForMedicine(m,p,d);
+        items.push({...m,rxPhase:prescriptionPhase(m),rxDose:regimen?.dose||m.dose||"",rxFreq:regimen?.frequency||"",rxDuration:regimen?.duration||"",rxInstruction:regimen?.instruction||"Explicit inventory-indication match. No problem-specific verified regimen is loaded for this exact match; clinician must confirm the regimen before signing.",rxSource:regimen?.source||"Clinic inventory indication fallback",rxSourceRef:regimen?.title||"",rxSelectionType:regimen?"REFERENCE_MATCH":"DIRECT_CLINICAL_USE_MATCH"});
         notes.push("A direct clinic-inventory indication match was selected for the entered complaint.");
       }
     }
@@ -1036,10 +1035,13 @@ function duplicateSafetyWarnings(rows){
   return [...new Set(warnings)];
 }
 function medCard(m){
-  const dose=m.dose||Object.entries(DOSE_GUIDE).find(([k])=>m.name.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(m.name.toLowerCase()))?.[1]||"Dose not specified in the provided clinic reference files.";
+  const dose=m.rxDose||m.dose||"Not specified in the verified clinic reference data.";
+  const frequency=m.rxFreq||"No problem-specific verified frequency loaded.";
+  const duration=m.rxDuration||"No problem-specific verified duration loaded.";
+  const source=m.rxSource||"Clinic inventory record";
   const stock=Number(m.stock)||0, exp=expiryStatus(m), warn=ageWarnings(m,currentCaseData||{});
   const selected=selectedPrescriptions.some(x=>x.id===m.id);
-  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="1"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="1">'+(selected&&prescriptionPhase(m)==="1"?"✓ Phase 1":"Add Phase 1")+'</button><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="2"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="2">'+(selected&&prescriptionPhase(m)==="2"?"✓ Phase 2":"Add Phase 2")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
+  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Dose:</b> '+esc(dose)+'<br><b>Frequency:</b> '+esc(frequency)+'<br><b>Duration:</b> '+esc(duration)+'<br><b>Reference:</b> '+esc(source)+(m.rxSourceRef?'<br><b>Reference detail:</b> '+esc(m.rxSourceRef):"")+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="1"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="1">'+(selected&&prescriptionPhase(m)==="1"?"✓ Phase 1":"Add Phase 1")+'</button><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="2"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="2">'+(selected&&prescriptionPhase(m)==="2"?"✓ Phase 2":"Add Phase 2")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
 }
 let currentCaseData=null;
 function rxConfidenceLabel(m){
@@ -1082,7 +1084,7 @@ function renderPrescription(){
   if(!list)return;
   list.innerHTML=selectedPrescriptions.length?selectedPrescriptions.map((m,i)=>{
     const phase=prescriptionPhase(m);
-    const defaultDuration=phase==="2"&&!m.rxDuration?"2–3 days":"";
+    const defaultDuration="";
     return '<div class="rx-row"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small><small class="rx-confidence">'+esc(rxConfidenceLabel(m))+'</small><small class="rx-why">'+esc(rxWhySelected(m))+'</small></div><div class="rx-fields"><select data-rx-phase="'+i+'"><option value="1" '+(phase==="1"?"selected":"")+'>Phase 1 — Regular medicines</option><option value="2" '+(phase==="2"?"selected":"")+'>Phase 2 — Injection + short-course</option></select><input data-rx-dose="'+i+'" placeholder="Dose / strength" value="'+esc(m.rxDose||"")+'"><select data-rx-route="'+i+'"><option value="">Route</option><option '+(m.rxRoute==="IM"?"selected":"")+'>IM</option><option '+(m.rxRoute==="IV"?"selected":"")+'>IV</option><option '+(m.rxRoute==="SC"?"selected":"")+'>SC</option><option '+(m.rxRoute==="Oral"?"selected":"")+'>Oral</option><option '+(m.rxRoute==="Topical"?"selected":"")+'>Topical</option></select><input data-rx-freq="'+i+'" placeholder="Frequency" value="'+esc(m.rxFreq||"")+'"><input data-rx-duration="'+i+'" placeholder="'+(phase==="2"?"2–3 days / as indicated":"Duration")+'" value="'+esc(m.rxDuration||defaultDuration)+'"><input data-rx-instruction="'+i+'" placeholder="Instructions" value="'+esc(m.rxInstruction||"")+'"><input data-rx-compat="'+i+'" placeholder="IV/Drip compatibility — verify before mixing" value="'+esc(m.rxCompat||"")+'"><button type="button" class="btn danger-outline remove-rx" data-rx-remove="'+i+'">Remove</button></div></div>';
   }).join(""):'<div class="empty-list">Treatment options yahan automatically selected hain. Zarurat ke hisaab se medicine add/remove karein aur prescription details clinician ke taur par verify/edit karein.</div>';
   renderPrescriptionCostSummary();
@@ -1121,8 +1123,8 @@ function formatRxGroup(rows){
     const dose=m.rxDose||m.dose||"Verify dose";
     const route=m.rxRoute?(" • Route: "+m.rxRoute):"";
     const compat=m.rxCompat?("\n   IV/Drip compatibility note: "+m.rxCompat):"";
-    return (i+1)+". "+m.name+"\n   Dose: "+dose+route+"\n   Frequency: "+(m.rxFreq||"Verify")+
-      "\n   Duration: "+(m.rxDuration||"Verify")+"\n   Instructions: "+(m.rxInstruction||"—")+compat+"\n   Confidence: "+rxConfidenceLabel(m)+"\n   Why: "+rxWhySelected(m);
+    return (i+1)+". "+m.name+"\n   Dose: "+dose+route+"\n   Frequency: "+(m.rxFreq||"No problem-specific verified frequency loaded")+
+      "\n   Duration: "+(m.rxDuration||"No problem-specific verified duration loaded")+"\n   Instructions: "+(m.rxInstruction||"—")+compat+"\n   Confidence: "+rxConfidenceLabel(m)+"\n   Why: "+rxWhySelected(m);
   }).join("\n\n");
 }
 function printPrescription(){
