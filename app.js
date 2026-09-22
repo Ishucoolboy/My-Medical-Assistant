@@ -1131,4 +1131,4 @@ function setupPrescriptionDelegation(){
 }
 setupPrescriptionDelegation();
 setupClinicSecurity();
-refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();loadPhaseB();loadPhaseC();setupLiveOpd();
+refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();loadPhaseB();loadPhaseC();setupLiveOpd();renderVillageOpdCategories();
