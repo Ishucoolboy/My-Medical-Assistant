@@ -580,6 +580,24 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
       .sort((a,b)=>b._match.score-a._match.score||a.name.localeCompare(b.name)).slice(0,1);
     fallback.forEach(m=>items.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"Short course / as clinically indicated",rxInstruction:"Inventory fallback is permitted by this protocol. Confirm indication, contraindications and product label before signing.",rxSource:"Inventory fallback",rxSelectionType:"SUPPORTED_INVENTORY_FALLBACK"}));
   }
+  // Supportive paracetamol pathway: use a plain paracetamol product for fever/pain when stocked.
+  // Do not substitute an NSAID/paracetamol combination for undifferentiated fever.
+  const caseText=opdText(d);
+  const needsParacetamol=/fever|acute fever|pyrexia|headache|migraine|body ache|myalgia|pain|dard|sir dard|badan dukhe/.test(caseText);
+  if(needsParacetamol && !items.some(m=>/paracetamol|acetaminophen/i.test(m.generic+" "+m.name))){
+    const pcmCandidates=inventory.filter(m=>{
+      const g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
+      const plain=/paracetamol|acetaminophen/.test(g);
+      const nsaid=/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin/.test(g);
+      return plain && !nsaid;
+    });
+    const pcm=chooseRxStockCandidate(pcmCandidates,{match:["paracetamol","acetaminophen"]},d,p);
+    if(pcm){
+      items.push({...pcm,rxPhase:"1",rxDose:Number(d.age)<18?"10–15 mg/kg/dose q4–6h; max 60 mg/kg/day":"500 mg–1 g every 4–6 hours; verify patient-specific maximum",rxFreq:Number(d.age)<18?"q4–6h PRN":"q4–6h PRN",rxDuration:"As clinically indicated",rxInstruction:"Supportive antipyretic/analgesic option. Verify total paracetamol exposure, liver risk and product strength before use.",rxSource:"Supportive paracetamol pathway",rxSelectionType:"SUPPORTIVE_PLAIN_PARACETAMOL"});
+      notes.push("Supportive plain paracetamol was added because the complaint contains fever/pain features and a suitable stocked paracetamol-only product was found.");
+    }
+  }
+
   if(missing.length)notes.unshift("Reference medicine not currently available in recorded usable stock: "+missing.join(", ")+". No substitute is invented unless this protocol explicitly defines a supported substitute.");
   if(!items.length)notes.push("No safe automatic prescription match was found in current usable clinic stock for this case. Do not use expiry/stock pressure as a reason to choose another medicine.");
   const fefo=items.filter(m=>m._selection?.fefoUsed);
