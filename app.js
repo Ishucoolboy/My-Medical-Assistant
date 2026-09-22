@@ -384,7 +384,7 @@ function medCard(m){
   const dose=m.dose||Object.entries(DOSE_GUIDE).find(([k])=>m.name.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(m.name.toLowerCase()))?.[1]||"Dose not specified in the provided clinic reference files.";
   const stock=Number(m.stock)||0, exp=expiryStatus(m), warn=ageWarnings(m,currentCaseData||{});
   const selected=selectedPrescriptions.some(x=>x.id===m.id);
-  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'">'+(selected?"✓ Added to prescription":"Add to prescription")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
+  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="1"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="1">'+(selected&&prescriptionPhase(m)==="1"?"✓ Phase 1":"Add Phase 1")+'</button><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="2"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="2">'+(selected&&prescriptionPhase(m)==="2"?"✓ Phase 2":"Add Phase 2")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
 }
 let currentCaseData=null;
 function prescriptionPhase(m){
@@ -413,9 +413,11 @@ function renderPrescription(){
     if(inp.dataset.rxCompat!==undefined)selectedPrescriptions[i].rxCompat=inp.value;
   }));
 }
-function addPrescription(id){
+function addPrescription(id,phase){
   const m=inventory.find(x=>x.id===id);if(!m)return;
-  if(!selectedPrescriptions.some(x=>x.id===id))selectedPrescriptions.push({...m,rxPhase:["Injection","IV Fluid","Respule"].includes(m.category)?"2":"1"});
+  const existing=selectedPrescriptions.find(x=>x.id===id);
+  if(existing)existing.rxPhase=phase||existing.rxPhase||"1";
+  else selectedPrescriptions.push({...m,rxPhase:phase||(["Injection","IV Fluid","Respule"].includes(m.category)?"2":"1")});
   renderPrescription();
   if(currentCaseData) rerenderAssessmentCards();
 }
@@ -578,7 +580,7 @@ function setupClinicSecurity(){
 function setupPrescriptionDelegation(){
   document.addEventListener("click",e=>{
     const b=e.target.closest("[data-add-rx]");
-    if(b){e.preventDefault();e.stopPropagation();addPrescription(b.dataset.addRx);}
+    if(b){e.preventDefault();e.stopPropagation();addPrescription(b.dataset.addRx,b.dataset.rxPhase||"1");}
   });
 }
 setupPrescriptionDelegation();
