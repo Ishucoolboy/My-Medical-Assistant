@@ -151,6 +151,8 @@ const starterInventory=[
 ];
   {id:"seed-citasol",name:"Citasol Syrup",type:"Pharma/Brand",generic:"Disodium Hydrogen Citrate BP 0.335 g per 5 mL",category:"Syrup/Suspension",form:"Oral Syrup",batch:"L407A",mfg:"2024-11",expiry:"2027-04-01",stock:3,minStock:0,mrp:120,notes:"Urinary alkalinising syrup. Label states each 5 mL contains disodium hydrogen citrate BP 0.335 g; dosage as directed by physician.",use:"Urinary alkalinisation where clinically indicated, including supportive management of selected urinary symptoms.",dose:"Label: as directed by the physician. Verify indication, hydration status, renal/cardiac considerations and patient-specific dosing before use."},
 
+  {id:"seed-silvez-plus",name:"Silvez Plus Cream",type:"Pharma/Brand",generic:"Silver Sulphadiazine + Chlorhexidine Gluconate + Lignocaine cream",category:"Cream/Gel",form:"Topical Cream",batch:"PZL002",mfg:"2025-01",expiry:"2026-12-01",stock:5,minStock:0,mrp:102.30,notes:"Topical burn and cut cream. Pack states Silver Sulphadiazine, Chlorhexidine Gluconate and Lignocaine; 15 g pack.",use:"Topical management/support for burns and cuts as clinically indicated; assess burn depth, extent and infection risk.",dose:"Apply/use as directed by physician and product label. Verify wound type, burn depth, allergy history and need for referral before use."},
+
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
