@@ -163,6 +163,8 @@ const starterInventory=[
 
   {id:"seed-fcn-200",name:"FCN 200",type:"Pharma/Brand",generic:"Fluconazole 200 mg",category:"Tablet/Capsule",form:"Tablet",batch:"SOT-8611",mfg:"2025-08",expiry:"2027-07-01",stock:2,minStock:0,mrp:39.77,notes:"Fluconazole 200 mg tablets. Pack contains 1 x 2 tablets; Schedule H prescription medicine.",use:"Antifungal treatment for susceptible fungal infections where clinically indicated.",dose:"Use only according to the appropriate indication and physician-directed regimen; verify infection site, interactions and hepatic considerations before prescribing."},
 
+  {id:"seed-flucolab-150",name:"Flucolab-150",type:"Pharma/Brand",generic:"Fluconazole 150 mg",category:"Tablet/Capsule",form:"Tablet",batch:"FCT-011",mfg:"2024-11",expiry:"2026-10-01",stock:2,minStock:0,mrp:13.50,notes:"Fluconazole 150 mg uncoated tablets. Pack contains 1 tablet; Schedule H prescription medicine.",use:"Antifungal treatment for susceptible fungal infections where clinically indicated.",dose:"Use only according to the appropriate indication and physician-directed regimen; verify interactions, pregnancy status and hepatic considerations before prescribing."},
+
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
