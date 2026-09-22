@@ -131,3 +131,5 @@ footer{width:min(1240px,calc(100% - 32px));margin:0 auto 30px;color:#718087;font
 @media(max-width:650px){.iv-check-grid{grid-template-columns:1fr}}
 
 .phaseb-box{margin:10px 0;padding:12px 14px;border:1px solid var(--line,#dfe5ec);border-radius:12px;background:var(--soft,#f7f9fc)}.phaseb-box b{display:block;margin-bottom:6px}.phaseb-box ul{margin:6px 0 0 18px;padding:0}.phaseb-box li{margin:3px 0}
+
+.prescription-confidence{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.confidence-badge{display:inline-flex;padding:5px 8px;border-radius:999px;border:1px solid var(--line,#dfe5ec);font-size:11px;font-weight:700}.audit-missing-list{margin-top:10px}.audit-missing-list>div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line,#e5e7eb)}.audit-missing-list span{font-size:12px;color:var(--muted,#64748b)}
