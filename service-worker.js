@@ -1,5 +1,5 @@
 const CACHE="mma-v2";
-const ASSETS=["./","./index.html","./styles.css","./app.js","./manifest.json","./data/protocols.json"];
+const ASSETS=["./","./index.html","./styles.css","./app.js","./manifest.json","./data/protocols.json","./data/clinic-rx-protocols.json"];
 self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",e=>e.waitUntil(self.clients.claim()));
 self.addEventListener("fetch",e=>{
