@@ -485,6 +485,16 @@ function prescriptionPhase(m){
   if(m.rxPhase) return m.rxPhase;
   return ["Injection","IV Fluid","Respule"].includes(m.category) ? "2" : "1";
 }
+function rxCost(m){
+  const v=Number(m.mrp||m.price||m.cost||0);
+  return Number.isFinite(v)?v:0;
+}
+function renderPrescriptionCostSummary(){
+  const p1=selectedPrescriptions.filter(m=>prescriptionPhase(m)==="1"), p2=selectedPrescriptions.filter(m=>prescriptionPhase(m)==="2");
+  const cost=rows=>rows.reduce((s,m)=>s+rxCost(m),0);
+  const el=$("prescriptionCostSummary"); if(!el)return;
+  el.innerHTML='<div class="rx-cost-grid"><div><span>Phase 1 Payment</span><strong>₹'+cost(p1).toFixed(2)+'</strong></div><div><span>Phase 2 Payment</span><strong>₹'+cost(p2).toFixed(2)+'</strong></div><div><span>Total Payment</span><strong>₹'+(cost(p1)+cost(p2)).toFixed(2)+'</strong></div></div><small>Cost is calculated only from medicine prices recorded in inventory. Missing prices are not estimated.</small>';
+}
 function renderPrescription(){
   const list=$("selectedPrescriptionList"), warnEl=$("prescriptionWarnings");
   if(!list)return;
@@ -493,6 +503,7 @@ function renderPrescription(){
     const defaultDuration=phase==="2"&&!m.rxDuration?"2–3 days":"";
     return '<div class="rx-row"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><div class="rx-fields"><select data-rx-phase="'+i+'"><option value="1" '+(phase==="1"?"selected":"")+'>Phase 1 — Regular medicines</option><option value="2" '+(phase==="2"?"selected":"")+'>Phase 2 — Injection + short-course</option></select><input data-rx-dose="'+i+'" placeholder="Dose / strength" value="'+esc(m.rxDose||"")+'"><select data-rx-route="'+i+'"><option value="">Route</option><option '+(m.rxRoute==="IM"?"selected":"")+'>IM</option><option '+(m.rxRoute==="IV"?"selected":"")+'>IV</option><option '+(m.rxRoute==="SC"?"selected":"")+'>SC</option><option '+(m.rxRoute==="Oral"?"selected":"")+'>Oral</option><option '+(m.rxRoute==="Topical"?"selected":"")+'>Topical</option></select><input data-rx-freq="'+i+'" placeholder="Frequency" value="'+esc(m.rxFreq||"")+'"><input data-rx-duration="'+i+'" placeholder="'+(phase==="2"?"2–3 days / as indicated":"Duration")+'" value="'+esc(m.rxDuration||defaultDuration)+'"><input data-rx-instruction="'+i+'" placeholder="Instructions" value="'+esc(m.rxInstruction||"")+'"><input data-rx-compat="'+i+'" placeholder="IV/Drip compatibility — verify before mixing" value="'+esc(m.rxCompat||"")+'"><button type="button" class="btn danger-outline remove-rx" data-rx-remove="'+i+'">Remove</button></div></div>';
   }).join(""):'<div class="empty-list">Assessment se medicine par “Add to prescription” click karein. Phase 1 regular medicines ke liye hai; Phase 2 injection/IV ke saath 2–3 din ka short-course medicine bhi rakh sakte hain.</div>';
+  renderPrescriptionCostSummary();
   const warnings=duplicateSafetyWarnings(selectedPrescriptions);
   warnEl.innerHTML=warnings.length?'<div class="medicine-warning"><b>Prescription safety check:</b> '+warnings.map(esc).join(" ")+'</div>':"";
   list.querySelectorAll("[data-rx-remove]").forEach(b=>b.addEventListener("click",()=>{selectedPrescriptions.splice(Number(b.dataset.rxRemove),1);renderPrescription();}));
