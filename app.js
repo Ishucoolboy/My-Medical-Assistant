@@ -407,7 +407,7 @@ const MARWARI_LATIN_ALIASES={
   "sir dukhe":"headache","sir dukh":"headache","chakkar aave":"dizziness","pet dukhe":"abdominal pain","pet dukh":"abdominal pain","pet saaf koni":"constipation","pet saaf nahi":"constipation",
   "ulti":"vomiting","ok":"vomiting","ji michlawe":"nausea","ji machlawe":"nausea","dast":"diarrhoea","julaab":"diarrhoea",
   "peshab me jalan":"urinary burning","pesab me jalan":"urinary burning","kamar me peer":"back pain","kamar me peed":"back pain","jod dukhe":"joint pain",
-  "badan dukhe":"body ache","sara badan dukhe":"body ache","saans foole":"breathlessness","saans chadhe":"breathlessness","dam ghute":"breathlessness",
+  "badan dukhe":"body ache","sara badan dukhe":"body ache","paanv dard":"leg pain","paanv drd":"leg pain","pair dard":"leg pain","pair drd":"leg pain","taang dard":"leg pain","taang drd":"leg pain","dard":"pain","drd":"pain","saans foole":"breathlessness","saans chadhe":"breathlessness","dam ghute":"breathlessness",
   "chhati me dard":"chest pain","sine me dard":"chest pain","khujli":"itching","kharish":"itching","daane":"rash","kaan dukhe":"ear pain","aankh dukhe":"eye pain","aankh laal":"red eye"
 };
 function expandMarwariClinicalText(value){
