@@ -1,0 +1,430 @@
+[
+  {
+    "title": "Non-Productive (Dry) Cough",
+    "source": "Doctorwalah OPD Gold Edition — Dry Cough case",
+    "keywords": [
+      "dry cough",
+      "non productive cough",
+      "throat irritation",
+      "night worsening"
+    ],
+    "medicines": [
+      {
+        "label": "Cocas-DX — dextromethorphan + chlorpheniramine",
+        "match": [
+          "Cocas-DX",
+          "Dextromethorphan 10 mg + Chlorpheniramine Maleate 4 mg"
+        ],
+        "dose": "10 mL TDS",
+        "frequency": "TDS",
+        "duration": "5 days",
+        "phase": "1",
+        "instruction": "Use as the stored clinic reference; review sedation and patient-specific suitability."
+      }
+    ],
+    "note": "The PDF specifically advises no routine antibiotics and avoiding expectorants for this dry-cough pattern."
+  },
+  {
+    "title": "Dyspepsia / Acid-Peptic Symptoms",
+    "source": "Doctorwalah OPD Gold Edition — Dyspepsia case",
+    "keywords": [
+      "dyspepsia",
+      "acidity",
+      "epigastric pain",
+      "heartburn",
+      "acid reflux",
+      "bloating",
+      "early satiety"
+    ],
+    "medicines": [
+      {
+        "label": "Pantosport-D — pantoprazole 40 mg + domperidone 10 mg",
+        "match": [
+          "Pantosport-D",
+          "pantoprazole 40 mg + domperidone 10 mg"
+        ],
+        "dose": "1 tablet OD before breakfast",
+        "frequency": "OD",
+        "duration": "2 weeks",
+        "phase": "1",
+        "instruction": "Use only after checking contraindications/interactions and indication."
+      }
+    ],
+    "note": "The reference pathway also mentions antacid/sucralfate options, but they are not auto-added unless an exact stocked match is present."
+  },
+  {
+    "title": "Functional Constipation",
+    "source": "Doctorwalah OPD Gold Edition — Constipation case",
+    "keywords": [
+      "constipation",
+      "hard stools",
+      "infrequent bowel movements",
+      "straining",
+      "incomplete evacuation"
+    ],
+    "medicines": [
+      {
+        "label": "Lactulose solution",
+        "match": [
+          "lactulose",
+          "LactomBL"
+        ],
+        "dose": "15–30 mL HS",
+        "frequency": "HS",
+        "duration": "as indicated",
+        "phase": "1",
+        "instruction": "Adjust to bowel response; maintain oral fluids."
+      }
+    ],
+    "note": "The PDF lists psyllium and bisacodyl as additional options; the app does not auto-stack multiple laxatives."
+  },
+  {
+    "title": "IBS — Diarrhoea Predominant",
+    "source": "Doctorwalah OPD Gold Edition — IBS case",
+    "keywords": [
+      "ibs",
+      "diarrhoea predominant",
+      "ibs-d",
+      "loose stools with abdominal pain",
+      "altered bowel habits"
+    ],
+    "medicines": [
+      {
+        "label": "Lopex — loperamide 2 mg",
+        "match": [
+          "Lopex",
+          "loperamide 2 mg"
+        ],
+        "dose": "2 mg SOS",
+        "frequency": "SOS",
+        "duration": "symptom based",
+        "phase": "1",
+        "instruction": "Use only when appropriate for IBS-D; exclude infectious/inflammatory red flags first."
+      }
+    ],
+    "note": "The PDF lists rifaximin as an additional option, but it is not auto-added unless an exact stocked product is available."
+  },
+  {
+    "title": "IBS — Constipation Predominant",
+    "source": "Doctorwalah OPD Gold Edition — IBS case",
+    "keywords": [
+      "ibs",
+      "ibs-c",
+      "constipation predominant",
+      "bloating with constipation"
+    ],
+    "medicines": [
+      {
+        "label": "Lactulose solution",
+        "match": [
+          "lactulose",
+          "LactomBL"
+        ],
+        "dose": "15–30 mL HS",
+        "frequency": "HS",
+        "duration": "symptom based",
+        "phase": "1",
+        "instruction": "Maintain hydration and fibre as tolerated."
+      }
+    ]
+  },
+  {
+    "title": "Anaemia in Pregnancy",
+    "source": "Doctorwalah OPD Gold Edition — Anaemia in Pregnancy case",
+    "keywords": [
+      "anaemia in pregnancy",
+      "anemia in pregnancy",
+      "pregnancy anaemia",
+      "pregnancy anemia",
+      "low hb pregnancy",
+      "hb less than 11 pregnancy"
+    ],
+    "medicines": [
+      {
+        "label": "Ferroclide-XT — elemental iron + folic acid",
+        "match": [
+          "Ferroclide-XT",
+          "elemental iron 100 mg + folic acid 1.5"
+        ],
+        "dose": "1 tablet OD after meals",
+        "frequency": "OD",
+        "duration": "as per antenatal plan",
+        "phase": "1",
+        "instruction": "Confirm gestational age, Hb/CBC and tolerance; the PDF also lists folic acid 5 mg and albendazole after 14 weeks, which are not auto-added here unless separately matched."
+      }
+    ]
+  },
+  {
+    "title": "First Trimester Pregnancy",
+    "source": "Doctorwalah OPD Gold Edition — First Trimester Pregnancy case",
+    "keywords": [
+      "first trimester",
+      "early pregnancy",
+      "pregnancy with nausea",
+      "missed periods",
+      "normal intrauterine pregnancy"
+    ],
+    "medicines": [
+      {
+        "label": "Ferglow — folic acid 5 mg",
+        "match": [
+          "Ferglow",
+          "folic acid 5 mg"
+        ],
+        "dose": "5 mg OD",
+        "frequency": "OD",
+        "duration": "12 weeks",
+        "phase": "1",
+        "instruction": "Confirm pregnancy/gestational age and antenatal investigations."
+      }
+    ],
+    "note": "The PDF also lists doxylamine+pyridoxine and calcium; only the stocked folic-acid product is auto-drafted here."
+  },
+  {
+    "title": "Second Trimester Pregnancy",
+    "source": "Doctorwalah OPD Gold Edition — Second Trimester Pregnancy case",
+    "keywords": [
+      "second trimester",
+      "mid pregnancy",
+      "quickening",
+      "normal pregnancy 2nd trimester"
+    ],
+    "medicines": [
+      {
+        "label": "Ferroclide-XT — elemental iron + folic acid",
+        "match": [
+          "Ferroclide-XT",
+          "elemental iron 100 mg + folic acid 1.5"
+        ],
+        "dose": "1 tablet OD",
+        "frequency": "OD",
+        "duration": "as per antenatal plan",
+        "phase": "1",
+        "instruction": "Confirm gestational age and CBC/antenatal status."
+      }
+    ],
+    "note": "The PDF also lists calcium + vitamin D and protein supplementation; they are not auto-added unless an exact stocked match is present."
+  },
+  {
+    "title": "PCOD",
+    "source": "Doctorwalah OPD Gold Edition — PCOD case",
+    "keywords": [
+      "pcod",
+      "pcos",
+      "polycystic ovarian",
+      "irregular menses",
+      "weight gain acne infertility"
+    ],
+    "medicines": [
+      {
+        "label": "Ferglow — folic acid 5 mg",
+        "match": [
+          "Ferglow",
+          "folic acid 5 mg"
+        ],
+        "dose": "5 mg OD",
+        "frequency": "OD",
+        "duration": "as clinically indicated",
+        "phase": "1",
+        "instruction": "Use as supplementation where appropriate; PCOD treatment requires menstrual, metabolic and fertility context."
+      }
+    ],
+    "note": "Metformin/OCP/myo-inositol are not auto-added unless an exact stocked product is present."
+  },
+  {
+    "title": "Cyclic Mastalgia",
+    "source": "Doctorwalah OPD Gold Edition — Mastalgia case",
+    "keywords": [
+      "mastalgia",
+      "breast pain",
+      "cyclic breast pain",
+      "breast heaviness"
+    ],
+    "medicines": [
+      {
+        "label": "DoloNic Gel — topical NSAID gel",
+        "match": [
+          "DoloNic Gel",
+          "diclofenac diethylamine"
+        ],
+        "dose": "Local application BD",
+        "frequency": "BD",
+        "duration": "as indicated",
+        "phase": "1",
+        "instruction": "Apply locally as directed; examine breast and investigate focal pain/lump where indicated."
+      }
+    ]
+  },
+  {
+    "title": "Minor Skin / Superficial Wound",
+    "source": "Clinic inventory + wound reference pathway",
+    "keywords": [
+      "minor wound",
+      "superficial wound",
+      "cut",
+      "abrasion",
+      "skin wound"
+    ],
+    "medicines": [
+      {
+        "label": "MBLDINE Ointment — povidone iodine 5%",
+        "match": [
+          "MBLDINE Ointment",
+          "povidone iodine 5%"
+        ],
+        "dose": "Topical thin layer",
+        "frequency": "as directed",
+        "duration": "short course",
+        "phase": "1",
+        "instruction": "Clean wound first; assess depth, contamination and tetanus status."
+      }
+    ]
+  },
+  {
+    "title": "Headache (Recurrent) — Stock-aware",
+    "source": "Doctorwalah OPD Gold Edition — Headache (Recurrent) + clinic inventory",
+    "keywords": [
+      "headache",
+      "recurrent headache",
+      "sir dard",
+      "sir dukhe",
+      "migraine"
+    ],
+    "medicines": [
+      {
+        "label": "Tromanil Plus — nimesulide 100 mg + paracetamol 325 mg",
+        "match": [
+          "Tromanil Plus",
+          "Nimesulide 100 mg + Paracetamol 325 mg"
+        ],
+        "dose": "Pack: as directed by physician; pack warning states nimesulide use should ordinarily be restricted to 10 days.",
+        "frequency": "As directed",
+        "duration": "Short-term; do not exceed 10 days for nimesulide-containing product per pack warning",
+        "phase": "1",
+        "instruction": "Use only when clinically appropriate for the documented headache pattern; review liver/GI/renal risk and avoid duplicate NSAID/paracetamol products."
+      }
+    ],
+    "note": "The OPD reference for recurrent tension-type headache lists paracetamol 650 mg, amitriptyline 10 mg HS and pantoprazole 40 mg. Only the stocked medicine that directly documents severe headache/migraine use is auto-matched here; amitriptyline is not substituted with another antidepressant."
+  },
+  {
+    "title": "Fever / Acute Febrile Illness — Stock-aware",
+    "source": "Clinic protocol: Fever / Acute Febrile Illness + clinic inventory use fields",
+    "keywords": [
+      "fever",
+      "acute fever",
+      "bukhar",
+      "taav",
+      "jwar",
+      "pyrexia"
+    ],
+    "medicines": [],
+    "note": "The uploaded fever reference supports symptomatic evaluation and does not justify automatic antibiotic treatment for fever alone. A plain adult paracetamol product is not currently recorded in the GitHub starter inventory. Because the available recorded adult fever/pain stock includes NSAID-containing combinations, the engine will not substitute those for undifferentiated fever; it will report that no safe automatic medicine match is available until an appropriate reference-matched stock item is recorded.",
+    "allowInventoryFallback": false
+  },
+  {
+    "title": "Body Ache / Myalgia — Stock-aware",
+    "source": "Doctorwalah OPD Gold Edition — Body Ache (Myalgia) + clinic inventory",
+    "keywords": [
+      "body ache",
+      "myalgia",
+      "muscle ache",
+      "badan dukhe",
+      "generalised body pain"
+    ],
+    "medicines": [
+      {
+        "label": "Tromanil-Forte — aceclofenac 100 mg + paracetamol 500 mg",
+        "match": [
+          "Tromanil-Forte",
+          "Aceclofenac 100 mg + Paracetamol 500 mg"
+        ],
+        "dose": "Clinic reference for aceclofenac: 100 mg BD after food where indicated; verify product label and patient-specific contraindications.",
+        "frequency": "BD",
+        "duration": "3–5 days",
+        "phase": "1",
+        "instruction": "Use only after considering dengue/malaria/typhoid and other febrile causes when relevant; avoid duplicate NSAID/paracetamol products."
+      }
+    ],
+    "note": "The OPD myalgia pathway advises CBC and dengue/malaria/typhoid testing where indicated and lists paracetamol plus aceclofenac; the stocked combination is used here only as an inventory-matched option."
+  },
+  {
+    "title": "Dengue Fever",
+    "source": "Doctorwalah OPD Gold Edition — Dengue Fever",
+    "keywords": [
+      "dengue",
+      "dengue fever",
+      "high grade fever",
+      "retro orbital pain",
+      "rash with fever"
+    ],
+    "medicines": [],
+    "note": "The source protocol specifies paracetamol, oral fluids/ORS and ondansetron and explicitly advises avoiding NSAIDs/aspirin and IM injections. Because the current recorded GitHub starter inventory does not contain a plain adult paracetamol or ORS stock item, the tool will not substitute a stocked NSAID combination for dengue.",
+    "allowInventoryFallback": false
+  },
+  {
+    "title": "Typhoid Fever",
+    "source": "Doctorwalah OPD Gold Edition — Typhoid Fever",
+    "keywords": [
+      "typhoid",
+      "enteric fever",
+      "step ladder fever",
+      "prolonged fever"
+    ],
+    "medicines": [
+      {
+        "label": "Ximeceff-200 — cefixime 200 mg",
+        "match": [
+          "Ximeceff-200",
+          "Cefixime 200 mg"
+        ],
+        "dose": "200 mg BD",
+        "frequency": "BD",
+        "duration": "14 days",
+        "phase": "1",
+        "instruction": "Use only when typhoid is clinically appropriate; correlate with testing and patient-specific factors."
+      }
+    ],
+    "note": "The source lists cefixime 200 mg BD x14 days OR azithromycin 500 mg OD x7 days, plus paracetamol and Pan. Antibiotic choice should be based on the clinical indication/testing and current antimicrobial guidance."
+  },
+  {
+    "title": "Malaria",
+    "source": "Doctorwalah OPD Gold Edition — Malaria",
+    "keywords": [
+      "malaria",
+      "fever with chills",
+      "rigors",
+      "sweating after fever",
+      "malarial"
+    ],
+    "medicines": [],
+    "note": "The source requires species-specific antimalarial therapy and testing and lists paracetamol for support. No verified species-specific antimalarial product is currently recorded in the GitHub starter inventory, so the tool must not invent one.",
+    "allowInventoryFallback": false
+  },
+  {
+    "title": "Paediatric Fever / Pain — Weight-based",
+    "source": "Pediatric Dosage Simplified — paracetamol dosing reference + clinic stock",
+    "keywords": [
+      "paediatric fever",
+      "pediatric fever",
+      "child fever",
+      "child pain",
+      "paediatric pain",
+      "pediatric pain"
+    ],
+    "medicines": [
+      {
+        "label": "Biocetamol-DS — paracetamol 250 mg/5 mL",
+        "match": [
+          "Biocetamol-DS",
+          "Paracetamol 250 mg per 5 mL"
+        ],
+        "dose": "10–15 mg/kg/dose q4–6h; maximum 60 mg/kg/day",
+        "frequency": "q4–6h PRN",
+        "duration": "As clinically indicated",
+        "phase": "1",
+        "instruction": "Weight-based calculation required. Verify age/weight, indication, liver risk and total daily paracetamol exposure."
+      }
+    ],
+    "note": "Pediatric reference supports paracetamol 10–15 mg/kg/dose q4–6h, maximum 60 mg/kg/day. Fixed-dose combinations should not be substituted automatically."
+  }
+]
