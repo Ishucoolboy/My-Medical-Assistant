@@ -667,6 +667,38 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
     notes.push("Urgent triage finding present. Automatic prescription selection is paused until the patient is clinically assessed/referred as appropriate.");
     return {protocol:p,items,missing,notes};
   }
+  // Direct clinical-use selection: when the stocked medicine explicitly lists the
+  // patient's symptom/condition as an indication, prefer that medicine over generic matches.
+  const caseText=opdText(d);
+  const directTerms=[];
+  if(/headache|migraine/.test(caseText))directTerms.push("headache","migraine");
+  if(/cough|cold|sore throat|sputum|phlegm/.test(caseText))directTerms.push("cough","cold","sore throat");
+  if(/fever|bukhar|taav|jwar/.test(caseText))directTerms.push("fever","antipyretic");
+  if(/toothache|dental pain|tooth pain/.test(caseText))directTerms.push("toothache","dental");
+  if(/joint pain|arthritis|muscle pain|sprain|strain|spasm/.test(caseText))directTerms.push("musculoskeletal","joint pain","muscle","spasm","sprain","strain");
+  if(/acidity|heartburn|gastric|gas|indigestion/.test(caseText))directTerms.push("acidity","heartburn","gastric","gas","indigestion");
+  if(/nausea|vomit|vomiting/.test(caseText))directTerms.push("nausea","vomit","antiemetic");
+
+  if(directTerms.length){
+    const direct=inventory.filter(m=>{
+      if((Number(m.stock)||0)<=0||expiryStatus(m)==="expired")return false;
+      const g=normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+      if(!directTerms.some(term=>g.includes(normalizeRxText(term))))return false;
+      return medicineSafetyForAutoRx(m,d,p,null).ok;
+    }).sort((x,y)=>{
+      const gx=normalizeRxText((x.generic||"")+" "+(x.name||"")+" "+(x.use||""));
+      const gy=normalizeRxText((y.generic||"")+" "+(y.name||"")+" "+(y.use||""));
+      const sx=directTerms.reduce((n,t)=>n+(gx.includes(normalizeRxText(t))?1:0),0);
+      const sy=directTerms.reduce((n,t)=>n+(gy.includes(normalizeRxText(t))?1:0),0);
+      return sy-sx||daysUntil(x.expiry)-daysUntil(y.expiry);
+    });
+    if(direct.length){
+      const m=direct[0];
+      items.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"",rxInstruction:"Direct clinical-use match from the verified clinic inventory. Confirm patient-specific contraindications and exact regimen before signing.",rxSource:"Direct inventory indication match",rxSelectionType:"DIRECT_CLINICAL_USE_MATCH"});
+      notes.push("Treatment selected from a stocked medicine whose recorded clinical use directly matches the patient's entered complaint.");
+    }
+  }
+
   if(p){
     (p.medicines||[]).forEach(rx=>{
       let m=chooseRxStockCandidate(inventory.filter(x=>inventoryCandidateMatch(x,rx)),rx,d,p);
