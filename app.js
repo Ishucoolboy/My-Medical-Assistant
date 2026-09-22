@@ -110,16 +110,29 @@ let settings=loadSettings();
 function loadSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{expiryDays:90}}catch{return{expiryDays:90}}}
 function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
 function daysUntil(date){if(!date)return Infinity;const d=new Date(date+"T23:59:59");return Math.ceil((d-Date.now())/86400000)}
+function sixMonthExpiryCutoff(){
+  const d=new Date();
+  d.setHours(23,59,59,999);
+  d.setMonth(d.getMonth()+6);
+  return d;
+}
 function stockStatus(m){const n=Number(m.stock)||0, min=Number(m.minStock)||0;return n<=0?"out":n<=min?"low":"ok"}
-function expiryStatus(m){const d=daysUntil(m.expiry);if(!Number.isFinite(d))return"none";if(d<0)return"expired";if(d<=settings.expiryDays)return"near";return"ok"}
+function expiryStatus(m){
+  if(!m.expiry)return"none";
+  const d=daysUntil(m.expiry);
+  if(!Number.isFinite(d))return"none";
+  if(d<0)return"expired";
+  const expiryDate=new Date(m.expiry+"T23:59:59");
+  return expiryDate<=sixMonthExpiryCutoff()?"near":"ok";
+}
 function getReorder(){return inventory.filter(m=>stockStatus(m)!=="ok")}
-function getExpiryAlerts(){return inventory.filter(m=>["expired","near"].includes(expiryStatus(m)))}
+function getExpiryAlerts(){return inventory.filter(m=>["expired","near"].includes(expiryStatus(m))).sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry))}
 function medicineRow(m,mode="inventory"){
   const status=stockStatus(m), exp=expiryStatus(m), need=Math.max(0,(Number(m.minStock)||0)-(Number(m.stock)||0));
   return {m,status,exp,need};
 }
 function renderDashboard(){
-  const reorder=getReorder(), expiry=getExpiryAlerts();
+  const reorder=getReorder(), expiry=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
   $("statTotal").textContent=inventory.length;
   $("statLow").textContent=reorder.filter(x=>stockStatus(x)==="low").length;
   $("statOut").textContent=reorder.filter(x=>stockStatus(x)==="out").length;
@@ -132,7 +145,7 @@ function renderRequired(){
   $("requiredTable").innerHTML=rows.length?`<table><thead><tr><th>Medicine</th><th>Stock</th><th>Minimum</th><th>Suggested order</th><th>Status</th><th>Expiry</th></tr></thead><tbody>${rows.map(m=>`<tr><td><strong>${esc(m.name)}</strong></td><td>${m.stock||0}</td><td>${m.minStock||0}</td><td>${Math.max(0,(Number(m.minStock)||0)-(Number(m.stock)||0))}</td><td><span class="status-tag ${stockStatus(m)}">${stockStatus(m)==="out"?"OUT": "REORDER"}</span></td><td>${esc(m.expiry||"—")}</td></tr>`).join("")}</tbody></table>`:'<div class="empty-list">No medicines currently require reorder.</div>';
 }
 function renderExpiry(){
-  const rows=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
+  const rows=getExpiryAlerts();
   $("expiryTable").innerHTML=rows.length?`<table><thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th>Days</th><th>Stock</th><th>Status</th></tr></thead><tbody>${rows.map(m=>`<tr><td><strong>${esc(m.name)}</strong></td><td>${esc(m.batch||"—")}</td><td>${esc(m.expiry||"—")}</td><td>${daysUntil(m.expiry)}</td><td>${m.stock||0}</td><td><span class="status-tag ${expiryStatus(m)}">${expiryStatus(m)==="expired"?"EXPIRED":"NEAR EXPIRY"}</span></td></tr>`).join("")}</tbody></table>`:'<div class="empty-list">No near-expiry or expired batches.</div>';
 }
 function refreshAll(){renderDashboard();renderRequired();renderExpiry();renderStoreTablets()}
