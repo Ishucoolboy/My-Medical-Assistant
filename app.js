@@ -565,7 +565,10 @@ function renderAssessmentView(a,d,recordHistory){
   const pbFactors=(a.patientFactors||[]).map(x=>"<div class=\"protocol-inline\"><b>Patient factor:</b> "+esc(x)+"</div>").join("");
   const pbInv=(a.investigations||[]).length?"<div class=\"phaseb-box\"><b>Suggested investigations / monitoring:</b><ul>"+a.investigations.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul></div>":"";
   const pbFollow=a.followUpSuggestion?"<div class=\"phaseb-box\"><b>Follow-up:</b> "+esc(a.followUpSuggestion)+"</div>":"";
-  $("possibleDiagnosis").innerHTML=esc(a.possible)+rxTitle+rxNotes+pbFactors+pbInv+pbFollow+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
+  const pdInv=d.investigationsOrdered?"<div class=\"phaseb-box\"><b>Investigations ordered/advised:</b> "+esc(d.investigationsOrdered)+"</div>":"";
+  const pdRes=d.investigationResults?"<div class=\"phaseb-box\"><b>Results recorded:</b> "+esc(d.investigationResults)+"</div>":"";
+  const pdFU=d.followupDate?"<div class=\"phaseb-box\"><b>Follow-up tracking:</b> "+esc(d.followupDate)+" • Status: "+esc(d.followupStatus||"planned")+"</div>":"";
+  $("possibleDiagnosis").innerHTML=esc(a.possible)+rxTitle+rxNotes+pbFactors+pbInv+pbFollow+pdInv+pdRes+pdFU+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
   $("medicineMatchCount").textContent=a.matches.length+" matched";
   $("medicineMatchInfo").innerHTML=a.matches.length
     ?'<span>Only medicines recorded in the current clinic inventory are shown.</span> <span>Selection order: clinical/reference match → safety/patient factors → FEFO only within the same suitable stock group.</span>'
