@@ -129,9 +129,27 @@
               <label>Examination findings
                 <textarea id="exam" rows="4" placeholder="Clinical examination findings..."></textarea>
               </label>
-              <label>Follow-up date
-                <input id="followupDate" type="date" />
-              </label>
+              <div class="phase-d-fields">
+                <label>Follow-up date
+                  <input id="followupDate" type="date" />
+                </label>
+                <label>Follow-up status
+                  <select id="followupStatus">
+                    <option value="planned">Planned</option>
+                    <option value="completed">Completed</option>
+                    <option value="missed">Missed</option>
+                    <option value="not-required">Not required</option>
+                  </select>
+                </label>
+              </div>
+              <div class="phase-d-fields">
+                <label>Investigations ordered / advised
+                  <textarea id="investigationsOrdered" rows="3" placeholder="CBC, urine routine, dengue NS1, LFT, etc."></textarea>
+                </label>
+                <label>Investigation results available
+                  <textarea id="investigationResults" rows="3" placeholder="Enter available results only. Do not infer missing results."></textarea>
+                </label>
+              </div>
 
               <label>Red flags / concerns
                 <textarea id="redFlags" rows="4" placeholder="Severe breathlessness, altered sensorium, shock, severe dehydration, chest pain, bleeding, etc."></textarea>
