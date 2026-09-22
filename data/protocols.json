@@ -1,1 +1,134 @@
-[]
+[
+  {
+    "title": "Fever / Acute Febrile Illness",
+    "category": "General OPD",
+    "summary": "Assess duration, temperature, hydration, localising symptoms and red flags before selecting symptomatic or antimicrobial therapy.",
+    "checks": [
+      "Vitals and hydration",
+      "Look for focal infection",
+      "Review allergy/current medicines",
+      "Consider testing when indicated"
+    ],
+    "caution": "Do not treat fever alone as proof of bacterial infection; choose antimicrobials only when clinically indicated."
+  },
+  {
+    "title": "Cough / Cold / Upper Respiratory Symptoms",
+    "category": "Respiratory",
+    "summary": "Assess duration, breathing difficulty, wheeze, SpO₂, chest findings and red flags.",
+    "checks": [
+      "SpO₂ and respiratory rate",
+      "Chest examination",
+      "Duration and sputum",
+      "Asthma/COPD history"
+    ],
+    "caution": "Urgent assessment is needed for respiratory distress, cyanosis or significant hypoxia."
+  },
+  {
+    "title": "Nausea / Vomiting",
+    "category": "Gastrointestinal",
+    "summary": "Assess hydration, frequency, abdominal pain, blood/bile, pregnancy where relevant and possible acute abdomen.",
+    "checks": [
+      "Hydration status",
+      "Abdominal examination",
+      "Pregnancy when relevant",
+      "Electrolyte risk if prolonged"
+    ],
+    "caution": "Persistent vomiting, severe dehydration, altered sensorium, blood or severe abdominal pain needs further assessment/referral."
+  },
+  {
+    "title": "Acidity / Gas / Dyspepsia",
+    "category": "Gastrointestinal",
+    "summary": "Review meal relation, reflux symptoms, medication triggers and alarm features before symptomatic therapy.",
+    "checks": [
+      "Alarm symptoms",
+      "NSAID use",
+      "Weight loss/bleeding",
+      "Persistent symptoms"
+    ],
+    "caution": "GI bleeding, persistent vomiting, severe pain or other alarm features require further investigation."
+  },
+  {
+    "title": "Constipation",
+    "category": "Gastrointestinal",
+    "summary": "Assess duration, stool pattern, hydration, diet and medicines; exclude obstruction/acute abdomen when suggested by symptoms.",
+    "checks": [
+      "Abdominal examination",
+      "Hydration",
+      "Medication causes",
+      "Obstruction red flags"
+    ],
+    "caution": "Severe abdominal pain, vomiting, distension or inability to pass stool/gas needs urgent assessment."
+  },
+  {
+    "title": "Musculoskeletal Pain / Spasm",
+    "category": "Musculoskeletal",
+    "summary": "Assess site, injury mechanism, neurological symptoms, functional limitation and red flags before selecting analgesic or topical therapy.",
+    "checks": [
+      "Trauma history",
+      "Neurological examination",
+      "GI/renal risk",
+      "Duplicate NSAID/paracetamol exposure"
+    ],
+    "caution": "Progressive neurological deficit, major trauma, fever with severe pain or other red flags warrants further assessment."
+  },
+  {
+    "title": "Skin / Minor Wound",
+    "category": "Skin & Wound",
+    "summary": "Clean and assess wound depth, contamination, bleeding, infection signs and tetanus status where relevant.",
+    "checks": [
+      "Wound depth/contamination",
+      "Bleeding control",
+      "Infection signs",
+      "Tetanus status"
+    ],
+    "caution": "Deep wounds, uncontrolled bleeding, bites or significant infection may require referral."
+  },
+  {
+    "title": "Eye / Ear Symptoms",
+    "category": "ENT / Eye",
+    "summary": "Examine the affected site and avoid steroid-containing topical therapy when diagnosis is uncertain or viral/fungal disease is suspected.",
+    "checks": [
+      "Vision/hearing where relevant",
+      "Discharge",
+      "Trauma/foreign body",
+      "Tympanic membrane status for ear drops"
+    ],
+    "caution": "Severe eye pain, vision loss, chemical injury or significant trauma requires urgent specialist assessment."
+  },
+  {
+    "title": "Women's Health / Pregnancy",
+    "category": "Women's Health",
+    "summary": "Confirm pregnancy status/gestational age where relevant and assess bleeding, pain, discharge and obstetric red flags.",
+    "checks": [
+      "Pregnancy/gestational age",
+      "Bleeding severity",
+      "Pain and vitals",
+      "Referral criteria"
+    ],
+    "caution": "Pregnancy-related bleeding, severe pain, syncope or hemodynamic instability requires urgent assessment."
+  },
+  {
+    "title": "Paediatric Fever / Pain",
+    "category": "Paediatrics",
+    "summary": "Use weight-based dosing references and verify the exact formulation strength; avoid guessing doses for fixed-dose combinations.",
+    "checks": [
+      "Weight in kg",
+      "Exact product strength",
+      "Maximum daily dose",
+      "Hydration and red flags"
+    ],
+    "caution": "Young children with concerning appearance, severe dehydration, respiratory distress, seizure or altered sensorium require urgent assessment."
+  },
+  {
+    "title": "Anaemia / Iron-Folate Supplementation",
+    "category": "Nutrition",
+    "summary": "Interpret haemoglobin and clinical context before selecting iron/folate supplementation; investigate significant or unexplained anaemia.",
+    "checks": [
+      "Hb/CBC where available",
+      "Pregnancy status",
+      "Bleeding history",
+      "Iron tolerance"
+    ],
+    "caution": "Severe symptomatic anaemia or ongoing significant bleeding may need urgent evaluation."
+  }
+]
