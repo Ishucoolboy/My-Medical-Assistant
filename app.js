@@ -88,7 +88,7 @@ function renderExpiry(){
   const rows=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
   $("expiryTable").innerHTML=rows.length?`<table><thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th>Days</th><th>Stock</th><th>Status</th></tr></thead><tbody>${rows.map(m=>`<tr><td><strong>${esc(m.name)}</strong></td><td>${esc(m.batch||"—")}</td><td>${esc(m.expiry||"—")}</td><td>${daysUntil(m.expiry)}</td><td>${m.stock||0}</td><td><span class="status-tag ${expiryStatus(m)}">${expiryStatus(m)==="expired"?"EXPIRED":"NEAR EXPIRY"}</span></td></tr>`).join("")}</tbody></table>`:'<div class="empty-list">No near-expiry or expired batches.</div>';
 }
-function refreshAll(){renderInventory();renderDashboard();renderRequired();renderExpiry();renderStoreTablets()}
+function refreshAll(){renderDashboard();renderRequired();renderExpiry();renderStoreTablets()}
 
 function renderStoreTablets(){
   const searchEl=$("storeTabletSearch"), stockEl=$("storeTabletStock"), listEl=$("storeTabletsList"), countEl=$("tabletCount");
@@ -116,7 +116,6 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".tab-panel").forEach(x=>x.classList.remove("active"));
   b.classList.add("active"); $(b.dataset.tab).classList.add("active");
   if(b.dataset.tab==="dashboard")renderDashboard();
-  if(b.dataset.tab==="inventory")renderInventory();
   if(b.dataset.tab==="required")renderRequired();
   if(b.dataset.tab==="expiry")renderExpiry();
   if(b.dataset.tab==="history")renderHistory();
@@ -134,27 +133,8 @@ function renderInventory(){
     rows.map(m=>'<tr><td><strong>'+esc(m.name)+'</strong><br><small>'+esc(m.form)+'</small></td><td>'+esc(m.category)+'</td><td>'+esc(m.batch||"—")+'</td><td>'+esc(m.expiry||"—")+'</td><td class="'+stockClass(m.stock)+'">'+(Number.isFinite(Number(m.stock))?m.stock:"—")+'</td><td>'+esc(m.minStock||0)+'</td><td><span class="status-tag '+stockStatus(m)+'">'+stockStatus(m).toUpperCase()+'</span></td><td><button class="btn ghost remove-medicine" data-id="'+esc(m.id)+'">Remove</button></td></tr>').join("")+
     '</tbody></table>';
 }
-window.removeMedicine=id=>{inventory=inventory.filter(m=>m.id!==id);saveInventory(inventory);renderInventory()};
-$("inventoryTable").addEventListener("click",e=>{const b=e.target.closest(".remove-medicine");if(b)window.removeMedicine(b.dataset.id)});
-$("inventorySearch").addEventListener("input",renderInventory);$("inventoryCategory").addEventListener("change",renderInventory);$("inventoryStatus").addEventListener("change",renderInventory);
 $("storeTabletSearch").addEventListener("input",renderStoreTablets);$("storeTabletStock").addEventListener("change",renderStoreTablets);
 
-$("addMedicine").addEventListener("click",()=>{
-  const name=prompt("Verified medicine name:");if(!name?.trim())return;
-  const category=prompt("Category: Tablet/Capsule, Syrup/Drops, Cream/Gel/Ointment, Respule, Injection, IV Fluid, Other")||"Other";
-  const form=prompt("Form / strength (optional):")||"";
-  const batch=prompt("Batch number (optional):")||"";
-  const expiry=prompt("Expiry date YYYY-MM-DD (optional):")||"";
-  const stockRaw=prompt("Current stock quantity:")||"0";
-  const minRaw=prompt("Minimum stock / reorder level:")||"0";
-  const notes=prompt("Verified clinic note / indication (optional):")||"";
-  const use=prompt("Main use (optional):")||"";
-  const dose=prompt("Dose / dosing reference (optional):")||"";
-  const stock=Number(stockRaw),minStock=Number(minRaw);
-  inventory.push({id:crypto.randomUUID(),name:name.trim(),category:category.trim(),form:form.trim(),batch:batch.trim(),expiry:expiry.trim(),stock:Number.isFinite(stock)?stock:0,minStock:Number.isFinite(minStock)?minStock:0,notes:notes.trim(),use:use.trim(),dose:dose.trim()});
-  saveInventory(inventory);refreshAll();
-});
-$("resetInventory").addEventListener("click",()=>{if(confirm("Clear all locally stored inventory records?")){inventory=[];saveInventory(inventory);refreshAll()}});
 $("expirySettings").addEventListener("click",()=>{const n=prompt("Near-expiry alert days:",settings.expiryDays);if(n!==null&&Number(n)>0){settings.expiryDays=Number(n);saveSettings();refreshAll()}});
 $("exportPurchase").addEventListener("click",()=>{const rows=getReorder();const header="Medicine,Current Stock,Minimum Stock,Suggested Order,Status";const body=rows.map(m=>[m.name,m.stock||0,m.minStock||0,Math.max(0,(Number(m.minStock)||0)-(Number(m.stock)||0)),stockStatus(m)].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");const csv=header+"\n"+body;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="clinic-reorder-list.csv";a.click();URL.revokeObjectURL(a.href)});
 
