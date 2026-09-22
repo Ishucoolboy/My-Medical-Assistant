@@ -104,7 +104,7 @@ function villageMedicineSelectionRules(d,category,problem,rx){
     if(category?.id==="fever"){if(/paracetamol/.test(x)&&!/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s+=20;if(/antibiotic|ciprofloxacin|cefixime|azithromycin|amoxicillin|ofloxacin|norfloxacin|metronidazole/.test(x))s-=20;if(/dengue/.test(t)&&/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s-=100;}
     if(category?.id==="pain"){if(/paracetamol/.test(x))s+=10;if(/aceclofenac|diclofenac|naproxen|etoricoxib|nimesulide|mefenamic/.test(x))s+=problem.includes("Musculoskeletal")?8:2;if(/chlorzoxazone|thiocolchicoside|drotaverine/.test(x)&&/spasm|sprain|strain|musculoskeletal/.test(problem.toLowerCase()))s+=8;}
     if(category?.id==="respiratory"){if(/montelukast|levocetirizine|fexofenadine|dextromethorphan|guaifenesin|phenylephrine/.test(x))s+=8;if(/antibiotic/.test(x))s-=15;}
-    if(category?.id==="gi"){if(/omeprazole|rabeprazole|pantoprazole/.test(x)&&/acidity|dyspepsia/.test(problem.toLowerCase()))s+=12;if(/ondansetron|domperidone/.test(x)&&/nausea|vomiting/.test(problem.toLowerCase()))s+=12;if(/lactulose|bisacodyl|sodium picosulfate/.test(x)&&/constipation/.test(problem.toLowerCase()))s+=12;if(/loperamide/.test(x)&&/diarr/.test(problem.toLowerCase()))s+=6;}
+    if(category?.id==="gi"){const pl=problem.toLowerCase();if(/omeprazole|rabeprazole|pantoprazole/.test(x)&&/acidity|dyspepsia/.test(pl))s+=12;if(/omeprazole|rabeprazole|pantoprazole|antacid|gastric|heartburn|reflux|indigestion|simethicone/.test(x)&&/abdominal pain/.test(pl))s+=8;if(/ondansetron|domperidone/.test(x)&&/nausea|vomiting/.test(pl))s+=12;if(/lactulose|bisacodyl|sodium picosulfate/.test(x)&&/constipation/.test(pl))s+=12;if(/loperamide/.test(x)&&/diarr/.test(pl))s+=6;}
     if(category?.id==="urinary"){if(/tamsulosin/.test(x)&&/bph|lower urinary/.test(problem.toLowerCase()))s+=15;if(/antibiotic/.test(x)&&/uti/.test(problem.toLowerCase()))s+=3;}
     if(category?.id==="skin_wounds"){if(/povidone|band aid|dressing|silver sulfadiazine/.test(x))s+=12;if(/clindamycin.*nicotinamide/.test(x)&&/acne/.test(problem.toLowerCase()))s+=15;}
     if(category?.id==="dental_oral"){if(/clove oil/.test(x)&&/toothache/.test(problem.toLowerCase()))s+=12;if(/riboflavin|folic acid|niacinamide/.test(x)&&/mouth ulcer/.test(problem.toLowerCase()))s+=10;}
@@ -768,7 +768,7 @@ function addRelevantInventoryOptions(items,d,p){
   const coughCase=/cough|cold|sore throat|sputum|phlegm|respir|wheez/.test(caseText);
   const feverCase=/fever|bukhar|taav|jwar|pyrexia/.test(caseText);
   const painCase=/pain|headache|migraine|body ache|dard/.test(caseText);
-  const gastricCase=/gas|acidity|heartburn|gastric|reflux|indigestion|abdomen|abdominal|nausea|vomit/.test(caseText);
+  const gastricCase=/gas|acidity|heartburn|gastric|reflux|indigestion|abdomen|abdominal|pet dard|pet me dard|pet drd|stomach pain|nausea|vomit/.test(caseText);
 
   // Prefer a medicine whose recorded clinical use directly matches the complaint.
   // This keeps a generic respiratory/allergy match below a directly documented cough treatment.
@@ -779,7 +779,7 @@ function addRelevantInventoryOptions(items,d,p){
     if(coughCase && /cold/.test(g))specificity+=3;
     if(feverCase && /fever|antipyretic/.test(g))specificity+=8;
     if(painCase && /pain|analges|headache/.test(g))specificity+=6;
-    if(gastricCase && /acid|gastric|antacid|heartburn|indigestion|nausea|vomit/.test(g))specificity+=6;
+    if(gastricCase && /acid|gastric|antacid|heartburn|indigestion|reflux|stomach|abdominal|nausea|vomit/.test(g))specificity+=6;
     m._treatmentSpecificity=specificity;
   });
   candidates.sort((a,b)=>(b._treatmentSpecificity||0)-(a._treatmentSpecificity||0)||b._match.score-a._match.score||daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
@@ -789,7 +789,7 @@ function addRelevantInventoryOptions(items,d,p){
     if(coughCase && !/cough|cold|respir|sputum|phlegm|allerg|rhinitis/.test(g))continue;
     if(feverCase && /nsaid|aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin/.test(g))continue;
     if(painCase && !coughCase && !feverCase && !/pain|analges|headache|muscle|joint|spasm|inflamm/.test(g))continue;
-    if(gastricCase && !/gas|acid|gastric|antacid|reflux|indigestion|nausea|vomit|antiemetic|stool|constipat|diarr/.test(g))continue;
+    if(gastricCase && !/gas|acid|gastric|antacid|reflux|indigestion|stomach|abdominal|nausea|vomit|antiemetic|stool|constipat|diarr/.test(g))continue;
     if(added.some(x=>sameClinicalStockGroup(x,m)))continue;
 
     const regimen=verifiedRegimenForMedicine(m,p,d);
