@@ -747,6 +747,31 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
     }
   }
 
+  // Hard fallback for common OPD complaints: use the clinic inventory's explicit indication data.
+  // This prevents a blank treatment section when the broader protocol matcher misses a simple complaint.
+  if(!items.length){
+    const ft=opdText(d);
+    const fallbackTerms=/headache|migraine/.test(ft)?["headache","migraine"]:
+      /toothache|dental pain|tooth pain/.test(ft)?["toothache","dental"]:
+      /cough|cold|sore throat/.test(ft)?["cough","cold","sore throat"]:
+      /fever|bukhar|taav|jwar/.test(ft)?["fever","antipyretic"]:
+      /acidity|heartburn|gastric|indigestion/.test(ft)?["acidity","heartburn","gastric","indigestion"]:
+      /nausea|vomit|vomiting/.test(ft)?["nausea","vomit","antiemetic"]:[];
+    if(fallbackTerms.length){
+      const fm=inventory.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&
+        fallbackTerms.some(term=>normalizeRxText((m.name||"")+" "+(m.generic||"")+" "+(m.use||"")+" "+(m.notes||"")).includes(normalizeRxText(term))) &&
+        medicineSafetyForAutoRx(m,d,p,null).ok)
+        .sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
+      if(fm.length){
+        const m=fm[0];
+        items.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"",
+          rxInstruction:"Explicit inventory-indication match. Verify diagnosis, contraindications, exact regimen and patient-specific factors before signing.",
+          rxSource:"Clinic inventory indication fallback",rxSelectionType:"DIRECT_CLINICAL_USE_MATCH"});
+        notes.push("A direct clinic-inventory indication match was selected for the entered complaint.");
+      }
+    }
+  }
+
   if(missing.length)notes.unshift("Reference medicine not currently available in recorded usable stock: "+missing.join(", ")+". No substitute is invented unless this protocol explicitly defines a supported substitute.");
   if(!items.length)notes.push("No safe automatic prescription match was found in current usable clinic stock for this case. Do not use expiry/stock pressure as a reason to choose another medicine.");
   const fefo=items.filter(m=>m._selection?.fefoUsed);
