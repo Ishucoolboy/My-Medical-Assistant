@@ -183,7 +183,7 @@
                     <button id="printPrescription" class="btn primary" type="button">Print Prescription</button>
                     <button id="clearPrescription" class="btn ghost" type="button">Clear Selected</button>
                   </div>
-                  <div id="prescriptionWarnings"></div><div id="prescriptionCostSummary" class="prescription-cost-summary"></div>
+                  <div id="prescriptionConfidence" class="prescription-confidence"></div><div id="prescriptionWarnings"></div><div id="prescriptionCostSummary" class="prescription-cost-summary"></div>
                 </div>
               </section>
               
@@ -309,6 +309,7 @@
         </div>
       </div>
     </article>
+    <article class="card"><div class="card-head"><div><h2>Medicine Database Audit</h2><p>Phase C flags missing metadata; it never invents missing values.</p></div></div><div id="databaseAudit"></div></article>
     <article class="card">
       <div class="card-head"><div><h2>Local Audit Log</h2><p>Recent changes made in this browser.</p></div><button id="clearAudit" class="btn danger-outline">Clear</button></div>
       <div id="auditList" class="history-list"></div>
