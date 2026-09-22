@@ -279,5 +279,135 @@
         "instruction": "Clean wound first; assess depth, contamination and tetanus status."
       }
     ]
+  },
+  {
+    "title": "Headache (Recurrent) — Stock-aware",
+    "source": "Doctorwalah OPD Gold Edition — Headache (Recurrent) + clinic inventory",
+    "keywords": [
+      "headache",
+      "recurrent headache",
+      "sir dard",
+      "sir dukhe",
+      "migraine"
+    ],
+    "medicines": [
+      {
+        "label": "Tromanil Plus — nimesulide 100 mg + paracetamol 325 mg",
+        "match": [
+          "Tromanil Plus",
+          "Nimesulide 100 mg + Paracetamol 325 mg"
+        ],
+        "dose": "Pack: as directed by physician; pack warning states nimesulide use should ordinarily be restricted to 10 days.",
+        "frequency": "As directed",
+        "duration": "Short-term; do not exceed 10 days for nimesulide-containing product per pack warning",
+        "phase": "1",
+        "instruction": "Use only when clinically appropriate for the documented headache pattern; review liver/GI/renal risk and avoid duplicate NSAID/paracetamol products."
+      }
+    ],
+    "note": "The OPD reference for recurrent tension-type headache lists paracetamol 650 mg, amitriptyline 10 mg HS and pantoprazole 40 mg. Only the stocked medicine that directly documents severe headache/migraine use is auto-matched here; amitriptyline is not substituted with another antidepressant."
+  },
+  {
+    "title": "Fever / Acute Febrile Illness — Stock-aware",
+    "source": "Clinic protocol: Fever / Acute Febrile Illness + clinic inventory use fields",
+    "keywords": [
+      "fever",
+      "acute fever",
+      "bukhar",
+      "taav",
+      "jwar",
+      "pyrexia"
+    ],
+    "medicines": [
+      {
+        "label": "Nimucaff Plus — nimesulide 100 mg + paracetamol 325 mg",
+        "match": [
+          "Nimucaff Plus",
+          "Nimesulide 100 mg + Paracetamol 325 mg"
+        ],
+        "dose": "Label: as directed by physician; use the lowest effective dose for the shortest duration.",
+        "frequency": "As directed",
+        "duration": "Short-term only",
+        "phase": "1",
+        "instruction": "Use only when an NSAID-containing combination is clinically appropriate and dengue/other contraindications have been considered. Avoid duplicate paracetamol/NSAID products and review liver, renal and GI risk."
+      }
+    ],
+    "note": "The source pathway is supportive and does not treat fever alone as proof of bacterial infection. A plain adult paracetamol product is not currently recorded in the GitHub starter inventory, so this stocked combination is only an inventory-based option."
+  },
+  {
+    "title": "Body Ache / Myalgia — Stock-aware",
+    "source": "Doctorwalah OPD Gold Edition — Body Ache (Myalgia) + clinic inventory",
+    "keywords": [
+      "body ache",
+      "myalgia",
+      "muscle ache",
+      "badan dukhe",
+      "generalised body pain"
+    ],
+    "medicines": [
+      {
+        "label": "Tromanil-Forte — aceclofenac 100 mg + paracetamol 500 mg",
+        "match": [
+          "Tromanil-Forte",
+          "Aceclofenac 100 mg + Paracetamol 500 mg"
+        ],
+        "dose": "Clinic reference for aceclofenac: 100 mg BD after food where indicated; verify product label and patient-specific contraindications.",
+        "frequency": "BD",
+        "duration": "3–5 days",
+        "phase": "1",
+        "instruction": "Use only after considering dengue/malaria/typhoid and other febrile causes when relevant; avoid duplicate NSAID/paracetamol products."
+      }
+    ],
+    "note": "The OPD myalgia pathway advises CBC and dengue/malaria/typhoid testing where indicated and lists paracetamol plus aceclofenac; the stocked combination is used here only as an inventory-matched option."
+  },
+  {
+    "title": "Dengue Fever",
+    "source": "Doctorwalah OPD Gold Edition — Dengue Fever",
+    "keywords": [
+      "dengue",
+      "dengue fever",
+      "high grade fever",
+      "retro orbital pain",
+      "rash with fever"
+    ],
+    "medicines": [],
+    "note": "The source protocol specifies paracetamol, oral fluids/ORS and ondansetron and explicitly advises avoiding NSAIDs/aspirin and IM injections. Because the current recorded GitHub starter inventory does not contain a plain adult paracetamol or ORS stock item, the tool will not substitute a stocked NSAID combination for dengue."
+  },
+  {
+    "title": "Typhoid Fever",
+    "source": "Doctorwalah OPD Gold Edition — Typhoid Fever",
+    "keywords": [
+      "typhoid",
+      "enteric fever",
+      "step ladder fever",
+      "prolonged fever"
+    ],
+    "medicines": [
+      {
+        "label": "Ximeceff-200 — cefixime 200 mg",
+        "match": [
+          "Ximeceff-200",
+          "Cefixime 200 mg"
+        ],
+        "dose": "200 mg BD",
+        "frequency": "BD",
+        "duration": "14 days",
+        "phase": "1",
+        "instruction": "Use only when typhoid is clinically appropriate; correlate with testing and patient-specific factors."
+      }
+    ],
+    "note": "The source lists cefixime 200 mg BD x14 days OR azithromycin 500 mg OD x7 days, plus paracetamol and Pan. Antibiotic choice should be based on the clinical indication/testing and current antimicrobial guidance."
+  },
+  {
+    "title": "Malaria",
+    "source": "Doctorwalah OPD Gold Edition — Malaria",
+    "keywords": [
+      "malaria",
+      "fever with chills",
+      "rigors",
+      "sweating after fever",
+      "malarial"
+    ],
+    "medicines": [],
+    "note": "The source requires species-specific antimalarial therapy and testing and lists paracetamol for support. No verified species-specific antimalarial product is currently recorded in the GitHub starter inventory, so the tool must not invent one."
   }
 ]
