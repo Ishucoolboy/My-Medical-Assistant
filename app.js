@@ -7,6 +7,9 @@ const PROTOCOLS_URL="./data/protocols.json";
 const IV_COMPAT_URL="./data/iv-compatibility.json";
 const CLINIC_RX_URL="./data/clinic-rx-protocols.json";
 const PHASE_B_URL="./data/clinic-phase-b.json";
+const PHASE_C_URL="./data/clinic-phase-c.json";
+let phaseC={};
+async function loadPhaseC(){try{const r=await fetch(PHASE_C_URL);if(!r.ok)throw new Error("phase C unavailable");phaseC=await r.json();}catch{phaseC={}}}
 let phaseB={};
 async function loadPhaseB(){try{const r=await fetch(PHASE_B_URL);if(!r.ok)throw new Error("phase B unavailable");phaseB=await r.json();}catch{phaseB={}}}
 let clinicRxProtocols=[];
@@ -814,4 +817,4 @@ function setupPrescriptionDelegation(){
 }
 setupPrescriptionDelegation();
 setupClinicSecurity();
-refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();loadPhaseB();setupLiveOpd();
+refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();loadPhaseB();loadPhaseC();setupLiveOpd();
