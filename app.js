@@ -552,6 +552,33 @@ function explicitInventorySubstituteCandidates(p,rx,d){
   if(!Array.isArray(subs)||!subs.length)return [];
   return inventory.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&subs.some(s=>inventoryCandidateMatch(m,{match:s.match||[]})));
 }
+function inventoryTreatmentEligibility(m,d,p){
+  const t=opdText(d),g=normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+  const safety=medicineSafetyForAutoRx(m,d,p,null);
+  if(!safety.ok)return false;
+  const antibiotic=/antibiotic|amoxicillin|amoxycillin|clavulan|azithromycin|cefixime|ciprofloxacin|ofloxacin|norfloxacin|metronidazole|tinidazole|fluoroquinolone|macrolide|cephalosporin/.test(g);
+  const infectious=/uti|urinary infection|dysentery|diarrh|typhoid|enteric|sinusitis|bacterial|infect/.test(t);
+  if(antibiotic&&!infectious)return false;
+  const fever=/fever|bukhar|taav|jwar|pyrexia|dengue|malaria|typhoid/.test(t);
+  const nsaid=/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin/.test(g);
+  if(fever&&nsaid)return false;
+  if(/dengue/.test(t)&&nsaid)return false;
+  return true;
+}
+function addRelevantInventoryOptions(items,d,p){
+  const existing=new Set(items.map(x=>x.id));
+  const candidates=inventory.map(m=>({...m,_match:medicineRelevance(m,d)}))
+    .filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&!existing.has(m.id)&&m._match.score>=6&&inventoryTreatmentEligibility(m,d,p))
+    .sort((a,b)=>b._match.score-a._match.score||daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
+  const added=[];
+  for(const m of candidates){
+    if(added.length>=3)break;
+    if(added.some(x=>sameClinicalStockGroup(x,m)))continue;
+    added.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"As clinically indicated",rxInstruction:"Inventory-supported treatment option matched from the medicine's recorded clinical use. Confirm indication, contraindications and exact product dose before signing.",rxSource:"Clinic inventory clinical-use match",rxSelectionType:"INVENTORY_USE_MATCH"});
+  }
+  return added;
+}
+
 function buildInventoryPrescription(d,triage=clinicalTriage(d)){
   const p=findProtocolForCase(d),items=[],missing=[],notes=[];
   if(triage.urgent){
@@ -575,11 +602,13 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
     if(p.note)notes.push(p.note);
   }
   if(!items.length&&(!p||p.allowInventoryFallback===true)){
-    const fallback=inventory.map(m=>({...m,_match:medicineRelevance(m,d),_safety:medicineSafetyForAutoRx(m,d,p,null)}))
-      .filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&m._match.score>=6&&m._safety.ok)
-      .sort((a,b)=>b._match.score-a._match.score||a.name.localeCompare(b.name)).slice(0,1);
-    fallback.forEach(m=>items.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"Short course / as clinically indicated",rxInstruction:"Inventory fallback is permitted by this protocol. Confirm indication, contraindications and product label before signing.",rxSource:"Inventory fallback",rxSelectionType:"SUPPORTED_INVENTORY_FALLBACK"}));
+    const fallback=addRelevantInventoryOptions([],d,p).slice(0,1);
+    fallback.forEach(m=>items.push({...m,rxSelectionType:"SUPPORTED_INVENTORY_FALLBACK"}));
   }
+  // Use the current clinic inventory's own recorded clinical-use information as an
+  // additional treatment source when the reference case does not enumerate every stocked option.
+  const extraOptions=addRelevantInventoryOptions(items,d,p);
+  extraOptions.forEach(m=>items.push(m));
   // Supportive paracetamol pathway: use a plain paracetamol product for fever/pain when stocked.
   // Do not substitute an NSAID/paracetamol combination for undifferentiated fever.
   const caseText=opdText(d);
