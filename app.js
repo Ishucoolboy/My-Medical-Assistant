@@ -683,7 +683,7 @@ function formatRxGroup(rows){
     const route=m.rxRoute?(" • Route: "+m.rxRoute):"";
     const compat=m.rxCompat?("\n   IV/Drip compatibility note: "+m.rxCompat):"";
     return (i+1)+". "+m.name+"\n   Dose: "+dose+route+"\n   Frequency: "+(m.rxFreq||"Verify")+
-      "\n   Duration: "+(m.rxDuration||"Verify")+"\n   Instructions: "+(m.rxInstruction||"—")+compat;
+      "\n   Duration: "+(m.rxDuration||"Verify")+"\n   Instructions: "+(m.rxInstruction||"—")+compat+"\n   Confidence: "+rxConfidenceLabel(m)+"\n   Why: "+rxWhySelected(m);
   }).join("\n\n");
 }
 function printPrescription(){
