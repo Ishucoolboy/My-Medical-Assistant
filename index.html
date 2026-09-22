@@ -29,7 +29,6 @@
       <nav class="tabs" aria-label="Main sections">
         <button class="tab active" data-tab="dashboard">Dashboard</button>
         <button class="tab" data-tab="assistant">OPD Assistant</button>
-        <button class="tab" data-tab="inventory">Inventory</button>
         <button class="tab" data-tab="required">Required / Reorder</button>
         <button class="tab" data-tab="expiry">Near Expiry</button>
         <button class="tab" data-tab="history">Recent Cases</button>
@@ -145,41 +144,6 @@
             </div>
           </article>
         </div>
-      </section>
-
-      <section id="inventory" class="tab-panel">
-        <article class="card">
-          <div class="card-head">
-            <div>
-              <h2>Medicine Inventory</h2>
-              <p>Only medicines entered here can be selected by the assistant.</p>
-            </div>
-            <button id="resetInventory" class="btn ghost">Reset local changes</button>
-          </div>
-
-          <div class="inventory-toolbar">
-            <input id="inventorySearch" placeholder="Search medicine..." />
-            <select id="inventoryStatus">
-              <option value="">All stock status</option>
-              <option value="out">Out of stock</option>
-              <option value="low">Low / reorder</option>
-              <option value="ok">Adequate</option>
-            </select>
-            <select id="inventoryCategory">
-              <option value="">All categories</option>
-              <option>Tablet/Capsule</option>
-              <option>Syrup/Drops</option>
-              <option>Cream/Gel/Ointment</option>
-              <option>Respule</option>
-              <option>Injection</option>
-              <option>IV Fluid</option>
-              <option>Other</option>
-            </select>
-            <button id="addMedicine" class="btn primary">+ Add medicine / batch</button>
-          </div>
-
-          <div id="inventoryTable" class="table-wrap"></div>
-        </article>
       </section>
 
       <section id="required" class="tab-panel">
