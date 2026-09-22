@@ -4,6 +4,36 @@ const HISTORY_KEY="mma_history_v1";
 const AUDIT_KEY="mma_audit_v1";
 const PIN_KEY="mma_clinic_pin_v1";
 const PROTOCOLS_URL="./data/protocols.json";
+
+// Village-level OPD clinical framework.
+// This is the category layer for the new treatment engine; medicines will be mapped to
+// these problems only after complaint, age/weight, sex/pregnancy, vitals and red flags are assessed.
+const VILLAGE_OPD_CATEGORIES=[
+  {id:"fever",title:"Fever & Febrile Illness",problems:["Acute fever / viral-like illness","Suspected malaria / dengue / other vector-borne illness","Prolonged or recurrent fever","Fever with focal bacterial symptoms"],redFlags:["Altered sensorium, shock, severe breathing difficulty, bleeding, severe dehydration, persistent high fever or other danger signs"]},
+  {id:"respiratory",title:"Respiratory",problems:["Common cold / URTI","Allergic rhinitis","Sore throat","Acute cough","Wheeze / asthma-type symptoms","Breathlessness"],redFlags:["Low SpO2, severe breathlessness, cyanosis, chest pain, stridor, altered sensorium"]},
+  {id:"pain",title:"Pain & Headache",problems:["Headache / tension-type pattern","Migraine-type headache","Back pain","General body pain","Musculoskeletal pain","Sprain / strain"],redFlags:["Sudden worst-ever headache, neurological deficit, head injury, meningism, altered sensorium, severe chest/abdominal pain"]},
+  {id:"gi",title:"Gastrointestinal",problems:["Acidity / GERD","Dyspepsia / gas","Nausea / vomiting","Acute diarrhoea","Abdominal cramps","Constipation"],redFlags:["GI bleeding, severe/localized abdominal pain, persistent vomiting, severe dehydration, abdominal distension/obstruction features"]},
+  {id:"urinary",title:"Urinary",problems:["Dysuria / burning urination","Suspected UTI","Lower urinary tract symptoms / BPH","Urinary frequency / urgency"],redFlags:["Fever with flank pain, urinary retention, gross haematuria, pregnancy with urinary symptoms, systemic illness"]},
+  {id:"skin_wounds",title:"Skin, Wounds & Minor Burns",problems:["Minor cuts / superficial wounds","Minor burns","Itching / dermatitis-type complaints","Fungal-type skin infection","Acne"],redFlags:["Deep/large burns, spreading cellulitis, necrosis, severe pain out of proportion, infected wound with systemic symptoms"]},
+  {id:"ent_eye",title:"ENT & Eye",problems:["Ear pain / selected ear complaints","Acute sinus-type symptoms","Conjunctival / eye complaints","Allergic ENT symptoms"],redFlags:["Vision loss, severe eye pain, proptosis, penetrating eye injury, mastoid swelling, severe headache with eye symptoms"]},
+  {id:"dental_oral",title:"Dental & Oral",problems:["Toothache","Mouth ulcers","Gum/oral discomfort"],redFlags:["Facial/neck swelling, difficulty swallowing/breathing, trismus, uncontrolled bleeding, spreading dental infection"]},
+  {id:"msk",title:"Musculoskeletal & Joint",problems:["Knee / joint pain","Muscle spasm","Back/neck pain","Sprain / strain","Soft-tissue inflammatory pain"],redFlags:["Major trauma, deformity, neurovascular deficit, hot swollen joint with fever, inability to bear weight"]},
+  {id:"parasitic",title:"Parasitic / Worm-related",problems:["Suspected intestinal worms","Selected protozoal intestinal infections"],redFlags:["Severe abdominal pain, GI bleeding, persistent vomiting, systemic illness or diagnostic uncertainty"]},
+  {id:"nutrition",title:"Nutrition & Deficiency Support",problems:["Iron/folate deficiency support","Nutritional supplementation","Calcium/Vitamin D support"],redFlags:["Severe pallor, syncope, significant bleeding, severe weakness, suspected major deficiency requiring investigation"]},
+  {id:"chronic",title:"Chronic / Follow-up",problems:["Type 2 diabetes follow-up","BPH/LUTS follow-up","Long-term medication review","Other stable chronic complaints"],redFlags:["Very abnormal vitals/glucose, acute deterioration, new neurological/cardiac symptoms or medication adverse effects"]},
+  {id:"women",title:"Women’s Health",problems:["Menstrual pain / dysmenorrhoea-type symptoms","Menstrual complaints","Vaginal/urinary symptoms","Pregnancy-related complaints requiring assessment"],redFlags:["Pregnancy with bleeding/pain, severe abdominal pain, heavy bleeding, syncope, fever, reduced fetal movement or other obstetric danger signs"]},
+  {id:"paediatric",title:"Paediatric OPD",problems:["Childhood fever","Paediatric cough/cold","Paediatric pain/fever","Vomiting / diarrhoea","Common minor childhood complaints"],redFlags:["Age-specific danger signs, respiratory distress, dehydration, seizures, altered sensorium, poor feeding, persistent vomiting"]},
+  {id:"mental_health",title:"Mental Health & Neuropsychiatric",problems:["Previously diagnosed psychiatric conditions","Medication follow-up where diagnosis is established","Sleep/anxiety/depressive symptoms requiring assessment"],redFlags:["Suicidal/self-harm thoughts, acute behavioural disturbance, delirium, severe confusion or immediate safety concerns"]}
+];
+
+function renderVillageOpdCategories(){
+  const el=$("treatmentWorkspacePlaceholder");
+  if(!el)return;
+  el.innerHTML='<div class="card-head"><div><h2>Village OPD Clinical Categories</h2><p>Common OPD problems ko clinical categories mein organize kiya gaya hai. Treatment engine next step mein complaint + patient factors + red flags ke basis par relevant pathway select karega.</p></div><span class="mini-label">'+VILLAGE_OPD_CATEGORIES.length+' categories</span></div>'+
+    '<div class="protocol-grid">'+VILLAGE_OPD_CATEGORIES.map(c=>'<article class="protocol-card"><div><span class="mini-label">'+esc(c.title)+'</span><h3>'+esc(c.problems.length+' common problems')+'</h3><div class="protocol-points">'+c.problems.map(p=>'<span>• '+esc(p)+'</span>').join('')+'</div></div><div class="protocol-caution"><b>Red flags:</b> '+esc(c.redFlags.join('; '))+'</div></article>').join('')+
+    '</div>';
+}
+
 const IV_COMPAT_URL="./data/iv-compatibility.json";
 const CLINIC_RX_URL="./data/clinic-rx-protocols.json";
 const PHASE_B_URL="./data/clinic-phase-b.json";
