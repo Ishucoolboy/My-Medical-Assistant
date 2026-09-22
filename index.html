@@ -28,7 +28,7 @@
 
       <nav class="tabs" aria-label="Main sections">
         <button class="tab active" data-tab="dashboard">Dashboard</button>
-        <button class="tab" data-tab="assistant">OPD Assistant</button>
+        <button class="tab" data-tab="diseaseShelf">Use / Condition Shelves</button><button class="tab" data-tab="assistant">OPD Assistant</button>
         <button class="tab" data-tab="required">Required / Reorder</button>
         <button class="tab" data-tab="expiry">Near Expiry</button>
         <button class="tab" data-tab="history">Recent Cases</button>
@@ -188,6 +188,19 @@
 </div>
         </article>
       </section>
+
+      
+<section id="diseaseShelf" class="tab-panel">
+  <article class="card">
+    <div class="card-head">
+      <div><h2>Medicine by Use / Condition</h2><p>Click a shelf to see medicines in the current inventory associated with that use. These are reference categories, not diagnoses or automatic prescriptions.</p></div>
+      <span id="diseaseShelfCount" class="badge">0 medicines</span>
+    </div>
+    <div id="diseaseShelves" class="disease-shelves"></div>
+    <div class="disease-results-head"><h3 id="diseaseShelfTitle">All Medicines</h3><span id="diseaseShelfSub"></span></div>
+    <div id="diseaseShelfList" class="disease-shelf-list"></div>
+  </article>
+</section>
 
       <section id="history" class="tab-panel">
         <article class="card">
