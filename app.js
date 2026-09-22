@@ -218,7 +218,7 @@ function renderDashboard(){
   const reorder=getReorder(), expiry=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
   const today=new Date().toISOString().slice(0,10), history=loadHistory();
   const todayCases=history.filter(x=>x.dateKey===today);
-  const due=history.filter(x=>x.followupDate&&x.followupDate<=today);
+  const due=history.filter(x=>x.followupDate&&x.followupDate<=today&&!["completed","not-required"].includes(x.followupStatus));
   if($("statTodayCases"))$("statTodayCases").textContent=todayCases.length;
   if($("statFollowups"))$("statFollowups").textContent=due.length;
   if($("dashboardFollowups"))$("dashboardFollowups").innerHTML=due.length?due.slice(0,12).map(x=>'<div class="alert-row"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><span>'+esc(x.followupDate||"—")+' • '+esc(x.mobile||"")+' • '+esc(x.complaint||"")+'</span></div>').join(""):'<div class="empty-list">No follow-ups due.</div>';
@@ -435,7 +435,7 @@ function buildAssessment(d){
   stewardship.slice().reverse().forEach(x=>checks.unshift(x));
   const possible=d.complaint?"Possible clinical considerations based on the entered complaint/history: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
   const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
-  return {urgent,possible,protocolMatches,matches,oral,phase2,injectable,checks,safety,rx,investigations,followUpSuggestion,patientFactors,stewardship,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
+  return {urgent,possible,protocolMatches,matches,oral,phase2,injectable,checks,safety,rx,investigations,followUpSuggestion,patientFactors,stewardship,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Investigations ordered: "+(d.investigationsOrdered||"Not recorded"),"Investigation results: "+(d.investigationResults||"Not recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")+" • "+(d.followupStatus||"planned"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
 }
 
 function normalizeRxText(v){return String(v||"").toLowerCase().replace(/[^a-z0-9+.#%/ -]/g," ").replace(/\\s+/g," ").trim()}
@@ -579,7 +579,7 @@ function renderAssessmentView(a,d,recordHistory){
 function runLiveAssessment(){
   const name=$("patientName")?.value.trim(), age=$("age")?.value, complaint=$("complaint")?.value.trim();
   if(!name||!age||!complaint)return;
-  currentCaseData={patientName:name,age,sex:$("sex").value,weight:$("weight")?.value,pregnancyStatus:$("pregnancyStatus")?.value||"unknown",gestationalWeeks:$("gestationalWeeks")?.value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint,history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
+  currentCaseData={patientName:name,age,sex:$("sex").value,weight:$("weight")?.value,pregnancyStatus:$("pregnancyStatus")?.value||"unknown",gestationalWeeks:$("gestationalWeeks")?.value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint,history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value,followupStatus:$("followupStatus")?.value||"planned",investigationsOrdered:$("investigationsOrdered")?.value.trim()||"",investigationResults:$("investigationResults")?.value.trim()||""};
   const a=buildAssessment(currentCaseData);
   renderAssessmentView(a,currentCaseData,false);
 }
@@ -717,13 +717,13 @@ $("clearCase").addEventListener("click",()=>{$("caseForm").reset();selectedPresc
 
 function renderHistory(){
   const h=loadHistory(), q=($("historySearch")?.value||"").trim().toLowerCase();
-  const rows=h.filter(x=>!q||[x.patientName,x.mobile,x.village,x.complaint,x.age,x.sex].join(" ").toLowerCase().includes(q));
-  $("historyList").innerHTML=rows.length?rows.map((x,i)=>'<div class="history-item"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><small>'+esc(x.createdAt||"")+' • Age: '+esc(x.age||"—")+' • Sex: '+esc(x.sex||"—")+' • Mobile: '+esc(x.mobile||"—")+' • Village: '+esc(x.village||"—")+'</small><p class="history-complaint">'+esc(x.complaint||"No complaint")+(x.followupDate?" • Follow-up: "+esc(x.followupDate):"")+'</p><button class="btn ghost load-case" data-history-id="'+esc(x.id||"")+'">Open old history</button></div>').join(""):'<div class="empty-list">No matching patient history.</div>';
+  const rows=h.filter(x=>!q||[x.patientName,x.mobile,x.village,x.complaint,x.age,x.sex,x.followupStatus,x.data?.investigationsOrdered,x.data?.investigationResults].join(" ").toLowerCase().includes(q));
+  $("historyList").innerHTML=rows.length?rows.map((x,i)=>'<div class="history-item"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><small>'+esc(x.createdAt||"")+' • Age: '+esc(x.age||"—")+' • Sex: '+esc(x.sex||"—")+' • Mobile: '+esc(x.mobile||"—")+' • Village: '+esc(x.village||"—")+'</small><p class="history-complaint">'+esc(x.complaint||"No complaint")+(x.followupDate?" • Follow-up: "+esc(x.followupDate)+" • "+esc(x.followupStatus||"planned"):"")+'</p><button class="btn ghost load-case" data-history-id="'+esc(x.id||"")+'">Open old history</button></div>').join(""):'<div class="empty-list">No matching patient history.</div>';
   $("historyList").querySelectorAll("[data-history-id]").forEach(b=>b.addEventListener("click",()=>{
     const x=h.find(v=>v.id===b.dataset.historyId);if(!x)return;
     const d=x.data||{patientName:x.patientName,mobile:x.mobile,village:x.village,age:x.age,sex:x.sex,complaint:x.complaint};
     $("patientName").value=d.patientName||"";$("mobile").value=d.mobile||"";$("village").value=d.village||"";$("age").value=d.age||"";$("sex").value=d.sex||"";$("weight").value=d.weight||"";$("pregnancyStatus").value=d.pregnancyStatus||"unknown";$("gestationalWeeks").value=d.gestationalWeeks||"";$("complaint").value=d.complaint||"";
-    $("history").value=d.history||"";$("bp").value=d.bp||"";$("bloodSugar").value=d.bloodSugar||"";$("pulse").value=d.pulse||"";$("spo2").value=d.spo2||"";$("temperature").value=d.temperature||"";$("exam").value=d.exam||"";$("redFlags").value=d.redFlags||"";$("followupDate").value=d.followupDate||"";
+    $("history").value=d.history||"";$("bp").value=d.bp||"";$("bloodSugar").value=d.bloodSugar||"";$("pulse").value=d.pulse||"";$("spo2").value=d.spo2||"";$("temperature").value=d.temperature||"";$("exam").value=d.exam||"";$("redFlags").value=d.redFlags||"";$("followupDate").value=d.followupDate||"";$("followupStatus").value=d.followupStatus||"planned";$("investigationsOrdered").value=d.investigationsOrdered||"";$("investigationResults").value=d.investigationResults||"";
     switchTab("assistant");
   }));
 }
@@ -787,7 +787,7 @@ refreshAll();renderReports();renderAudit();loadProtocols();alert("Backup restore
 
 function setupLiveOpd(){
   let timer=null;
-  const ids=["patientName","age","sex","weight","pregnancyStatus","gestationalWeeks","complaint","history","bp","bloodSugar","pulse","spo2","temperature","exam","redFlags"];
+  const ids=["patientName","age","sex","weight","pregnancyStatus","gestationalWeeks","complaint","history","bp","bloodSugar","pulse","spo2","temperature","exam","redFlags","followupDate","followupStatus","investigationsOrdered","investigationResults"];
   ids.forEach(id=>$(id)?.addEventListener("input",()=>{clearTimeout(timer);timer=setTimeout(runLiveAssessment,300)}));
   ids.forEach(id=>$(id)?.addEventListener("change",()=>{clearTimeout(timer);timer=setTimeout(runLiveAssessment,50)}));
 }
