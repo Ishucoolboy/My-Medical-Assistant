@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "lastReviewed": "2026-09-22",
+  "confidenceLevels": {
+    "DIRECT_REFERENCE_MATCH": {
+      "label": "DIRECT REFERENCE MATCH",
+      "tone": "high",
+      "meaning": "Medicine and indication match a structured clinic prescription pathway; current usable stock and patient-safety checks passed."
+    },
+    "EXPLICIT_REFERENCE_SUBSTITUTE": {
+      "label": "SUPPORTED INVENTORY MATCH",
+      "tone": "medium",
+      "meaning": "The structured pathway explicitly allows this inventory substitute; it is not an invented substitution."
+    },
+    "SUPPORTED_INVENTORY_FALLBACK": {
+      "label": "SUPPORTED INVENTORY FALLBACK",
+      "tone": "caution",
+      "meaning": "No exact structured medicine was matched, but the selected protocol permits an inventory fallback and safety checks passed."
+    },
+    "MANUAL": {
+      "label": "MANUAL SELECTION",
+      "tone": "manual",
+      "meaning": "Added manually by the clinician; the tool does not claim that the selection is protocol-matched."
+    },
+    "NO_SAFE_AUTOMATIC_MATCH": {
+      "label": "NO SAFE AUTOMATIC MATCH",
+      "tone": "danger",
+      "meaning": "No medicine should be auto-selected from current usable stock."
+    }
+  },
+  "selectionOrder": [
+    "Clinical/reference match",
+    "Patient-specific safety checks",
+    "Usable non-expired stock",
+    "FEFO within the same suitable clinical stock group"
+  ],
+  "databaseAudit": {
+    "requiredFields": [
+      "name",
+      "generic",
+      "category",
+      "use",
+      "dose",
+      "expiry",
+      "stock"
+    ],
+    "optionalFields": [
+      "batch",
+      "mrp",
+      "form",
+      "minStock",
+      "notes"
+    ],
+    "purpose": "Flags incomplete medicine metadata without inventing missing values."
+  },
+  "printPolicy": {
+    "include": [
+      "patient context",
+      "matched clinic case",
+      "confidence/source",
+      "Phase 1",
+      "Phase 2",
+      "dose",
+      "route",
+      "frequency",
+      "duration",
+      "instructions",
+      "safety checks"
+    ],
+    "exclude": [
+      "inventory purchase price as prescription cost unless explicitly recorded"
+    ]
+  }
+}
