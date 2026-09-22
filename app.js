@@ -685,38 +685,53 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
 }
 
 function renderAssessmentView(a,d,recordHistory){
-  $("emptyResult").classList.add("hidden");$("result").classList.remove("hidden");
-  $("resultState").textContent=a.urgent?"Referral review":(a.rx?.items?.length?"Prescription draft":"Generated");
-  $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");
-  $("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
-  $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
-  $("clinicalSnapshot").innerHTML=`<div><span>Patient</span><strong>${esc(d.patientName||"—")}</strong></div><div><span>Age / Sex</span><strong>${esc(d.age||"—")} / ${esc(d.sex||"—")}</strong></div><div><span>Vitals</span><strong>BP ${esc(d.bp||"—")} • Sugar ${esc(d.bloodSugar||"—")} • Pulse ${esc(d.pulse||"—")} • SpO₂ ${esc(d.spo2||"—")} • Temp ${esc(d.temperature||"—")} • Weight ${esc(d.weight||"—")} kg • Pregnancy ${esc(d.pregnancyStatus||"—")}${d.gestationalWeeks?" • GA "+esc(d.gestationalWeeks)+" wk":""}</strong></div><div><span>Complaint</span><strong>${esc(d.complaint||"—")}</strong></div>`;
-  const testEl=$("suggestedTests");
-  if(testEl){
-    testEl.innerHTML=(a.suggestedTests||[]).map(x=>'<div style="margin-bottom:8px"><b>'+esc(x.name)+'</b><br><small>'+esc(x.reason)+'</small></div>').join("");
+  $("emptyResult").classList.add("hidden");
+  $("result").classList.remove("hidden");
+
+  $("resultState").textContent=a.urgent?"Referral review":(a.rx?.items?.length?"Treatment ready":"Treatment review");
+  $("resultState").className="badge"+(a.urgent?" danger":"");
+
+  $("referralBox").innerHTML=a.urgent
+    ?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>'
+    :"";
+
+  const patientBar=$("treatmentPatientBar");
+  if(patientBar){
+    patientBar.innerHTML=
+      '<div><span>Patient</span><strong>'+esc(d.patientName||"—")+'</strong></div>'+
+      '<div><span>Age / Sex</span><strong>'+esc(d.age||"—")+' / '+esc(d.sex||"—")+'</strong></div>'+
+      '<div><span>Weight</span><strong>'+esc(d.weight||"—")+' kg</strong></div>'+
+      '<div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div>';
   }
+
   const autoRxItems=a.rx?.items||[];
   const autoP1=autoRxItems.filter(m=>prescriptionPhase(m)==="1");
   const autoP2=autoRxItems.filter(m=>prescriptionPhase(m)==="2");
-  const rxTitle=a.rx?.protocol?'<div class="protocol-inline"><b>Matched clinic case:</b> '+esc(a.rx.protocol.title)+(a.rx.protocol.source?'<small> • '+esc(a.rx.protocol.source)+'</small>':"")+'</div>':"";
-  const rxNotes=(a.rx?.notes||[]).map(x=>'<div class="medicine-warning">'+esc(x)+'</div>').join("");
-  const pbFactors=(a.patientFactors||[]).map(x=>"<div class=\"protocol-inline\"><b>Patient factor:</b> "+esc(x)+"</div>").join("");
-  const pbInv=(a.investigations||[]).length?"<div class=\"phaseb-box\"><b>Suggested investigations / monitoring:</b><ul>"+a.investigations.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul></div>":"";
-  const pbFollow=a.followUpSuggestion?"<div class=\"phaseb-box\"><b>Follow-up:</b> "+esc(a.followUpSuggestion)+"</div>":"";
-  const pdInv=d.investigationsOrdered?"<div class=\"phaseb-box\"><b>Investigations ordered/advised:</b> "+esc(d.investigationsOrdered)+"</div>":"";
-  const pdRes=d.investigationResults?"<div class=\"phaseb-box\"><b>Results recorded:</b> "+esc(d.investigationResults)+"</div>":"";
-  const pdFU=d.followupDate?"<div class=\"phaseb-box\"><b>Follow-up tracking:</b> "+esc(d.followupDate)+" • Status: "+esc(d.followupStatus||"planned")+"</div>":"";
-  $("possibleDiagnosis").innerHTML=esc(a.possible)+rxTitle+rxNotes+pbFactors+pbInv+pbFollow+pdInv+pdRes+pdFU+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
-  $("medicineMatchCount").textContent=a.matches.length+" matched";
+
+  $("medicineMatchCount").textContent=autoRxItems.length+" selected";
   $("medicineMatchInfo").innerHTML=a.matches.length
-    ?'<span>Only medicines recorded in the current clinic inventory are shown.</span> <span>Selection order: clinical/reference match → safety/patient factors → FEFO only within the same suitable stock group.</span>'
-    :"<span>No inventory medicine was matched confidently to the entered complaint.</span>";
-  $("phase1").innerHTML=autoP1.length?autoP1.map(medCard).join(""):'<div class="empty-list">No safe automatic Phase 1 medicine was matched to this case. Review the complaint, examination and clinic reference before selecting a medicine.</div>';
-  $("phase2").innerHTML=autoP2.length?autoP2.map(medCard).join(""):'<div class="empty-list">No safe automatic Phase 2 injection/short-course medicine was matched. Do not add an injection or IV fluid unless clinically indicated and verified.</div>';
+    ?'<span>'+a.matches.length+' inventory treatment options matched to this case.</span> <span>Only medicines in the verified clinic inventory are shown.</span>'
+    :"No inventory treatment matched confidently. Review the complaint, examination and clinic reference before selecting treatment.";
+
+  $("phase1").innerHTML=autoP1.length
+    ?autoP1.map(medCard).join("")
+    :'<div class="empty-list">No automatic Phase 1 treatment matched. You can review the available inventory and add an appropriate medicine manually.</div>';
+
+  $("phase2").innerHTML=autoP2.length
+    ?autoP2.map(medCard).join("")
+    :'<div class="empty-list">No automatic Phase 2 treatment matched. Add an injection/IV/short-course item only when clinically indicated.</div>';
+
   selectedPrescriptions=autoRxItems.map(x=>({...x}));
   renderPrescription();
+
+  const checks=(a.checks||[]).filter(x=>x);
+  const confidence=$("prescriptionConfidence");
+  if(confidence && checks.length){
+    confidence.innerHTML='<div class="protocol-inline"><b>Before signing:</b> '+checks.slice(0,4).map(esc).join(" • ")+'</div>';
+  }
   if($("summary"))$("summary").textContent=a.summary;
 }
+
 function runLiveAssessment(){
   const name=$("patientName")?.value.trim(), age=$("age")?.value, complaint=$("complaint")?.value.trim();
   if(!name||!age||!complaint)return;
