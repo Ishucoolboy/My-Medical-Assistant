@@ -58,6 +58,7 @@ public class MainActivity extends Activity {
         webView.getSettings().setSupportZoom(false);
         webView.getSettings().setBuiltInZoomControls(false);
         webView.getSettings().setDisplayZoomControls(false);
+        webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
         webView.loadUrl("https://appassets.androidplatform.net/assets/web/index.html");
 
     }
