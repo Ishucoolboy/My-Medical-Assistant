@@ -92,7 +92,27 @@ function renderExpiry(){
   const rows=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
   $("expiryTable").innerHTML=rows.length?`<table><thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th>Days</th><th>Stock</th><th>Status</th></tr></thead><tbody>${rows.map(m=>`<tr><td><strong>${esc(m.name)}</strong></td><td>${esc(m.batch||"—")}</td><td>${esc(m.expiry||"—")}</td><td>${daysUntil(m.expiry)}</td><td>${m.stock||0}</td><td><span class="status-tag ${expiryStatus(m)}">${expiryStatus(m)==="expired"?"EXPIRED":"NEAR EXPIRY"}</span></td></tr>`).join("")}</tbody></table>`:'<div class="empty-list">No near-expiry or expired batches.</div>';
 }
-function refreshAll(){renderInventory();renderDashboard();renderRequired();renderExpiry()}
+function refreshAll(){renderInventory();renderDashboard();renderRequired();renderExpiry();renderStoreTablets()}
+
+function renderStoreTablets(){
+  const searchEl=$("storeTabletSearch"), stockEl=$("storeTabletStock"), listEl=$("storeTabletsList"), countEl=$("tabletCount");
+  if(!listEl)return;
+  const q=(searchEl?.value||"").trim().toLowerCase();
+  const mode=stockEl?.value||"available";
+  const isTablet=m=>["Tablet/Capsule","Tablet","Capsule"].includes(m.category)||/tablet|capsule/i.test(m.form||"");
+  const rows=inventory.filter(m=>{
+    const matchesSearch=!q||[m.name,m.form,m.notes,m.batch].join(" ").toLowerCase().includes(q);
+    const available=(Number(m.stock)||0)>0;
+    return isTablet(m)&&matchesSearch&&(mode==="all"||available);
+  });
+  const total=inventory.filter(m=>isTablet(m)&&(Number(m.stock)||0)>0).length;
+  if(countEl)countEl.textContent=total+" available";
+  listEl.innerHTML=rows.length?rows.map(m=>{
+    const stock=Number(m.stock)||0;
+    const batch=m.batch?'<small>Batch: '+esc(m.batch)+'</small>':'';
+    return '<div class="store-tablet-card"><div class="store-tablet-icon">💊</div><div class="store-tablet-info"><strong>'+esc(m.name)+'</strong><small>'+esc(m.form||"Tablet/Capsule")+'</small>'+batch+'</div><div class="store-tablet-stock '+(stock>0?"in-stock":"out-stock")+'">'+(stock>0?stock+" in stock":"Out of stock")+'</div></div>';
+  }).join(""):'<div class="empty-list store-empty">No tablets are currently recorded for this view. Add tablet stock from Inventory.</div>';
+}
 
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
@@ -103,6 +123,7 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
   if(b.dataset.tab==="required")renderRequired();
   if(b.dataset.tab==="expiry")renderExpiry();
   if(b.dataset.tab==="history")renderHistory();
+  if(b.dataset.tab==="storeTablets")renderStoreTablets();
 }));
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
@@ -119,6 +140,7 @@ function renderInventory(){
 window.removeMedicine=id=>{inventory=inventory.filter(m=>m.id!==id);saveInventory(inventory);renderInventory()};
 $("inventoryTable").addEventListener("click",e=>{const b=e.target.closest(".remove-medicine");if(b)window.removeMedicine(b.dataset.id)});
 $("inventorySearch").addEventListener("input",renderInventory);$("inventoryCategory").addEventListener("change",renderInventory);$("inventoryStatus").addEventListener("change",renderInventory);
+$("storeTabletSearch").addEventListener("input",renderStoreTablets);$("storeTabletStock").addEventListener("change",renderStoreTablets);
 
 $("addMedicine").addEventListener("click",()=>{
   const name=prompt("Verified medicine name:");if(!name?.trim())return;
