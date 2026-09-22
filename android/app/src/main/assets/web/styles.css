@@ -1,0 +1,137 @@
+:root {
+  --bg:#f4f7f8; --surface:#fff; --surface2:#eef7f6; --text:#172026;
+  --muted:#66757d; --border:#d9e2e5; --primary:#0f766e; --primary-dark:#115e59;
+  --danger:#b42318; --warning-bg:#fff7e6; --warning-border:#f2c66d;
+  --shadow:0 10px 30px rgba(23,32,38,.07);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text)}
+button,input,textarea,select{font:inherit} button{cursor:pointer}
+.topbar{background:linear-gradient(135deg,#0f766e,#115e59);color:#fff;padding:28px max(20px,calc((100vw - 1240px)/2));display:flex;align-items:center;justify-content:space-between;gap:20px}
+.eyebrow{font-size:11px;letter-spacing:.16em;opacity:.8;font-weight:800} h1{margin:5px 0 4px;font-size:clamp(26px,4vw,38px)} .subtitle{margin:0;opacity:.84}
+.status-pill{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);padding:9px 13px;border-radius:999px;white-space:nowrap;font-size:13px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#86efac;margin-right:7px}
+.container{width:min(1240px,calc(100% - 32px));margin:24px auto 50px}
+.notice{background:var(--warning-bg);border:1px solid var(--warning-border);padding:14px 16px;border-radius:12px;color:#5c450f;line-height:1.5;margin-bottom:18px}
+.tabs{display:flex;gap:6px;margin-bottom:18px;overflow-x:auto}.tab{border:0;background:transparent;padding:11px 15px;border-radius:9px;color:var(--muted);font-weight:700}.tab.active{background:#fff;color:var(--primary);box-shadow:var(--shadow)}
+.tab-panel{display:none}.tab-panel.active{display:block}.grid.two{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(420px,1.1fr);gap:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:20px}
+.card-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:18px}.card h2{margin:0 0 4px;font-size:20px}.card-head p{margin:0;color:var(--muted);font-size:13px}
+form{display:grid;gap:14px}label{display:grid;gap:7px;font-size:13px;font-weight:700;color:#33434a}
+input,textarea,select{width:100%;border:1px solid var(--border);background:#fbfcfc;color:var(--text);border-radius:9px;padding:11px 12px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,118,110,.1)}textarea{resize:vertical;min-height:80px}
+.btn{border:1px solid transparent;border-radius:9px;padding:10px 14px;font-weight:800}.btn.primary{background:var(--primary);color:#fff}.btn.primary:hover{background:var(--primary-dark)}
+.btn.ghost{background:#fff;color:#405158;border-color:var(--border)}.btn.danger-outline{background:#fff;color:var(--danger);border-color:#f1c3bf}
+.badge{padding:6px 9px;border-radius:999px;background:#edf2f3;color:#5a6870;font-size:11px;font-weight:800}
+.empty{min-height:560px;display:grid;place-content:center;text-align:center;color:var(--muted);padding:40px}.empty-icon{font-size:42px}.empty h3{margin:12px 0 5px;color:var(--text)}
+.hidden{display:none!important}.result-section{border-top:1px solid var(--border);padding:18px 0}.result-section:first-of-type{border-top:0}.result-section h3{margin:0 0 9px;font-size:15px}.result-section p{line-height:1.55;margin:0}
+.phase-title{display:flex;gap:9px;align-items:center;margin-bottom:12px}.phase-title span{font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--primary);background:var(--surface2);padding:5px 7px;border-radius:5px}
+.medicine-list{display:grid;gap:8px}.medicine-item{border:1px solid var(--border);border-radius:10px;padding:11px 12px;background:#fbfcfc}.medicine-item strong{display:block;margin-bottom:3px}.medicine-item small{color:var(--muted);line-height:1.4}
+.empty-list{color:var(--muted);font-size:13px;padding:8px 0}.referral{background:#fff1f0;border:1px solid #f3b7b1;color:#7a271a;padding:12px;border-radius:10px;margin-bottom:15px;line-height:1.45}
+.checks{padding-left:20px;margin:0;color:#46565d}.summary{white-space:pre-wrap;background:#f6f8f8;border:1px solid var(--border);padding:12px;border-radius:9px;font-size:12px;line-height:1.5}
+.inventory-toolbar{display:grid;grid-template-columns:1fr 190px auto;gap:10px;margin-bottom:15px}.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.stock-ok{color:#166534;font-weight:800}.stock-low{color:#9a3412;font-weight:800}.stock-out{color:var(--danger);font-weight:800}
+.history-list{display:grid;gap:10px}.history-item{border:1px solid var(--border);padding:13px;border-radius:10px}.history-item strong{display:block;margin-bottom:4px}.history-item small{color:var(--muted)}
+footer{width:min(1240px,calc(100% - 32px));margin:0 auto 30px;color:#718087;font-size:11px;display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:900px){.grid.two{grid-template-columns:1fr}.empty{min-height:260px}}@media(max-width:620px){.topbar{align-items:flex-start;flex-direction:column}.container{width:min(100% - 20px,1240px);margin-top:12px}.card{padding:15px}.inventory-toolbar{grid-template-columns:1fr}}
+.dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:17px;box-shadow:var(--shadow)}
+.stat-card span{display:block;color:var(--muted);font-size:12px;font-weight:700}.stat-card strong{display:block;font-size:30px;margin:6px 0}.stat-card small{color:var(--muted)}
+.alert-row{display:flex;justify-content:space-between;gap:15px;padding:12px;border:1px solid var(--border);border-radius:9px;margin-bottom:8px;background:#fbfcfc}
+.alert-row span{color:var(--muted);font-size:12px;text-align:right}.alert-row.expired{border-color:#f3b7b1;background:#fff1f0}
+.status-tag{display:inline-block;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900}.status-tag.out,.status-tag.expired{background:#fff1f0;color:var(--danger)}.status-tag.low,.status-tag.near{background:#fff7e6;color:#9a3412}.status-tag.ok{background:#ecfdf3;color:#166534}
+@media(max-width:900px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.dashboard-grid{grid-template-columns:1fr}.alert-row{flex-direction:column}.alert-row span{text-align:left}}
+
+
+.store-tablet-toolbar{display:grid;grid-template-columns:1fr 190px;gap:10px;margin-bottom:16px}
+.store-tablets-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.store-tablet-card{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;border:1px solid var(--border);border-radius:12px;padding:13px;background:#fbfcfc}
+.store-tablet-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:var(--surface2);font-size:20px}
+.store-tablet-info{min-width:0}
+.store-tablet-info strong{display:block;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.store-tablet-info small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.store-tablet-stock{font-size:12px;font-weight:900;white-space:nowrap}
+.store-tablet-stock.in-stock{color:#166534}
+.store-tablet-stock.out-stock{color:var(--danger)}
+.store-empty{grid-column:1/-1;padding:20px;text-align:center;border:1px dashed var(--border);border-radius:10px}
+@media(max-width:620px){.store-tablet-toolbar{grid-template-columns:1fr}.store-tablets-grid{grid-template-columns:1fr}.store-tablet-card{grid-template-columns:auto 1fr}.store-tablet-stock{grid-column:2}}
+
+.store-tablets-table{min-width:900px}
+.store-tablets-table th{background:#f6f8f8}
+.store-tablets-table td{line-height:1.45}
+.store-tablets-table td:nth-child(2){min-width:220px;max-width:360px}
+.store-tablets-table td:nth-child(3){min-width:260px;max-width:430px}
+.tablet-availability{display:inline-block;min-width:42px;text-align:center;padding:5px 9px;border-radius:999px;font-weight:900;font-size:12px}
+.tablet-availability.available{background:#ecfdf3;color:#166534}
+.tablet-availability.unavailable{background:#fff1f0;color:var(--danger)}
+.store-empty{text-align:center!important;color:var(--muted);padding:24px!important}
+
+.disease-shelves{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:4px 0 20px}
+.disease-shelf{display:flex;align-items:center;gap:10px;text-align:left;padding:13px;border:1px solid var(--border);border-radius:12px;background:#fbfcfc;cursor:pointer;transition:.15s}
+.disease-shelf:hover{transform:translateY(-1px);border-color:var(--primary)}
+.disease-shelf.active{border-color:var(--primary);background:var(--surface2);box-shadow:0 0 0 2px rgba(0,0,0,.03)}
+.disease-shelf-icon{font-size:22px;width:32px;text-align:center}.disease-shelf strong{display:block;font-size:13px}.disease-shelf small{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.disease-results-head{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:16px;margin-bottom:10px}.disease-results-head h3{margin:0}.disease-results-head span{color:var(--muted);font-size:12px}
+.disease-shelf-list{display:grid;gap:9px}.disease-medicine{display:grid;grid-template-columns:1.1fr 1.8fr auto;gap:15px;align-items:center;border:1px solid var(--border);border-radius:11px;padding:12px;background:#fbfcfc}.disease-medicine strong{display:block}.disease-medicine small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.disease-use{font-size:12px;line-height:1.45;color:#46565d}.disease-stock{text-align:right;font-size:11px}.disease-stock span{display:block;color:var(--muted);margin-bottom:4px}.disease-stock strong{font-size:12px}
+@media(max-width:1000px){.disease-shelves{grid-template-columns:repeat(3,minmax(0,1fr))}.disease-medicine{grid-template-columns:1fr 1.5fr auto}}@media(max-width:700px){.disease-shelves{grid-template-columns:repeat(2,minmax(0,1fr))}.disease-medicine{grid-template-columns:1fr}.disease-stock{text-align:left}.disease-results-head{align-items:flex-start;gap:8px;flex-direction:column}}
+
+.opd-section-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px}.mini-label{display:block;font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--primary);margin-bottom:3px}.clinical-snapshot{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.clinical-snapshot>div{border:1px solid var(--border);background:#fbfcfc;border-radius:9px;padding:10px}.clinical-snapshot span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase}.clinical-snapshot strong{display:block;margin-top:4px;font-size:12px;line-height:1.35}.match-info{background:#f6f8f8;border:1px solid var(--border);border-radius:9px;padding:10px;font-size:12px;color:var(--muted);line-height:1.45}.medicine-item-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.medicine-item-top small{display:block;color:var(--muted);margin-top:3px}.medicine-use{font-size:12px;line-height:1.4;margin-top:7px;color:#46565d}.medicine-meta{display:flex;justify-content:space-between;gap:10px;margin-top:8px;color:var(--muted);font-size:11px}.expiry-bad{color:var(--danger);font-weight:900}.medicine-warning{margin-top:8px;padding:8px 9px;border-radius:8px;background:#fff7e6;color:#7c4a03;font-size:11px;line-height:1.4}
+@media(max-width:900px){.clinical-snapshot{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.clinical-snapshot{grid-template-columns:1fr}.opd-section-head{align-items:flex-start}.medicine-item-top{flex-direction:column}}
+
+.header-actions{display:flex;gap:10px;align-items:center}.global-search{position:relative}.global-search input{width:310px;padding:10px 12px}.global-search-results{position:absolute;z-index:50;top:62px;right:22px;width:310px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:6px}.search-result{display:block;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid var(--border);padding:9px;cursor:pointer}.search-result:last-child{border-bottom:0}.search-result strong,.search-result small{display:block}.search-result small{color:var(--muted);margin-top:3px;font-size:11px}.search-empty{padding:12px;color:var(--muted);font-size:12px}
+.quick-actions{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 18px}.report-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}.report-card{border:1px solid var(--border);border-radius:12px;padding:15px;background:#fbfcfc}.report-card span{display:block;color:var(--muted);font-size:11px}.report-card strong{display:block;font-size:26px;margin-top:5px}.report-tables{display:grid;gap:18px}.report-table{border-top:1px solid var(--border);padding-top:12px}.report-table h3{margin:0 0 8px}.link-button{border:0;background:none;padding:0;color:var(--primary);font-weight:800;cursor:pointer}
+.protocol-toolbar{margin-bottom:14px}.protocol-list{display:grid;gap:11px}.protocol-card{border:1px solid var(--border);border-radius:12px;padding:14px;background:#fbfcfc}.protocol-card h3{margin:3px 0 5px}.protocol-card p{color:#46565d;line-height:1.45;margin:0 0 10px}.protocol-points{display:flex;gap:7px;flex-wrap:wrap}.protocol-points span{font-size:11px;padding:5px 8px;border-radius:999px;background:#eef7f6}.protocol-caution{margin-top:10px;padding:9px;background:#fff7e6;border-radius:8px;color:#704f10;font-size:11px;line-height:1.4}
+.calc-result{display:grid;gap:5px}.calc-result span{color:var(--muted);font-size:11px}.calc-result strong{font-size:15px}.calc-result .calc-big{font-size:28px;color:var(--primary);padding:7px 0}.backup-actions{display:flex;gap:10px;flex-wrap:wrap}.file-btn{display:inline-flex;cursor:pointer}.backup-note{margin-top:15px;padding:11px;background:#f6f8f8;border-radius:9px;color:var(--muted);font-size:12px;line-height:1.45}
+.modal{position:fixed;inset:0;z-index:100}.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.42)}.modal-card{position:relative;width:min(760px,calc(100% - 28px));max-height:90vh;overflow:auto;margin:5vh auto;background:#fff;border-radius:15px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.2)}.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:15px}.detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.detail-grid>div{border:1px solid var(--border);border-radius:9px;padding:10px}.detail-grid span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase}.detail-grid strong{display:block;margin-top:4px;font-size:12px;line-height:1.4}.stock-editor{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0;padding:12px;border:1px solid var(--border);border-radius:10px}.stock-editor input{width:100px}
+.medicine-item{cursor:pointer}.medicine-item:hover{border-color:var(--primary)}.hidden{display:none!important}
+@media(max-width:900px){.header-actions{width:100%;justify-content:space-between}.global-search{flex:1}.global-search input{width:100%}.report-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.header-actions{flex-direction:column;align-items:stretch}.global-search-results{position:fixed;top:100px;left:10px;right:10px;width:auto}.detail-grid{grid-template-columns:1fr}.report-grid{grid-template-columns:1fr}}
+
+.patient-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.vitals-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:10px 0}
+.history-toolbar{margin:0 0 12px}.history-toolbar input{width:100%}
+.history-complaint{font-size:12px;color:#46565d;margin:8px 0}
+.prescription-builder{display:grid;gap:10px}
+.selected-prescription-list{display:grid;gap:9px}
+.rx-row{border:1px solid var(--border);border-radius:10px;padding:11px;background:#fbfcfc}
+.rx-row>div:first-child{margin-bottom:9px}.rx-row small{display:block;color:var(--muted);margin-top:3px}
+.rx-fields{display:grid;grid-template-columns:1.2fr 1fr 1fr 1.3fr auto;gap:7px;align-items:center}
+.rx-fields input{min-width:0}
+.prescription-actions{display:flex;gap:8px;flex-wrap:wrap}
+.medicine-actions{margin-top:9px}
+.security-box{margin-top:15px;border:1px solid var(--border);border-radius:10px;padding:12px;background:#fbfcfc}
+.security-box p{color:var(--muted);font-size:12px;margin:5px 0 10px}
+.security-actions{display:flex;gap:8px;flex-wrap:wrap}.security-actions input{max-width:180px}
+.pin-lock{position:fixed;inset:0;z-index:1000;background:rgba(15,30,34,.72);display:grid;place-items:center;padding:20px}
+.pin-card{width:min(390px,100%);background:#fff;border-radius:16px;padding:25px;box-shadow:0 25px 80px rgba(0,0,0,.3);text-align:center}
+.pin-card h2{margin:8px 0}.pin-card p{color:var(--muted);font-size:13px}.pin-card input{width:100%;margin:10px 0}.pin-error{display:block;color:var(--danger);min-height:18px;margin-top:8px}
+@media(max-width:900px){.vitals-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.rx-fields{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.patient-grid,.vitals-grid{grid-template-columns:1fr}.rx-fields{grid-template-columns:1fr}.security-actions{flex-direction:column}.security-actions input{max-width:none}}
+
+/* Prescription phase controls */
+.rx-fields select{min-width:0;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;font:inherit}
+.rx-fields [data-rx-compat]{grid-column:span 2}
+@media(max-width:1100px){.rx-fields{grid-template-columns:1fr 1fr 1fr}.rx-fields [data-rx-compat]{grid-column:1/-1}}
+@media(max-width:620px){.rx-fields [data-rx-compat]{grid-column:auto}}
+
+/* IV compatibility checker */
+.iv-checker{display:grid;gap:14px}
+.iv-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.iv-check-grid label{display:grid;gap:7px;font-weight:700}
+.iv-check-grid select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit}
+.iv-result{min-height:70px}
+.iv-status{padding:14px;border-radius:12px;border:1px solid var(--border)}
+.iv-status strong{display:block;margin-bottom:5px}
+.iv-status.compatible{border-color:#2e8b57;background:#f0fbf5}
+.iv-status.do-not-mix{border-color:#c33;background:#fff3f3}
+.iv-status.unverified{border-color:#d39b00;background:#fff9e8}
+.iv-status p{margin:0 0 6px}
+.iv-status small{display:block;margin-top:5px}
+@media(max-width:650px){.iv-check-grid{grid-template-columns:1fr}}
+
+.phaseb-box{margin:10px 0;padding:12px 14px;border:1px solid var(--line,#dfe5ec);border-radius:12px;background:var(--soft,#f7f9fc)}.phaseb-box b{display:block;margin-bottom:6px}.phaseb-box ul{margin:6px 0 0 18px;padding:0}.phaseb-box li{margin:3px 0}
+
+.prescription-confidence{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.confidence-badge{display:inline-flex;padding:5px 8px;border-radius:999px;border:1px solid var(--line,#dfe5ec);font-size:11px;font-weight:700}.audit-missing-list{margin-top:10px}.audit-missing-list>div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line,#e5e7eb)}.audit-missing-list span{font-size:12px;color:var(--muted,#64748b)}
+
+.phase-d-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:10px}.phase-d-fields label{display:block}@media(max-width:760px){.phase-d-fields{grid-template-columns:1fr}}
