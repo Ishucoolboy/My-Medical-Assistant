@@ -4,6 +4,146 @@ const HISTORY_KEY="mma_history_v1";
 const AUDIT_KEY="mma_audit_v1";
 const PIN_KEY="mma_clinic_pin_v1";
 const PROTOCOLS_URL="./data/protocols.json";
+
+// Village-level OPD clinical framework.
+// This is the category layer for the new treatment engine; medicines will be mapped to
+// these problems only after complaint, age/weight, sex/pregnancy, vitals and red flags are assessed.
+const VILLAGE_OPD_CATEGORIES=[
+  {id:"fever",title:"Fever & Febrile Illness",problems:["Acute fever / viral-like illness","Suspected malaria / dengue / other vector-borne illness","Prolonged or recurrent fever","Fever with focal bacterial symptoms"],redFlags:["Altered sensorium, shock, severe breathing difficulty, bleeding, severe dehydration, persistent high fever or other danger signs"]},
+  {id:"respiratory",title:"Respiratory",problems:["Common cold / URTI","Allergic rhinitis","Sore throat","Acute cough","Wheeze / asthma-type symptoms","Breathlessness"],redFlags:["Low SpO2, severe breathlessness, cyanosis, chest pain, stridor, altered sensorium"]},
+  {id:"pain",title:"Pain & Headache",problems:["Headache / tension-type pattern","Migraine-type headache","Back pain","General body pain","Musculoskeletal pain","Sprain / strain"],redFlags:["Sudden worst-ever headache, neurological deficit, head injury, meningism, altered sensorium, severe chest/abdominal pain"]},
+  {id:"gi",title:"Gastrointestinal",problems:["Acidity / GERD","Dyspepsia / gas","Nausea / vomiting","Acute diarrhoea","Abdominal cramps","Constipation"],redFlags:["GI bleeding, severe/localized abdominal pain, persistent vomiting, severe dehydration, abdominal distension/obstruction features"]},
+  {id:"urinary",title:"Urinary",problems:["Dysuria / burning urination","Suspected UTI","Lower urinary tract symptoms / BPH","Urinary frequency / urgency"],redFlags:["Fever with flank pain, urinary retention, gross haematuria, pregnancy with urinary symptoms, systemic illness"]},
+  {id:"skin_wounds",title:"Skin, Wounds & Minor Burns",problems:["Minor cuts / superficial wounds","Minor burns","Itching / dermatitis-type complaints","Fungal-type skin infection","Acne"],redFlags:["Deep/large burns, spreading cellulitis, necrosis, severe pain out of proportion, infected wound with systemic symptoms"]},
+  {id:"ent_eye",title:"ENT & Eye",problems:["Ear pain / selected ear complaints","Acute sinus-type symptoms","Conjunctival / eye complaints","Allergic ENT symptoms"],redFlags:["Vision loss, severe eye pain, proptosis, penetrating eye injury, mastoid swelling, severe headache with eye symptoms"]},
+  {id:"dental_oral",title:"Dental & Oral",problems:["Toothache","Mouth ulcers","Gum/oral discomfort"],redFlags:["Facial/neck swelling, difficulty swallowing/breathing, trismus, uncontrolled bleeding, spreading dental infection"]},
+  {id:"msk",title:"Musculoskeletal & Joint",problems:["Knee / joint pain","Muscle spasm","Back/neck pain","Sprain / strain","Soft-tissue inflammatory pain"],redFlags:["Major trauma, deformity, neurovascular deficit, hot swollen joint with fever, inability to bear weight"]},
+  {id:"parasitic",title:"Parasitic / Worm-related",problems:["Suspected intestinal worms","Selected protozoal intestinal infections"],redFlags:["Severe abdominal pain, GI bleeding, persistent vomiting, systemic illness or diagnostic uncertainty"]},
+  {id:"nutrition",title:"Nutrition & Deficiency Support",problems:["Iron/folate deficiency support","Nutritional supplementation","Calcium/Vitamin D support"],redFlags:["Severe pallor, syncope, significant bleeding, severe weakness, suspected major deficiency requiring investigation"]},
+  {id:"chronic",title:"Chronic / Follow-up",problems:["Type 2 diabetes follow-up","BPH/LUTS follow-up","Long-term medication review","Other stable chronic complaints"],redFlags:["Very abnormal vitals/glucose, acute deterioration, new neurological/cardiac symptoms or medication adverse effects"]},
+  {id:"women",title:"Women’s Health",problems:["Menstrual pain / dysmenorrhoea-type symptoms","Menstrual complaints","Vaginal/urinary symptoms","Pregnancy-related complaints requiring assessment"],redFlags:["Pregnancy with bleeding/pain, severe abdominal pain, heavy bleeding, syncope, fever, reduced fetal movement or other obstetric danger signs"]},
+  {id:"paediatric",title:"Paediatric OPD",problems:["Childhood fever","Paediatric cough/cold","Paediatric pain/fever","Vomiting / diarrhoea","Common minor childhood complaints"],redFlags:["Age-specific danger signs, respiratory distress, dehydration, seizures, altered sensorium, poor feeding, persistent vomiting"]},
+  {id:"mental_health",title:"Mental Health & Neuropsychiatric",problems:["Previously diagnosed psychiatric conditions","Medication follow-up where diagnosis is established","Sleep/anxiety/depressive symptoms requiring assessment"],redFlags:["Suicidal/self-harm thoughts, acute behavioural disturbance, delirium, severe confusion or immediate safety concerns"]}
+];
+
+function villageOpdCategoryFor(d){
+  const t=opdText(d);
+  const rules=[
+    ["fever",/fever|bukhar|taav|jwar|pyrexia|temperature|chills|rigor|kapkap/i],
+    ["respiratory",/cough|khaansi|cold|jukam|sore throat|gala dard|gala dukhe|runny nose|naak bahe|wheeze|saans|breathlessness|asthma|phlegm|sputum/i],
+    ["pain",/headache|sir dard|sir me dard|sir dukhe|migraine|body ache|badan dard|general pain|dard/i],
+    ["gi",/acidity|heartburn|gastric|indigestion|dyspepsia|gas|pet dard|pet me dard|nausea|vomit|ulti|diarr|dast|julaab|constipation|kabz|abdominal/i],
+    ["urinary",/urine|urinary|peshab|pesab|dysuria|burning urine|jalan.*peshab|frequency|urgency|retention|prostate|bph/i],
+    ["skin_wounds",/wound|cut|chot|zakhm|burn|jal|itch|khujli|kharish|rash|fungal|daad|acne|pimple/i],
+    ["ent_eye",/ear|kaan|sinus|naak|nose|eye|aankh|conjunct|earache|kaan dard/i],
+    ["dental_oral",/tooth|daant|dental|toothache|mouth ulcer|munh ke chhale|oral ulcer|gum/i],
+    ["msk",/joint|jod|knee|ghutna|ghutne|back|kamar|neck|gardan|muscle|sprain|strain|spasm|paanv|pair|taang|pag dukhe/i],
+    ["parasitic",/worm|keede|krimi|deworm|parasite|amoeb|giardia/i],
+    ["nutrition",/anaemia|anemia|iron|folate|calcium|vitamin d|weakness|nutrition|bhook|appetite/i],
+    ["chronic",/diabetes|sugar|bph|prostate|follow.?up|chronic|regular medicine/i],
+    ["women",/period|menses|menstrual|dysmenorr|pcos|pregnan|pregnancy|vaginal|white discharge|bleeding per vaginam/i],
+    ["paediatric",/child|baby|infant|baccha|bacha|bachha|pediatric|paediatric/i],
+    ["mental_health",/depress|anxiety|psychiatric|psychosis|sleep problem|risperidone|fluoxetine|suicid/i]
+  ];
+  const age=Number(d.age);
+  if(age<18)return VILLAGE_OPD_CATEGORIES.find(x=>x.id==="paediatric");
+  for(const [id,re] of rules){if(re.test(t))return VILLAGE_OPD_CATEGORIES.find(x=>x.id===id)}
+  return null;
+}
+function villageTreatmentPathway(d,category,triage){
+  if(triage.urgent)return "URGENT REVIEW / REFERRAL PATHWAY — automatic medicine selection paused.";
+  if(!category)return "Unclassified complaint — clinical examination and diagnosis first; no automatic treatment pathway.";
+  const t=opdText(d);
+  if(category.id==="fever")return /dengue|malaria|typhoid/.test(t) ? "Febrile illness → targeted examination/investigation → treat confirmed/likely cause; avoid blind antibiotic selection." : "Febrile illness → vitals/hydration assessment → supportive care + targeted investigation when indicated.";
+  if(category.id==="respiratory")return "Respiratory → SpO₂/respiratory examination → distinguish viral/allergic/wheeze/bacterial features → symptom-directed treatment.";
+  if(category.id==="pain")return "Pain/headache → characterize pain + red flags → choose one appropriate analgesic/supportive option after contraindication review.";
+  if(category.id==="gi")return "GI → hydration/severity + abdominal assessment → symptom-directed treatment; investigate persistent/severe/bleeding cases.";
+  if(category.id==="urinary")return "Urinary → assess dysuria/systemic features → urine testing when indicated → targeted treatment; refer retention/upper-tract/systemic cases.";
+  if(category.id==="skin_wounds")return "Skin/wound → inspect lesion and severity → local wound care/topical treatment where appropriate → refer deep/extensive/infected lesions.";
+  if(category.id==="ent_eye")return "ENT/eye → focused examination → avoid antibiotic/steroid combinations unless indication is established.";
+  if(category.id==="dental_oral")return "Dental/oral → local assessment + symptomatic care → dental referral for persistent infection, swelling or structural disease.";
+  if(category.id==="msk")return "Musculoskeletal → trauma/neurovascular assessment → conservative/analgesic pathway where appropriate.";
+  if(category.id==="parasitic")return "Parasitic → establish likely organism/indication → appropriate anthelmintic/anti-infective only when clinically supported.";
+  if(category.id==="nutrition")return "Nutrition → assess likely deficiency and severity → supplementation plus investigation when indicated.";
+  if(category.id==="chronic")return "Chronic-care → confirm existing diagnosis/medication → review vitals/labs/adherence before continuation or adjustment.";
+  if(category.id==="women")return "Women’s health → pregnancy status + focused assessment → pregnancy-specific pathway or referral when indicated.";
+  if(category.id==="paediatric")return "Paediatric → age + weight + danger signs → weight-based/product-specific treatment only.";
+  if(category.id==="mental_health")return "Mental-health → establish diagnosis/current treatment + safety assessment → urgent referral for immediate safety concerns.";
+  return "Clinical assessment pathway.";
+}
+function villageProblemFor(d,category){
+  const t=opdText(d);
+  const rules={
+    fever:[[/dengue/,"Dengue-suspected febrile illness"],[/malaria|rigor|chills/,"Malaria-suspected febrile illness"],[/typhoid|enteric/,"Enteric fever-suspected illness"],[/fever|bukhar|taav|jwar/,"Acute febrile illness"]],
+    respiratory:[[/wheeze|wheezing|asthma/,"Wheeze / asthma-type episode"],[/allerg|sneez|itchy nose/,"Allergic rhinitis"],[/sore throat|gala dard|gala dukhe/,"Acute sore throat / pharyngitis-type complaint"],[/cough|khaansi|cold|jukam/,"Acute cough / common cold-type illness"]],
+    pain:[[/migraine|one-sided headache|photophobia/,"Migraine-type headache"],[/headache|sir dard|sir me dard|sir dukhe/,"Headache — cause to be assessed"],[/sprain|strain|muscle spasm|spasm/,"Musculoskeletal pain with possible spasm"],[/joint|jod|knee|ghutna|back|kamar/,"Joint/back musculoskeletal pain"],[/pain|dard|body ache|badan dard/,"Acute pain / body ache"]],
+    gi:[[/vomit|vomiting|ulti|nausea/,"Nausea / vomiting"],[/diarr|dast|julaab/,"Acute diarrhoeal illness"],[/constipation|kabz/,"Constipation"],[/acidity|heartburn|gastric|indigestion/,"Acidity / dyspepsia"],[/pet dard|abdominal/,"Abdominal pain — cause to be assessed"]],
+    urinary:[[/retention|urine nahi|peshab nahi/,"Urinary retention — urgent assessment if acute"],[/burning urine|dysuria|peshab.*jalan|pesab.*jalan/,"Dysuria / suspected lower UTI"],[/frequency|urgency|prostate|bph/,"Lower urinary tract symptoms / BPH"]],
+    skin_wounds:[[/burn|jal gaya/,"Minor burn — depth/extent assessment required"],[/wound|cut|chot|zakhm/,"Minor superficial wound"],[/fungal|daad/,"Fungal-type skin complaint"],[/acne|pimple/,"Acne"],[/itch|khujli|kharish|rash/,"Itching / dermatitis-type complaint"]],
+    ent_eye:[[/eye|aankh|conjunct/,"Eye complaint — focused eye examination"],[/ear|kaan/,"Ear complaint"],[/sinus|facial pain|naak band/,"Sinus-type upper respiratory complaint"]],
+    dental_oral:[[/tooth|daant|dental/,"Toothache / dental pain"],[/mouth ulcer|munh ke chhale|oral ulcer/,"Mouth ulcer"]],
+    msk:[[/sprain|strain/,"Sprain / strain"],[/spasm|muscle/,"Muscle spasm / muscular pain"],[/joint|jod|knee|ghutna/,"Joint / knee pain"],[/back|kamar|neck|gardan|paanv|pair|taang|pag dukhe/,"Back/limb musculoskeletal pain"]],
+    parasitic:[[/worm|keede|krimi|deworm/,"Suspected intestinal worm infestation"]],
+    nutrition:[[/anaemia|anemia|iron|folate/,"Possible iron/folate deficiency"],[/calcium|vitamin d/,"Possible calcium/Vitamin D supplementation need"]],
+    chronic:[[/diabetes|sugar/,"Type 2 diabetes — established diagnosis/follow-up required"],[/bph|prostate/,"BPH/LUTS — established diagnosis/follow-up required"],[/follow.?up|chronic/,"Chronic disease follow-up"]],
+    women:[[/pregnan|pregnancy/,"Pregnancy-related complaint — pregnancy pathway"],[/period|menses|menstrual|dysmenorr/,"Menstrual complaint / dysmenorrhoea-type symptoms"],[/vaginal|white discharge/,"Vaginal complaint — focused assessment"]],
+    paediatric:[[/fever|bukhar|taav/,"Paediatric fever"],[/cough|cold|khaansi|jukam/,"Paediatric cough/cold"],[/vomit|ulti|diarr|dast/,"Paediatric GI complaint"],[/pain|dard/,"Paediatric pain/fever complaint"]],
+    mental_health:[[/depress/,"Depressive symptoms / established depression follow-up"],[/anxiety/,"Anxiety symptoms"],[/psychosis|risperidone/,"Established psychotic disorder follow-up"],[/sleep/,"Sleep complaint — assessment required"]]
+  };
+  const age=Number(d.age);
+  if(age<18)return VILLAGE_OPD_CATEGORIES.find(x=>x.id==="paediatric");
+  for(const [id,re] of (rules[category?.id]||[])){if(re.test(t))return rules[category.id].find(x=>x[0]===re)?.[1]}
+  return category?.problems?.[0]||"Clinical problem not yet classified";
+}
+function villageMedicineSelectionRules(d,category,problem,rx){
+  const t=opdText(d);
+  const eligible=(rx?.items||[]).filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&medicineSafetyForAutoRx(m,d,rx.protocol,null).ok);
+  const g=m=>normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+  const score=m=>{
+    const x=g(m);let s=0;
+    if(category?.id==="fever"){if(/paracetamol/.test(x)&&!/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s+=20;if(/antibiotic|ciprofloxacin|cefixime|azithromycin|amoxicillin|ofloxacin|norfloxacin|metronidazole/.test(x))s-=20;if(/dengue/.test(t)&&/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s-=100;}
+    if(category?.id==="pain"){if(/paracetamol/.test(x))s+=10;if(/aceclofenac|diclofenac|naproxen|etoricoxib|nimesulide|mefenamic/.test(x))s+=problem.includes("Musculoskeletal")?8:2;if(/chlorzoxazone|thiocolchicoside|drotaverine/.test(x)&&/spasm|sprain|strain|musculoskeletal/.test(problem.toLowerCase()))s+=8;}
+    if(category?.id==="respiratory"){if(/montelukast|levocetirizine|fexofenadine|dextromethorphan|guaifenesin|phenylephrine/.test(x))s+=8;if(/antibiotic/.test(x))s-=15;}
+    if(category?.id==="gi"){if(/omeprazole|rabeprazole|pantoprazole/.test(x)&&/acidity|dyspepsia/.test(problem.toLowerCase()))s+=12;if(/ondansetron|domperidone/.test(x)&&/nausea|vomiting/.test(problem.toLowerCase()))s+=12;if(/lactulose|bisacodyl|sodium picosulfate/.test(x)&&/constipation/.test(problem.toLowerCase()))s+=12;if(/loperamide/.test(x)&&/diarr/.test(problem.toLowerCase()))s+=6;}
+    if(category?.id==="urinary"){if(/tamsulosin/.test(x)&&/bph|lower urinary/.test(problem.toLowerCase()))s+=15;if(/antibiotic/.test(x)&&/uti/.test(problem.toLowerCase()))s+=3;}
+    if(category?.id==="skin_wounds"){if(/povidone|band aid|dressing|silver sulfadiazine/.test(x))s+=12;if(/clindamycin.*nicotinamide/.test(x)&&/acne/.test(problem.toLowerCase()))s+=15;}
+    if(category?.id==="dental_oral"){if(/clove oil/.test(x)&&/toothache/.test(problem.toLowerCase()))s+=12;if(/riboflavin|folic acid|niacinamide/.test(x)&&/mouth ulcer/.test(problem.toLowerCase()))s+=10;}
+    if(category?.id==="parasitic"&&/albendazole|ivermectin/.test(x))s+=15;
+    if(category?.id==="nutrition"&&/iron|folic|calcium|vitamin d|multivitamin/.test(x))s+=10;
+    if(category?.id==="chronic"&&/glipizide|metformin|tamsulosin/.test(x))s+=10;
+    return s;
+  };
+  return eligible.map(m=>({...m,_engineScore:score(m)})).filter(m=>m._engineScore>0).sort((a,b)=>b._engineScore-a._engineScore||daysUntil(a.expiry)-daysUntil(b.expiry)).slice(0,3);
+}
+
+function villageSelectedMedicines(rx,d){
+  if(!rx?.items?.length)return [];
+  return rx.items.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&medicineSafetyForAutoRx(m,d,rx.protocol,null).ok).slice(0,4);
+}
+function renderVillageOpdEngine(d){
+  const el=$("treatmentWorkspacePlaceholder"); if(!el)return;
+  const category=villageOpdCategoryFor(d);
+  const triage=clinicalTriage(d);
+  const rx=buildInventoryPrescription(d,triage);
+  const problem=villageProblemFor(d,category);
+  const selected=triage.urgent?[]:villageMedicineSelectionRules(d,category,problem,rx);
+  const possible=problem?[problem]:[];
+  const pathway=villageTreatmentPathway(d,category,triage);
+  el.innerHTML='<div class="card-head"><div><h2>OPD Treatment Engine</h2><p>Complaint → Clinical category → Possible problem → Red-flag check → Stock medicines → Treatment pathway</p></div><span class="mini-label">'+(category?esc(category.title):"Clinical review")+'</span></div>'+
+    '<div class="rx-cost-grid"><div><span>Clinical category</span><strong>'+(category?esc(category.title):"Needs review")+'</strong></div><div><span>Possible problem</span><strong>'+esc(possible.length?possible.join(" • "):"Not enough information")+'</strong></div><div><span>Red-flag status</span><strong class="'+(triage.urgent?"expiry-bad":"")+'">'+(triage.urgent?"URGENT REVIEW":"No automatic red flag detected")+'</strong></div></div>'+
+    '<div class="protocol-caution"><b>Pathway:</b> '+esc(pathway)+'</div>'+
+    (triage.reasons.length?'<div class="medicine-warning"><b>Referral / red flags:</b> '+triage.reasons.map(esc).join(" • ")+'</div>':"")+
+    '<div class="card-head" style="margin-top:18px"><div><h3>Stock-based treatment</h3><p>'+esc(selected.length?"Inventory-linked options selected; clinician verification required.":"No automatic medicine selected.")+'</p></div><span class="mini-label">'+selected.length+' selected</span></div>'+
+    '<div class="protocol-grid">'+(selected.length?selected.map(m=>'<article class="protocol-card"><div><span class="mini-label">PHASE '+esc(prescriptionPhase(m))+'</span><h3>'+esc(m.name)+'</h3><p>'+esc(m.generic||"")+'</p><div class="protocol-points"><span>Use: '+esc(m.use||m.notes||"")+'</span><span>Dose: '+esc(m.rxDose||m.dose||"Not specified")+'</span><span>Frequency: '+esc(m.rxFreq||"No problem-specific regimen loaded")+'</span><span>Duration: '+esc(m.rxDuration||"No problem-specific regimen loaded")+'</span><span>Reference: '+esc(m.rxSource||"Clinic inventory")+'</span><span>Stock: '+esc(m.stock)+' available</span></div></div><div class="protocol-caution"><b>Why:</b> '+esc(rxWhySelected(m))+(m.rxSourceRef?'<br><b>Reference:</b> '+esc(m.rxSourceRef):"")+(m.rxInstruction?'<br><b>Instruction:</b> '+esc(m.rxInstruction):"")+'</div></article>').join(""):'<div class="empty-list">No automatic medicine selected. Review examination/investigations and choose from verified inventory.</div>')+'</div>'+
+    '<div class="medicine-warning"><b>Clinical safety:</b> Decision support only — not a final diagnosis or prescription. Antibiotics, steroids, psychiatric medicines, antifungals, injections and paediatric medicines require indication-specific verification.</div>';
+  selectedPrescriptions=selected.map(x=>({...x}));
+  renderPrescription();
+}
+function renderVillageOpdCategories(){
+  const el=$("treatmentWorkspacePlaceholder"); if(!el)return;
+  el.innerHTML='<div class="card-head"><div><h2>Village OPD Clinical Categories</h2><p>Enter patient details above and press Save OPD Case to run the treatment engine.</p></div><span class="mini-label">'+VILLAGE_OPD_CATEGORIES.length+' categories</span></div>';
+}
+
 const IV_COMPAT_URL="./data/iv-compatibility.json";
 const CLINIC_RX_URL="./data/clinic-rx-protocols.json";
 const PHASE_B_URL="./data/clinic-phase-b.json";
@@ -147,7 +287,26 @@ const starterInventory=[
   {"id":"stock-n-pil-tz","name":"N-PIL TZ","type":"Pharma/Brand","generic":"Norfloxacin 400 mg + Tinidazole 600 mg","category":"Tablet/Capsule","form":"Tablet","batch":"","expiry":"","stock":20,"minStock":0,"notes":"One packet photographed containing 2 x 10 tablets. Prescription antimicrobial combination; use only for an appropriate indication.","use":"Selected gastrointestinal bacterial/protozoal infections where clinically indicated.","dose":"Verify product details and indication before prescribing."},
   {"id":"stock-tryzyme","name":"Tryzyme","type":"Dietary Supplement","generic":"Digestive enzyme preparation; exact composition not legible on photographed pack","category":"Syrup/Suspension","form":"Syrup","batch":"","expiry":"2027-09-01","stock":1,"minStock":0,"notes":"Pack explicitly states NOT FOR MEDICINAL USE and contains no therapeutic claim. Do not use as an automatic medicinal prescription pathway. Batch/manufacturing details were not reliably legible.","use":"Digestive enzyme dietary supplement.","dose":"Pack: dosage as directed; not for medicinal use."},
   {"id":"stock-hunger-up","name":"Hunger Up","type":"Pharma/Brand","generic":"Composition not legible on photographed pack","category":"Syrup/Suspension","form":"Syrup","batch":"264-3015","expiry":"2026-12-01","stock":3,"minStock":0,"notes":"Photographed pack identifies Hunger Up syrup. Exact composition and strength are not reliably legible; do not infer them.","use":"Appetite/nutritional support; exact indication depends on verified composition.","dose":"Not specified from the provided photograph; verify the product label before prescribing."},
-  {"id":"stock-rantac-150","name":"Rantac 150","type":"Pharma/Brand","generic":"Ranitidine 150 mg","category":"Gastrointestinal","form":"Tablet","batch":"TR326073","expiry":"2027-10-01","stock":90,"minStock":0,"notes":"Photograph identifies Rantac 150 (ranitidine 150 mg). Pack appears expired; do not dispense/use. Verify regulatory status before any clinical use.","use":"Acid-peptic symptoms / gastric acid reduction; clinical use requires current regulatory verification.","dose":"Not added as an automatic prescribing dose; verify current approved use and product status."}
+  {"id":"stock-rantac-150","name":"Rantac 150","type":"Pharma/Brand","generic":"Ranitidine 150 mg","category":"Gastrointestinal","form":"Tablet","batch":"TR326073","expiry":"2027-10-01","stock":90,"minStock":0,"notes":"Photograph identifies Rantac 150 (ranitidine 150 mg). Pack appears expired; do not dispense/use. Verify regulatory status before any clinical use.","use":"Acid-peptic symptoms / gastric acid reduction; clinical use requires current regulatory verification.","dose":"Not added as an automatic prescribing dose; verify current approved use and product status."},
+  {id:"seed-citasol",name:"Citasol Syrup",type:"Pharma/Brand",generic:"Disodium Hydrogen Citrate BP 0.335 g per 5 mL",category:"Syrup/Suspension",form:"Oral Syrup",batch:"L407A",mfg:"2024-11",expiry:"2027-04-01",stock:3,minStock:0,mrp:120,notes:"Urinary alkalinising syrup. Label states each 5 mL contains disodium hydrogen citrate BP 0.335 g; dosage as directed by physician.",use:"Urinary alkalinisation where clinically indicated, including supportive management of selected urinary symptoms.",dose:"Label: as directed by the physician. Verify indication, hydration status, renal/cardiac considerations and patient-specific dosing before use."},
+
+  {id:"seed-silvez-plus",name:"Silvez Plus Cream",type:"Pharma/Brand",generic:"Silver Sulphadiazine + Chlorhexidine Gluconate + Lignocaine cream",category:"Cream/Gel",form:"Topical Cream",batch:"PZL002",mfg:"2025-01",expiry:"2026-12-01",stock:5,minStock:0,mrp:102.30,notes:"Topical burn and cut cream. Pack states Silver Sulphadiazine, Chlorhexidine Gluconate and Lignocaine; 15 g pack.",use:"Topical management/support for burns and cuts as clinically indicated; assess burn depth, extent and infection risk.",dose:"Apply/use as directed by physician and product label. Verify wound type, burn depth, allergy history and need for referral before use."},
+
+  {id:"seed-clinsol-gel",name:"Clinsol Gel",type:"Pharma/Brand",generic:"Clindamycin Phosphate + Nicotinamide topical gel",category:"Cream/Gel",form:"Topical Gel",batch:"Not clearly legible on provided photograph",mfg:"2025-11",expiry:"2027-11-01",stock:1,minStock:0,mrp:99,notes:"15 g topical gel. Pack states Clindamycin Phosphate & Nicotinamide Gel.",use:"Topical treatment of acne where clinically indicated.",dose:"Use as directed by physician and product label. Verify exact strength and patient-specific skin considerations before use."},
+
+  {id:"seed-neo-becmet-cg",name:"Neo Becmet-CG Cream",type:"Pharma/Brand",generic:"Beclomethasone Dipropionate + Clotrimazole + Neomycin cream",category:"Cream/Gel",form:"Topical Cream",batch:"1016",mfg:"2025-09",expiry:"2027-08-01",stock:21,minStock:0,mrp:93.75,notes:"10 g topical cream. Pack states Beclomethasone Dipropionate, Clotrimazole & Neomycin cream.",use:"Topical treatment of selected inflammatory/infective skin conditions where clinically indicated; verify diagnosis before use.",dose:"Use as directed by physician and product label. Avoid unsupervised prolonged use of topical corticosteroid-containing combinations."},
+
+  {id:"seed-orogard",name:"OroGard Mouth Ulcer Tablet",type:"Pharma/Brand",generic:"Riboflavin 10 mg + Folic Acid 1.5 mg + Niacinamide 100 mg + Lactic Acid Bacillus 60 million spores",category:"Tablet/Capsule",form:"Tablet",batch:"RFLT25010",mfg:"2025-10",expiry:"2027-09-01",stock:100,minStock:0,mrp:65.60,notes:"10-tablet mouth ulcer tablet. Composition recorded from the photographed pack; pack states dosage as directed by physician.",use:"Supportive treatment of mouth ulcers as labelled/clinically indicated.",dose:"Pack: as directed by the physician."},
+
+  {id:"seed-sigma-clove-oil",name:"Sigma Clove Oil",type:"Ayurvedic Medicine",generic:"Clove oil",category:"Other",form:"Oral/Topical Oil",batch:"25S01",mfg:"2025-01",expiry:"2027-12-01",stock:6,minStock:0,mrp:50,notes:"5 mL Ayurvedic proprietary medicine for toothache. Pack states fast pain relief.",use:"Symptomatic relief of toothache as labelled; dental assessment is needed for persistent, severe or recurrent dental pain.",dose:"Use strictly as directed on the product label/physician advice; avoid swallowing or excessive application."},
+
+  {id:"seed-fcn-200",name:"FCN 200",type:"Pharma/Brand",generic:"Fluconazole 200 mg",category:"Tablet/Capsule",form:"Tablet",batch:"SOT-8611",mfg:"2025-08",expiry:"2027-07-01",stock:2,minStock:0,mrp:39.77,notes:"Fluconazole 200 mg tablets. Pack contains 1 x 2 tablets; Schedule H prescription medicine.",use:"Antifungal treatment for susceptible fungal infections where clinically indicated.",dose:"Use only according to the appropriate indication and physician-directed regimen; verify infection site, interactions and hepatic considerations before prescribing."},
+
+  {id:"seed-flucolab-150",name:"Flucolab-150",type:"Pharma/Brand",generic:"Fluconazole 150 mg",category:"Tablet/Capsule",form:"Tablet",batch:"FCT-011",mfg:"2024-11",expiry:"2026-10-01",stock:2,minStock:0,mrp:13.50,notes:"Fluconazole 150 mg uncoated tablets. Pack contains 1 tablet; Schedule H prescription medicine.",use:"Antifungal treatment for susceptible fungal infections where clinically indicated.",dose:"Use only according to the appropriate indication and physician-directed regimen; verify interactions, pregnancy status and hepatic considerations before prescribing."},
+
+  {id:"seed-mp4",name:"MP-4",type:"Pharma/Brand",generic:"Methylprednisolone 4 mg",category:"Tablet/Capsule",form:"Tablet",batch:"TD-25146",mfg:"2025-04",expiry:"2027-09-01",stock:36,minStock:0,mrp:64.50,notes:"Methylprednisolone 4 mg uncoated tablets. Schedule H prescription medicine; use only under appropriate clinical supervision.",use:"Corticosteroid therapy for clinically indicated inflammatory/allergic/immune-mediated conditions.",dose:"Use according to the specific indication and physician-directed regimen; do not infer a patient dose from the pack alone."},
+
+  {id:"seed-risperidone-2",name:"Risperidone 2 mg",type:"Pharma/Brand",generic:"Risperidone 2 mg",category:"Tablet/Capsule",form:"Tablet",batch:"D32T602",mfg:"2024-12",expiry:"2026-11-01",stock:17,minStock:0,mrp:50.10,notes:"Risperidone 2 mg tablets. Prescription medicine; use only under appropriate clinical supervision.",use:"Antipsychotic treatment for clinically indicated psychiatric conditions.",dose:"Use only according to the specific indication and physician-directed regimen; do not infer a patient dose from the pack alone."},
 ];
 
 const DOSE_GUIDE={
@@ -200,7 +359,7 @@ const DOSE_GUIDE={
 };
 
 const $=id=>document.getElementById(id);
-function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));const base=Array.isArray(s)?s:[];let cleaned=base.slice();let changed=false;for(const seed of starterInventory){if(!cleaned.some(m=>m?.id===seed.id)){cleaned.push({...seed});changed=true}}const glynase=starterInventory.find(m=>m?.id==="seed-glynase-mf");if(glynase&&!cleaned.some(m=>String(m?.name||"").trim().toLowerCase()==="glynase mf")){cleaned.push({...glynase});changed=true}if(!cleaned.length&&starterInventory.length){cleaned=starterInventory.map(m=>({...m}));changed=true}if(changed||!Array.isArray(s))localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{const seeded=starterInventory.map(m=>({...m}));try{localStorage.setItem(INVENTORY_KEY,JSON.stringify(seeded))}catch{}return seeded}}
+function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));const base=Array.isArray(s)?s:[];let cleaned=base.slice();let changed=false;for(const seed of starterInventory){if(!cleaned.some(m=>m?.id===seed.id)){cleaned.push({...seed});changed=true}}const glynase=starterInventory.find(m=>m?.id==="seed-glynase-mf");if(glynase&&!cleaned.some(m=>String(m?.name||"").trim().toLowerCase()==="glynase mf")){cleaned.push({...glynase});changed=true}if(!cleaned.length&&starterInventory.length){cleaned=starterInventory.map(m=>({...m}));changed=true}const stockRepairKey="mma_inventory_stock_repair_v1";const totalUnits=cleaned.reduce((sum,m)=>sum+(Number(m?.stock)||0),0);if(cleaned.length&&totalUnits===0&&!localStorage.getItem(stockRepairKey)){const seedById=new Map(starterInventory.map(m=>[m.id,m]));cleaned=cleaned.map(m=>{const seed=seedById.get(m?.id);return seed?{...m,stock:Number(seed.stock)||0}:m});for(const seed of starterInventory){if(!cleaned.some(m=>m?.id===seed.id))cleaned.push({...seed})}localStorage.setItem(stockRepairKey,"1");changed=true}if(changed||!Array.isArray(s))localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{const seeded=starterInventory.map(m=>({...m}));try{localStorage.setItem(INVENTORY_KEY,JSON.stringify(seeded))}catch{}return seeded}}
 function saveInventory(items){localStorage.setItem(INVENTORY_KEY,JSON.stringify(items))}
 function loadHistory(){try{const s=JSON.parse(localStorage.getItem(HISTORY_KEY));return Array.isArray(s)?s:[]}catch{return []}}
 function saveHistory(items){localStorage.setItem(HISTORY_KEY,JSON.stringify(items))}
@@ -233,6 +392,10 @@ function medicineRow(m,mode="inventory"){
   return {m,status,exp,need};
 }
 function renderDashboard(){
+  if(!Array.isArray(inventory)||inventory.length===0){
+    inventory=starterInventory.map(m=>({...m}));
+    try{localStorage.setItem(INVENTORY_KEY,JSON.stringify(inventory))}catch{}
+  }
   const reorder=getReorder(), expiry=getExpiryAlerts().sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry));
   const today=new Date().toISOString().slice(0,10), history=loadHistory();
   const todayCases=history.filter(x=>x.dateKey===today);
@@ -384,7 +547,7 @@ const MARWARI_LATIN_ALIASES={
   "sir dukhe":"headache","sir dukh":"headache","chakkar aave":"dizziness","pet dukhe":"abdominal pain","pet dukh":"abdominal pain","pet saaf koni":"constipation","pet saaf nahi":"constipation",
   "ulti":"vomiting","ok":"vomiting","ji michlawe":"nausea","ji machlawe":"nausea","dast":"diarrhoea","julaab":"diarrhoea",
   "peshab me jalan":"urinary burning","pesab me jalan":"urinary burning","kamar me peer":"back pain","kamar me peed":"back pain","jod dukhe":"joint pain",
-  "badan dukhe":"body ache","sara badan dukhe":"body ache","saans foole":"breathlessness","saans chadhe":"breathlessness","dam ghute":"breathlessness",
+  "badan dukhe":"body ache","sara badan dukhe":"body ache","paanv dard":"leg pain","paanv drd":"leg pain","pair dard":"leg pain","pair drd":"leg pain","taang dard":"leg pain","taang drd":"leg pain","pag dukhe":"leg pain","pag dukhe hai":"leg pain","pag mein peer":"leg pain","pag me peer":"leg pain","pag me dard":"leg pain","pair dukhe":"leg pain","pair me peer":"leg pain","taang dukhe":"leg pain","taang mein peer":"leg pain","taang me peer":"leg pain","ghutno dukhe":"knee pain","ghutna dukhe":"knee pain","ghutne me peer":"knee pain","jod dukhe":"joint pain","jod me peer":"joint pain","kamar me peer":"back pain","kamar mein peer":"back pain","sir me peer":"headache","sir mein peer":"headache","sir dukhe":"headache","pet me peer":"abdominal pain","pet mein peer":"abdominal pain","gala dukhe":"sore throat","gala mein peer":"sore throat","khansi":"cough","khaansi":"cough","jukam":"cold","nak bahe":"runny nose","bukhar":"fever","taav":"fever","tap":"fever","ulti":"vomiting","ji michlawe":"nausea","ji machlawe":"nausea","dast":"diarrhoea","julaab":"diarrhoea","pesab me jalan":"urinary burning","peshab me jalan":"urinary burning","saans foole":"breathlessness","saans chadhe":"breathlessness","chhati me dard":"chest pain","sine me dard":"chest pain","aankh dukhe":"eye pain","kaan dukhe":"ear pain","khujli":"itching","kharish":"itching","daane":"rash","dard":"pain","drd":"pain","पग दुखे":"leg pain","पगां में पीर":"leg pain","पांव में पीर":"leg pain","पैर दुखे":"leg pain","टांग दुखे":"leg pain","टांग में पीर":"leg pain","घुटनो दुखे":"knee pain","घुटना दुखे":"knee pain","जोड़ दुखे":"joint pain","जोड़ में पीर":"joint pain","कमर में पीर":"back pain","सिर में पीर":"headache","सिर दुखे":"headache","पेट में पीर":"abdominal pain","गला दुखे":"sore throat","खांसी":"cough","जुकाम":"cold","बुखार":"fever","उल्टी":"vomiting","जी मचलावे":"nausea","दस्त":"diarrhoea","पेशाब में जलन":"urinary burning","सांस फूलै":"breathlessness","सांस फूले":"breathlessness","छाती में दर्द":"chest pain","आंख दुखे":"eye pain","कान दुखे":"ear pain","खुजली":"itching","खारिश":"itching","saans foole":"breathlessness","saans chadhe":"breathlessness","dam ghute":"breathlessness",
   "chhati me dard":"chest pain","sine me dard":"chest pain","khujli":"itching","kharish":"itching","daane":"rash","kaan dukhe":"ear pain","aankh dukhe":"eye pain","aankh laal":"red eye"
 };
 function expandMarwariClinicalText(value){
@@ -520,6 +683,13 @@ function findProtocolForCase(d){
   });
   return bestScore>0?best:null;
 }
+function verifiedRegimenForMedicine(m,p){
+  if(!m||!p||!Array.isArray(p.medicines))return null;
+  const rx=p.medicines.find(x=>inventoryCandidateMatch(m,x));
+  if(!rx)return null;
+  if(!String(rx.dose||"").trim()&&!String(rx.frequency||"").trim()&&!String(rx.duration||"").trim())return null;
+  return {dose:rx.dose||"",frequency:rx.frequency||"",duration:rx.duration||"",instruction:rx.instruction||"",source:rx.source||p.source||p.title||"Clinic reference",title:p.title||"Clinic reference"};
+}
 function clinicalTriage(d){
   const t=opdText(d), reasons=[];
   const explicit=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis","anaphylaxis","severe abdominal pain","persistent vomiting","blood in vomit","blood in stool","black stool","bleeding gums","rapid breathing","cold clammy","very low urine","no urine"];
@@ -589,23 +759,86 @@ function inventoryTreatmentEligibility(m,d,p){
 function addRelevantInventoryOptions(items,d,p){
   const existing=new Set(items.map(x=>x.id));
   const candidates=inventory.map(m=>({...m,_match:medicineRelevance(m,d)}))
-    .filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&!existing.has(m.id)&&m._match.score>=6&&inventoryTreatmentEligibility(m,d,p))
+    .filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&!existing.has(m.id)&&m._match.score>=5&&inventoryTreatmentEligibility(m,d,p))
     .sort((a,b)=>b._match.score-a._match.score||daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
+
   const added=[];
+  const caseText=opdText(d);
+  const coughCase=/cough|cold|sore throat|sputum|phlegm|respir|wheez/.test(caseText);
+  const feverCase=/fever|bukhar|taav|jwar|pyrexia/.test(caseText);
+  const painCase=/pain|headache|migraine|body ache|dard/.test(caseText);
+  const gastricCase=/gas|acidity|heartburn|gastric|reflux|indigestion|abdomen|abdominal|nausea|vomit/.test(caseText);
+
+  // Prefer a medicine whose recorded clinical use directly matches the complaint.
+  // This keeps a generic respiratory/allergy match below a directly documented cough treatment.
+  candidates.forEach(m=>{
+    const g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
+    let specificity=0;
+    if(coughCase && /cough/.test(g))specificity+=8;
+    if(coughCase && /cold/.test(g))specificity+=3;
+    if(feverCase && /fever|antipyretic/.test(g))specificity+=8;
+    if(painCase && /pain|analges|headache/.test(g))specificity+=6;
+    if(gastricCase && /acid|gastric|antacid|heartburn|indigestion|nausea|vomit/.test(g))specificity+=6;
+    m._treatmentSpecificity=specificity;
+  });
+  candidates.sort((a,b)=>(b._treatmentSpecificity||0)-(a._treatmentSpecificity||0)||b._match.score-a._match.score||daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
+
   for(const m of candidates){
-    if(added.length>=3)break;
+    const g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
+    if(coughCase && !/cough|cold|respir|sputum|phlegm|allerg|rhinitis/.test(g))continue;
+    if(feverCase && /nsaid|aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin/.test(g))continue;
+    if(painCase && !coughCase && !feverCase && !/pain|analges|headache|muscle|joint|spasm|inflamm/.test(g))continue;
+    if(gastricCase && !/gas|acid|gastric|antacid|reflux|indigestion|nausea|vomit|antiemetic|stool|constipat|diarr/.test(g))continue;
     if(added.some(x=>sameClinicalStockGroup(x,m)))continue;
-    added.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"As clinically indicated",rxInstruction:"Inventory-supported treatment option matched from the medicine's recorded clinical use. Confirm indication, contraindications and exact product dose before signing.",rxSource:"Clinic inventory clinical-use match",rxSelectionType:"INVENTORY_USE_MATCH"});
+
+    const regimen=verifiedRegimenForMedicine(m,p,d);
+    added.push({...m,rxPhase:prescriptionPhase(m),rxDose:regimen?.dose||m.dose||"",rxFreq:regimen?.frequency||"",rxDuration:regimen?.duration||"",rxInstruction:regimen?.instruction||"Clinically relevant inventory option. No problem-specific verified regimen is loaded for this exact match; clinician must confirm the regimen before signing.",rxSource:regimen?.source||"Clinic inventory clinical-use match",rxSourceRef:regimen?.title||"",rxSelectionType:regimen?"REFERENCE_MATCH":"INVENTORY_USE_MATCH"});
+
+    // Do not fill a prescription with several medicines merely because they match
+    // the same symptom. Start with the strongest distinct inventory match.
+    if(added.length>=2)break;
   }
   return added;
 }
-
 function buildInventoryPrescription(d,triage=clinicalTriage(d)){
   const p=findProtocolForCase(d),items=[],missing=[],notes=[];
   if(triage.urgent){
     notes.push("Urgent triage finding present. Automatic prescription selection is paused until the patient is clinically assessed/referred as appropriate.");
     return {protocol:p,items,missing,notes};
   }
+  // Direct clinical-use selection: when the stocked medicine explicitly lists the
+  // patient's symptom/condition as an indication, prefer that medicine over generic matches.
+  const directCaseText=opdText(d);
+  const directTerms=[];
+  if(/headache|migraine/.test(directCaseText))directTerms.push("headache","migraine");
+  if(/cough|cold|sore throat|sputum|phlegm/.test(directCaseText))directTerms.push("cough","cold","sore throat");
+  if(/fever|bukhar|taav|jwar/.test(directCaseText))directTerms.push("fever","antipyretic");
+  if(/toothache|dental pain|tooth pain/.test(directCaseText))directTerms.push("toothache","dental");
+  if(/joint pain|arthritis|muscle pain|sprain|strain|spasm/.test(directCaseText))directTerms.push("musculoskeletal","joint pain","muscle","spasm","sprain","strain");
+  if(/acidity|heartburn|gastric|gas|indigestion/.test(directCaseText))directTerms.push("acidity","heartburn","gastric","gas","indigestion");
+  if(/nausea|vomit|vomiting/.test(directCaseText))directTerms.push("nausea","vomit","antiemetic");
+
+  if(directTerms.length){
+    const direct=inventory.filter(m=>{
+      if((Number(m.stock)||0)<=0||expiryStatus(m)==="expired")return false;
+      const g=normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+      if(!directTerms.some(term=>g.includes(normalizeRxText(term))))return false;
+      return medicineSafetyForAutoRx(m,d,p,null).ok;
+    }).sort((x,y)=>{
+      const gx=normalizeRxText((x.generic||"")+" "+(x.name||"")+" "+(x.use||""));
+      const gy=normalizeRxText((y.generic||"")+" "+(y.name||"")+" "+(y.use||""));
+      const sx=directTerms.reduce((n,t)=>n+(gx.includes(normalizeRxText(t))?1:0),0);
+      const sy=directTerms.reduce((n,t)=>n+(gy.includes(normalizeRxText(t))?1:0),0);
+      return sy-sx||daysUntil(x.expiry)-daysUntil(y.expiry);
+    });
+    if(direct.length){
+      const m=direct[0];
+      const regimen=verifiedRegimenForMedicine(m,p,d);
+      items.push({...m,rxPhase:prescriptionPhase(m),rxDose:regimen?.dose||m.dose||"",rxFreq:regimen?.frequency||"",rxDuration:regimen?.duration||"",rxInstruction:regimen?.instruction||"Direct clinical-use match from the verified clinic inventory. No problem-specific regimen was loaded for this exact match; clinician must confirm the regimen before signing.",rxSource:regimen?.source||"Direct inventory indication match",rxSourceRef:regimen?.title||"",rxSelectionType:regimen?"REFERENCE_MATCH":"DIRECT_CLINICAL_USE_MATCH"});
+      notes.push(regimen?"Treatment selected with an exact problem-specific regimen from the matched clinic reference.":"Treatment selected from a stocked medicine whose recorded clinical use directly matches the patient's entered complaint; no exact problem-specific regimen was loaded for this medicine.");
+    }
+  }
+
   if(p){
     (p.medicines||[]).forEach(rx=>{
       let m=chooseRxStockCandidate(inventory.filter(x=>inventoryCandidateMatch(x,rx)),rx,d,p);
@@ -654,6 +887,30 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
     }
   }
 
+  // Hard fallback for common OPD complaints: use the clinic inventory's explicit indication data.
+  // This prevents a blank treatment section when the broader protocol matcher misses a simple complaint.
+  if(!items.length){
+    const ft=opdText(d);
+    const fallbackTerms=/headache|migraine/.test(ft)?["headache","migraine"]:
+      /toothache|dental pain|tooth pain/.test(ft)?["toothache","dental"]:
+      /cough|cold|sore throat/.test(ft)?["cough","cold","sore throat"]:
+      /fever|bukhar|taav|jwar/.test(ft)?["fever","antipyretic"]:
+      /acidity|heartburn|gastric|indigestion/.test(ft)?["acidity","heartburn","gastric","indigestion"]:
+      /nausea|vomit|vomiting/.test(ft)?["nausea","vomit","antiemetic"]:[];
+    if(fallbackTerms.length){
+      const fm=inventory.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&
+        fallbackTerms.some(term=>normalizeRxText((m.name||"")+" "+(m.generic||"")+" "+(m.use||"")+" "+(m.notes||"")).includes(normalizeRxText(term))) &&
+        medicineSafetyForAutoRx(m,d,p,null).ok)
+        .sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
+      if(fm.length){
+        const m=fm[0];
+        const regimen=verifiedRegimenForMedicine(m,p,d);
+        items.push({...m,rxPhase:prescriptionPhase(m),rxDose:regimen?.dose||m.dose||"",rxFreq:regimen?.frequency||"",rxDuration:regimen?.duration||"",rxInstruction:regimen?.instruction||"Explicit inventory-indication match. No problem-specific verified regimen is loaded for this exact match; clinician must confirm the regimen before signing.",rxSource:regimen?.source||"Clinic inventory indication fallback",rxSourceRef:regimen?.title||"",rxSelectionType:regimen?"REFERENCE_MATCH":"DIRECT_CLINICAL_USE_MATCH"});
+        notes.push("A direct clinic-inventory indication match was selected for the entered complaint.");
+      }
+    }
+  }
+
   if(missing.length)notes.unshift("Reference medicine not currently available in recorded usable stock: "+missing.join(", ")+". No substitute is invented unless this protocol explicitly defines a supported substitute.");
   if(!items.length)notes.push("No safe automatic prescription match was found in current usable clinic stock for this case. Do not use expiry/stock pressure as a reason to choose another medicine.");
   const fefo=items.filter(m=>m._selection?.fefoUsed);
@@ -661,39 +918,102 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
   return {protocol:p,items,missing,notes};
 }
 
+function selectAutomaticTreatmentFallback(a,d){
+  const t=opdText(d);
+  const symptomOnly=/^(headache|sir dard|pain|pain in legs|leg pain|body pain|joint pain|muscle pain|toothache|dental pain|cough|cold|fever|bukhar|acidity|gas|indigestion|nausea|vomiting)$/i.test(String(d.complaint||"").trim());
+  const candidates=(a.matches||[]).filter(m=>
+    (Number(m.stock)||0)>0 &&
+    expiryStatus(m)!=="expired" &&
+    !["Injection","IV Fluid","Respule"].includes(m.category) &&
+    medicineSafetyForAutoRx(m,d,a.rx?.protocol,null).ok
+  );
+  if(!candidates.length)return null;
+  const rank=(m)=>{
+    const g=normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+    let score=medicineRelevance(m,d).score*10;
+    if(/pain in legs|leg pain|joint pain|muscle pain|body pain|sprain|strain|spasm/.test(t)){
+      if(/musculoskeletal|joint pain|muscle|spasm|sprain|strain/.test(g))score+=30;
+      if(/^KLOZ$/i.test(m.name))score+=8;
+      if(/^Tromanil-Forte$/i.test(m.name))score+=7;
+      if(/^Powerflam MR$/i.test(m.name)&&/spasm|stiffness/.test(t))score+=8;
+    }
+    if(/headache|migraine/.test(t)){
+      if(/severe headache|migraine|headache/.test(g))score+=30;
+      if(/^Tromanil Plus$/i.test(m.name))score+=8;
+      if(/^Nimucaff$/i.test(m.name)&&/cold|allerg|rhinitis/.test(t))score+=6;
+    }
+    if(/toothache|dental pain|tooth pain/.test(t)){
+      if(/toothache|dental/.test(g))score+=30;
+      if(/^Sigma Clove Oil$/i.test(m.name))score+=10;
+    }
+    if(/cough|cold|sore throat/.test(t)&&/cough|cold|sore throat|respir|rhinitis/.test(g))score+=25;
+    if(/acidity|heartburn|gastric|gas|indigestion/.test(t)&&/acid|gastric|antacid|reflux|indigestion/.test(g))score+=25;
+    if(/nausea|vomit/.test(t)&&/nausea|vomit|antiemetic/.test(g))score+=25;
+    if(/fever|bukhar|taav|jwar/.test(t)&&/fever|antipyretic/.test(g))score+=25;
+    if(symptomOnly && /antibiotic|ciprofloxacin|cefixime|azithromycin|ofloxacin|amoxicillin|metronidazole/.test(g))score-=100;
+    return score;
+  };
+  candidates.sort((x,y)=>rank(y)-rank(x)||daysUntil(x.expiry)-daysUntil(y.expiry)||x.name.localeCompare(y.name));
+  const m=candidates[0];
+  return {...m,
+    rxPhase:prescriptionPhase(m),
+    rxDose:m.dose||"",
+    rxFreq:"",
+    rxDuration:"",
+    rxInstruction:"Automatically selected from stocked clinic inventory based on the entered complaint and recorded indication. Verify diagnosis, contraindications and exact regimen before signing.",
+    rxSource:"Automatic clinic-inventory treatment match",
+    rxSelectionType:"AUTOMATIC_TREATMENT_MATCH"
+  };
+}
+
 function renderAssessmentView(a,d,recordHistory){
-  $("emptyResult").classList.add("hidden");$("result").classList.remove("hidden");
-  $("resultState").textContent=a.urgent?"Referral review":(a.rx?.items?.length?"Prescription draft":"Generated");
-  $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");
-  $("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
-  $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
-  $("clinicalSnapshot").innerHTML=`<div><span>Patient</span><strong>${esc(d.patientName||"—")}</strong></div><div><span>Age / Sex</span><strong>${esc(d.age||"—")} / ${esc(d.sex||"—")}</strong></div><div><span>Vitals</span><strong>BP ${esc(d.bp||"—")} • Sugar ${esc(d.bloodSugar||"—")} • Pulse ${esc(d.pulse||"—")} • SpO₂ ${esc(d.spo2||"—")} • Temp ${esc(d.temperature||"—")} • Weight ${esc(d.weight||"—")} kg • Pregnancy ${esc(d.pregnancyStatus||"—")}${d.gestationalWeeks?" • GA "+esc(d.gestationalWeeks)+" wk":""}</strong></div><div><span>Complaint</span><strong>${esc(d.complaint||"—")}</strong></div>`;
-  const testEl=$("suggestedTests");
-  if(testEl){
-    testEl.innerHTML=(a.suggestedTests||[]).map(x=>'<div style="margin-bottom:8px"><b>'+esc(x.name)+'</b><br><small>'+esc(x.reason)+'</small></div>').join("");
+  $("emptyResult").classList.add("hidden");
+  $("result").classList.remove("hidden");
+
+  $("resultState").textContent=a.urgent?"Referral review":(a.rx?.items?.length?"Treatment ready":"Treatment review");
+  $("resultState").className="badge"+(a.urgent?" danger":"");
+
+  $("referralBox").innerHTML=a.urgent
+    ?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>'
+    :"";
+
+  const patientBar=$("treatmentPatientBar");
+  if(patientBar){
+    patientBar.innerHTML=
+      '<div><span>Patient</span><strong>'+esc(d.patientName||"—")+'</strong></div>'+
+      '<div><span>Age / Sex</span><strong>'+esc(d.age||"—")+' / '+esc(d.sex||"—")+'</strong></div>'+
+      '<div><span>Weight</span><strong>'+esc(d.weight||"—")+' kg</strong></div>'+
+      '<div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div>';
   }
-  const autoRxItems=a.rx?.items||[];
+
+  const autoRxItems=(a.rx?.items&&a.rx.items.length)?a.rx.items:(selectAutomaticTreatmentFallback(a,d)?[selectAutomaticTreatmentFallback(a,d)]:[]);
   const autoP1=autoRxItems.filter(m=>prescriptionPhase(m)==="1");
   const autoP2=autoRxItems.filter(m=>prescriptionPhase(m)==="2");
-  const rxTitle=a.rx?.protocol?'<div class="protocol-inline"><b>Matched clinic case:</b> '+esc(a.rx.protocol.title)+(a.rx.protocol.source?'<small> • '+esc(a.rx.protocol.source)+'</small>':"")+'</div>':"";
-  const rxNotes=(a.rx?.notes||[]).map(x=>'<div class="medicine-warning">'+esc(x)+'</div>').join("");
-  const pbFactors=(a.patientFactors||[]).map(x=>"<div class=\"protocol-inline\"><b>Patient factor:</b> "+esc(x)+"</div>").join("");
-  const pbInv=(a.investigations||[]).length?"<div class=\"phaseb-box\"><b>Suggested investigations / monitoring:</b><ul>"+a.investigations.map(x=>"<li>"+esc(x)+"</li>").join("")+"</ul></div>":"";
-  const pbFollow=a.followUpSuggestion?"<div class=\"phaseb-box\"><b>Follow-up:</b> "+esc(a.followUpSuggestion)+"</div>":"";
-  const pdInv=d.investigationsOrdered?"<div class=\"phaseb-box\"><b>Investigations ordered/advised:</b> "+esc(d.investigationsOrdered)+"</div>":"";
-  const pdRes=d.investigationResults?"<div class=\"phaseb-box\"><b>Results recorded:</b> "+esc(d.investigationResults)+"</div>":"";
-  const pdFU=d.followupDate?"<div class=\"phaseb-box\"><b>Follow-up tracking:</b> "+esc(d.followupDate)+" • Status: "+esc(d.followupStatus||"planned")+"</div>":"";
-  $("possibleDiagnosis").innerHTML=esc(a.possible)+rxTitle+rxNotes+pbFactors+pbInv+pbFollow+pdInv+pdRes+pdFU+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
-  $("medicineMatchCount").textContent=a.matches.length+" matched";
+
+  $("medicineMatchCount").textContent=autoRxItems.length+" selected";
   $("medicineMatchInfo").innerHTML=a.matches.length
-    ?'<span>Only medicines recorded in the current clinic inventory are shown.</span> <span>Selection order: clinical/reference match → safety/patient factors → FEFO only within the same suitable stock group.</span>'
-    :"<span>No inventory medicine was matched confidently to the entered complaint.</span>";
-  $("phase1").innerHTML=autoP1.length?autoP1.map(medCard).join(""):'<div class="empty-list">No safe automatic Phase 1 medicine was matched to this case. Review the complaint, examination and clinic reference before selecting a medicine.</div>';
-  $("phase2").innerHTML=autoP2.length?autoP2.map(medCard).join(""):'<div class="empty-list">No safe automatic Phase 2 injection/short-course medicine was matched. Do not add an injection or IV fluid unless clinically indicated and verified.</div>';
+    ?'<span>'+a.matches.length+' inventory treatment options matched to this case.</span> <span>Only medicines in the verified clinic inventory are shown.</span>'
+    :"No inventory treatment matched confidently. Review the complaint, examination and clinic reference before selecting treatment.";
+
+  $("phase1").innerHTML=autoP1.length
+    ?autoP1.map(medCard).join("")
+    :'<div class="empty-list">No automatic Phase 1 treatment matched. You can review the available inventory and add an appropriate medicine manually.</div>';
+
+  $("phase2").innerHTML=autoP2.length
+    ?autoP2.map(medCard).join("")
+    :'<div class="empty-list">No automatic Phase 2 treatment matched. Add an injection/IV/short-course item only when clinically indicated.</div>';
+
   selectedPrescriptions=autoRxItems.map(x=>({...x}));
   renderPrescription();
+
+  const checks=(a.checks||[]).filter(x=>x);
+  const confidence=$("prescriptionConfidence");
+  if(confidence && checks.length){
+    confidence.innerHTML='<div class="protocol-inline"><b>Before signing:</b> '+checks.slice(0,4).map(esc).join(" • ")+'</div>';
+  }
   if($("summary"))$("summary").textContent=a.summary;
 }
+
 function runLiveAssessment(){
   const name=$("patientName")?.value.trim(), age=$("age")?.value, complaint=$("complaint")?.value.trim();
   if(!name||!age||!complaint)return;
@@ -715,10 +1035,13 @@ function duplicateSafetyWarnings(rows){
   return [...new Set(warnings)];
 }
 function medCard(m){
-  const dose=m.dose||Object.entries(DOSE_GUIDE).find(([k])=>m.name.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(m.name.toLowerCase()))?.[1]||"Dose not specified in the provided clinic reference files.";
+  const dose=m.rxDose||m.dose||"Not specified in the verified clinic reference data.";
+  const frequency=m.rxFreq||"No problem-specific verified frequency loaded.";
+  const duration=m.rxDuration||"No problem-specific verified duration loaded.";
+  const source=m.rxSource||"Clinic inventory record";
   const stock=Number(m.stock)||0, exp=expiryStatus(m), warn=ageWarnings(m,currentCaseData||{});
   const selected=selectedPrescriptions.some(x=>x.id===m.id);
-  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="1"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="1">'+(selected&&prescriptionPhase(m)==="1"?"✓ Phase 1":"Add Phase 1")+'</button><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="2"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="2">'+(selected&&prescriptionPhase(m)==="2"?"✓ Phase 2":"Add Phase 2")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
+  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Dose:</b> '+esc(dose)+'<br><b>Frequency:</b> '+esc(frequency)+'<br><b>Duration:</b> '+esc(duration)+'<br><b>Reference:</b> '+esc(source)+(m.rxSourceRef?'<br><b>Reference detail:</b> '+esc(m.rxSourceRef):"")+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="1"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="1">'+(selected&&prescriptionPhase(m)==="1"?"✓ Phase 1":"Add Phase 1")+'</button><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="2"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="2">'+(selected&&prescriptionPhase(m)==="2"?"✓ Phase 2":"Add Phase 2")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
 }
 let currentCaseData=null;
 function rxConfidenceLabel(m){
@@ -761,9 +1084,9 @@ function renderPrescription(){
   if(!list)return;
   list.innerHTML=selectedPrescriptions.length?selectedPrescriptions.map((m,i)=>{
     const phase=prescriptionPhase(m);
-    const defaultDuration=phase==="2"&&!m.rxDuration?"2–3 days":"";
+    const defaultDuration="";
     return '<div class="rx-row"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small><small class="rx-confidence">'+esc(rxConfidenceLabel(m))+'</small><small class="rx-why">'+esc(rxWhySelected(m))+'</small></div><div class="rx-fields"><select data-rx-phase="'+i+'"><option value="1" '+(phase==="1"?"selected":"")+'>Phase 1 — Regular medicines</option><option value="2" '+(phase==="2"?"selected":"")+'>Phase 2 — Injection + short-course</option></select><input data-rx-dose="'+i+'" placeholder="Dose / strength" value="'+esc(m.rxDose||"")+'"><select data-rx-route="'+i+'"><option value="">Route</option><option '+(m.rxRoute==="IM"?"selected":"")+'>IM</option><option '+(m.rxRoute==="IV"?"selected":"")+'>IV</option><option '+(m.rxRoute==="SC"?"selected":"")+'>SC</option><option '+(m.rxRoute==="Oral"?"selected":"")+'>Oral</option><option '+(m.rxRoute==="Topical"?"selected":"")+'>Topical</option></select><input data-rx-freq="'+i+'" placeholder="Frequency" value="'+esc(m.rxFreq||"")+'"><input data-rx-duration="'+i+'" placeholder="'+(phase==="2"?"2–3 days / as indicated":"Duration")+'" value="'+esc(m.rxDuration||defaultDuration)+'"><input data-rx-instruction="'+i+'" placeholder="Instructions" value="'+esc(m.rxInstruction||"")+'"><input data-rx-compat="'+i+'" placeholder="IV/Drip compatibility — verify before mixing" value="'+esc(m.rxCompat||"")+'"><button type="button" class="btn danger-outline remove-rx" data-rx-remove="'+i+'">Remove</button></div></div>';
-  }).join(""):'<div class="empty-list">Assessment se medicine par “Add to prescription” click karein. Phase 1 regular medicines ke liye hai; Phase 2 injection/IV ke saath 2–3 din ka short-course medicine bhi rakh sakte hain.</div>';
+  }).join(""):'<div class="empty-list">Treatment options yahan automatically selected hain. Zarurat ke hisaab se medicine add/remove karein aur prescription details clinician ke taur par verify/edit karein.</div>';
   renderPrescriptionCostSummary();
   const confidenceEl=$("prescriptionConfidence");
   if(confidenceEl){const groups={};selectedPrescriptions.forEach(m=>{const k=rxConfidenceLabel(m);groups[k]=(groups[k]||0)+1;});confidenceEl.innerHTML=selectedPrescriptions.length?Object.entries(groups).map(([k,n])=>"<span class=\"confidence-badge\">"+esc(k)+" × "+n+"</span>").join(" "):"";}
@@ -800,8 +1123,8 @@ function formatRxGroup(rows){
     const dose=m.rxDose||m.dose||"Verify dose";
     const route=m.rxRoute?(" • Route: "+m.rxRoute):"";
     const compat=m.rxCompat?("\n   IV/Drip compatibility note: "+m.rxCompat):"";
-    return (i+1)+". "+m.name+"\n   Dose: "+dose+route+"\n   Frequency: "+(m.rxFreq||"Verify")+
-      "\n   Duration: "+(m.rxDuration||"Verify")+"\n   Instructions: "+(m.rxInstruction||"—")+compat+"\n   Confidence: "+rxConfidenceLabel(m)+"\n   Why: "+rxWhySelected(m);
+    return (i+1)+". "+m.name+"\n   Dose: "+dose+route+"\n   Frequency: "+(m.rxFreq||"No problem-specific verified frequency loaded")+
+      "\n   Duration: "+(m.rxDuration||"No problem-specific verified duration loaded")+"\n   Instructions: "+(m.rxInstruction||"—")+compat+"\n   Confidence: "+rxConfidenceLabel(m)+"\n   Why: "+rxWhySelected(m);
   }).join("\n\n");
 }
 function printPrescription(){
@@ -819,35 +1142,20 @@ function printPrescription(){
 $("caseForm").addEventListener("submit",e=>{
   e.preventDefault();
   currentCaseData={patientName:$("patientName").value.trim(),age:$("age").value,sex:$("sex").value,weight:$("weight")?.value,pregnancyStatus:$("pregnancyStatus")?.value||"unknown",gestationalWeeks:$("gestationalWeeks")?.value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint:$("complaint").value.trim(),history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
-  const a=buildAssessment(currentCaseData);
-  renderAssessmentView(a,currentCaseData,true);
-  const h=loadHistory();
-  h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),dateKey:new Date().toISOString().slice(0,10),followupDate:currentCaseData.followupDate,patientName:currentCaseData.patientName,mobile:currentCaseData.mobile,village:currentCaseData.village,complaint:currentCaseData.complaint,age:currentCaseData.age,sex:currentCaseData.sex,data:{...currentCaseData},summary:a.summary});
-  saveHistory(h.slice(0,100));
-  logAudit("OPD case recorded",(currentCaseData.patientName||"Unnamed patient")+" • "+(currentCaseData.complaint||"Unnamed complaint"));
-  renderHistory();renderDashboard();
+  renderVillageOpdEngine(currentCaseData);
+  logAudit("OPD treatment engine",(currentCaseData.patientName||"Unnamed patient")+" • "+(currentCaseData.complaint||"Unnamed complaint"));
+  renderDashboard();
 });
 
 $("printSummary")?.addEventListener("click",()=>{const text=$("summary")?.textContent||"";const w=window.open("","_blank");if(!w)return;w.document.write("<pre style=\"font:14px Arial;padding:30px;white-space:pre-wrap\">"+esc(text)+"</pre>");w.document.close();w.print()});
 $("printPrescription")?.addEventListener("click",printPrescription);
 $("clearPrescription")?.addEventListener("click",()=>{selectedPrescriptions=[];renderPrescription();rerenderAssessmentCards()});
-$("clearCase").addEventListener("click",()=>{$("caseForm").reset();selectedPrescriptions=[];renderPrescription();$("emptyResult").classList.remove("hidden");$("result").classList.add("hidden");$("resultState").textContent="Waiting"});
+$("clearCase").addEventListener("click",()=>{$("caseForm").reset();selectedPrescriptions=[];});
 
-function renderHistory(){
-  const h=loadHistory(), q=($("historySearch")?.value||"").trim().toLowerCase();
-  const rows=h.filter(x=>!q||[x.patientName,x.mobile,x.village,x.complaint,x.age,x.sex,x.followupStatus,x.data?.investigationsOrdered,x.data?.investigationResults].join(" ").toLowerCase().includes(q));
-  $("historyList").innerHTML=rows.length?rows.map((x,i)=>'<div class="history-item"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><small>'+esc(x.createdAt||"")+' • Age: '+esc(x.age||"—")+' • Sex: '+esc(x.sex||"—")+' • Mobile: '+esc(x.mobile||"—")+' • Village: '+esc(x.village||"—")+'</small><p class="history-complaint">'+esc(x.complaint||"No complaint")+(x.followupDate?" • Follow-up: "+esc(x.followupDate)+" • "+esc(x.followupStatus||"planned"):"")+'</p><button class="btn ghost load-case" data-history-id="'+esc(x.id||"")+'">Open old history</button></div>').join(""):'<div class="empty-list">No matching patient history.</div>';
-  $("historyList").querySelectorAll("[data-history-id]").forEach(b=>b.addEventListener("click",()=>{
-    const x=h.find(v=>v.id===b.dataset.historyId);if(!x)return;
-    const d=x.data||{patientName:x.patientName,mobile:x.mobile,village:x.village,age:x.age,sex:x.sex,complaint:x.complaint};
-    $("patientName").value=d.patientName||"";$("mobile").value=d.mobile||"";$("village").value=d.village||"";$("age").value=d.age||"";$("sex").value=d.sex||"";$("weight").value=d.weight||"";$("pregnancyStatus").value=d.pregnancyStatus||"unknown";$("gestationalWeeks").value=d.gestationalWeeks||"";$("complaint").value=d.complaint||"";
-    $("history").value=d.history||"";$("bp").value=d.bp||"";$("bloodSugar").value=d.bloodSugar||"";$("pulse").value=d.pulse||"";$("spo2").value=d.spo2||"";$("temperature").value=d.temperature||"";$("exam").value=d.exam||"";$("redFlags").value=d.redFlags||"";$("followupDate").value=d.followupDate||"";$("followupStatus").value=d.followupStatus||"planned";$("investigationsOrdered").value=d.investigationsOrdered||"";$("investigationResults").value=d.investigationResults||"";
-    switchTab("assistant");
-  }));
-}
-$("historySearch")?.addEventListener("input",renderHistory);
-$("clearHistory").addEventListener("click",()=>{if(confirm("Clear locally stored case history?")){localStorage.removeItem(HISTORY_KEY);renderHistory();renderDashboard()}});
+function renderHistory(){ return; }
 
+// Old OPD case history was intentionally removed for the treatment workspace rebuild.
+try{localStorage.removeItem(HISTORY_KEY);}catch{}
 let clinicProtocols=[];
 async function loadProtocols(){
  try{const r=await fetch(PROTOCOLS_URL);clinicProtocols=await r.json();}catch{clinicProtocols=[]}
@@ -935,4 +1243,4 @@ function setupPrescriptionDelegation(){
 }
 setupPrescriptionDelegation();
 setupClinicSecurity();
-refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();loadPhaseB();loadPhaseC();setupLiveOpd();
+refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();loadPhaseB();loadPhaseC();setupLiveOpd();renderVillageOpdCategories();
