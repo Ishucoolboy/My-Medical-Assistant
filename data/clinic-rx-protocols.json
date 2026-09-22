@@ -1,0 +1,283 @@
+[
+  {
+    "title": "Non-Productive (Dry) Cough",
+    "source": "Doctorwalah OPD Gold Edition — Dry Cough case",
+    "keywords": [
+      "dry cough",
+      "non productive cough",
+      "throat irritation",
+      "night worsening"
+    ],
+    "medicines": [
+      {
+        "label": "Cocas-DX — dextromethorphan + chlorpheniramine",
+        "match": [
+          "Cocas-DX",
+          "Dextromethorphan 10 mg + Chlorpheniramine Maleate 4 mg"
+        ],
+        "dose": "10 mL TDS",
+        "frequency": "TDS",
+        "duration": "5 days",
+        "phase": "1",
+        "instruction": "Use as the stored clinic reference; review sedation and patient-specific suitability."
+      }
+    ],
+    "note": "The PDF specifically advises no routine antibiotics and avoiding expectorants for this dry-cough pattern."
+  },
+  {
+    "title": "Dyspepsia / Acid-Peptic Symptoms",
+    "source": "Doctorwalah OPD Gold Edition — Dyspepsia case",
+    "keywords": [
+      "dyspepsia",
+      "acidity",
+      "epigastric pain",
+      "heartburn",
+      "acid reflux",
+      "bloating",
+      "early satiety"
+    ],
+    "medicines": [
+      {
+        "label": "Pantosport-D — pantoprazole 40 mg + domperidone 10 mg",
+        "match": [
+          "Pantosport-D",
+          "pantoprazole 40 mg + domperidone 10 mg"
+        ],
+        "dose": "1 tablet OD before breakfast",
+        "frequency": "OD",
+        "duration": "2 weeks",
+        "phase": "1",
+        "instruction": "Use only after checking contraindications/interactions and indication."
+      }
+    ],
+    "note": "The reference pathway also mentions antacid/sucralfate options, but they are not auto-added unless an exact stocked match is present."
+  },
+  {
+    "title": "Functional Constipation",
+    "source": "Doctorwalah OPD Gold Edition — Constipation case",
+    "keywords": [
+      "constipation",
+      "hard stools",
+      "infrequent bowel movements",
+      "straining",
+      "incomplete evacuation"
+    ],
+    "medicines": [
+      {
+        "label": "Lactulose solution",
+        "match": [
+          "lactulose",
+          "LactomBL"
+        ],
+        "dose": "15–30 mL HS",
+        "frequency": "HS",
+        "duration": "as indicated",
+        "phase": "1",
+        "instruction": "Adjust to bowel response; maintain oral fluids."
+      }
+    ],
+    "note": "The PDF lists psyllium and bisacodyl as additional options; the app does not auto-stack multiple laxatives."
+  },
+  {
+    "title": "IBS — Diarrhoea Predominant",
+    "source": "Doctorwalah OPD Gold Edition — IBS case",
+    "keywords": [
+      "ibs",
+      "diarrhoea predominant",
+      "ibs-d",
+      "loose stools with abdominal pain",
+      "altered bowel habits"
+    ],
+    "medicines": [
+      {
+        "label": "Lopex — loperamide 2 mg",
+        "match": [
+          "Lopex",
+          "loperamide 2 mg"
+        ],
+        "dose": "2 mg SOS",
+        "frequency": "SOS",
+        "duration": "symptom based",
+        "phase": "1",
+        "instruction": "Use only when appropriate for IBS-D; exclude infectious/inflammatory red flags first."
+      }
+    ],
+    "note": "The PDF lists rifaximin as an additional option, but it is not auto-added unless an exact stocked product is available."
+  },
+  {
+    "title": "IBS — Constipation Predominant",
+    "source": "Doctorwalah OPD Gold Edition — IBS case",
+    "keywords": [
+      "ibs",
+      "ibs-c",
+      "constipation predominant",
+      "bloating with constipation"
+    ],
+    "medicines": [
+      {
+        "label": "Lactulose solution",
+        "match": [
+          "lactulose",
+          "LactomBL"
+        ],
+        "dose": "15–30 mL HS",
+        "frequency": "HS",
+        "duration": "symptom based",
+        "phase": "1",
+        "instruction": "Maintain hydration and fibre as tolerated."
+      }
+    ]
+  },
+  {
+    "title": "Anaemia in Pregnancy",
+    "source": "Doctorwalah OPD Gold Edition — Anaemia in Pregnancy case",
+    "keywords": [
+      "anaemia in pregnancy",
+      "anemia in pregnancy",
+      "pregnancy anaemia",
+      "pregnancy anemia",
+      "low hb pregnancy",
+      "hb less than 11 pregnancy"
+    ],
+    "medicines": [
+      {
+        "label": "Ferroclide-XT — elemental iron + folic acid",
+        "match": [
+          "Ferroclide-XT",
+          "elemental iron 100 mg + folic acid 1.5"
+        ],
+        "dose": "1 tablet OD after meals",
+        "frequency": "OD",
+        "duration": "as per antenatal plan",
+        "phase": "1",
+        "instruction": "Confirm gestational age, Hb/CBC and tolerance; the PDF also lists folic acid 5 mg and albendazole after 14 weeks, which are not auto-added here unless separately matched."
+      }
+    ]
+  },
+  {
+    "title": "First Trimester Pregnancy",
+    "source": "Doctorwalah OPD Gold Edition — First Trimester Pregnancy case",
+    "keywords": [
+      "first trimester",
+      "early pregnancy",
+      "pregnancy with nausea",
+      "missed periods",
+      "normal intrauterine pregnancy"
+    ],
+    "medicines": [
+      {
+        "label": "Ferglow — folic acid 5 mg",
+        "match": [
+          "Ferglow",
+          "folic acid 5 mg"
+        ],
+        "dose": "5 mg OD",
+        "frequency": "OD",
+        "duration": "12 weeks",
+        "phase": "1",
+        "instruction": "Confirm pregnancy/gestational age and antenatal investigations."
+      }
+    ],
+    "note": "The PDF also lists doxylamine+pyridoxine and calcium; only the stocked folic-acid product is auto-drafted here."
+  },
+  {
+    "title": "Second Trimester Pregnancy",
+    "source": "Doctorwalah OPD Gold Edition — Second Trimester Pregnancy case",
+    "keywords": [
+      "second trimester",
+      "mid pregnancy",
+      "quickening",
+      "normal pregnancy 2nd trimester"
+    ],
+    "medicines": [
+      {
+        "label": "Ferroclide-XT — elemental iron + folic acid",
+        "match": [
+          "Ferroclide-XT",
+          "elemental iron 100 mg + folic acid 1.5"
+        ],
+        "dose": "1 tablet OD",
+        "frequency": "OD",
+        "duration": "as per antenatal plan",
+        "phase": "1",
+        "instruction": "Confirm gestational age and CBC/antenatal status."
+      }
+    ],
+    "note": "The PDF also lists calcium + vitamin D and protein supplementation; they are not auto-added unless an exact stocked match is present."
+  },
+  {
+    "title": "PCOD",
+    "source": "Doctorwalah OPD Gold Edition — PCOD case",
+    "keywords": [
+      "pcod",
+      "pcos",
+      "polycystic ovarian",
+      "irregular menses",
+      "weight gain acne infertility"
+    ],
+    "medicines": [
+      {
+        "label": "Ferglow — folic acid 5 mg",
+        "match": [
+          "Ferglow",
+          "folic acid 5 mg"
+        ],
+        "dose": "5 mg OD",
+        "frequency": "OD",
+        "duration": "as clinically indicated",
+        "phase": "1",
+        "instruction": "Use as supplementation where appropriate; PCOD treatment requires menstrual, metabolic and fertility context."
+      }
+    ],
+    "note": "Metformin/OCP/myo-inositol are not auto-added unless an exact stocked product is present."
+  },
+  {
+    "title": "Cyclic Mastalgia",
+    "source": "Doctorwalah OPD Gold Edition — Mastalgia case",
+    "keywords": [
+      "mastalgia",
+      "breast pain",
+      "cyclic breast pain",
+      "breast heaviness"
+    ],
+    "medicines": [
+      {
+        "label": "DoloNic Gel — topical NSAID gel",
+        "match": [
+          "DoloNic Gel",
+          "diclofenac diethylamine"
+        ],
+        "dose": "Local application BD",
+        "frequency": "BD",
+        "duration": "as indicated",
+        "phase": "1",
+        "instruction": "Apply locally as directed; examine breast and investigate focal pain/lump where indicated."
+      }
+    ]
+  },
+  {
+    "title": "Minor Skin / Superficial Wound",
+    "source": "Clinic inventory + wound reference pathway",
+    "keywords": [
+      "minor wound",
+      "superficial wound",
+      "cut",
+      "abrasion",
+      "skin wound"
+    ],
+    "medicines": [
+      {
+        "label": "MBLDINE Ointment — povidone iodine 5%",
+        "match": [
+          "MBLDINE Ointment",
+          "povidone iodine 5%"
+        ],
+        "dose": "Topical thin layer",
+        "frequency": "as directed",
+        "duration": "short course",
+        "phase": "1",
+        "instruction": "Clean wound first; assess depth, contamination and tetanus status."
+      }
+    ]
+  }
+]
