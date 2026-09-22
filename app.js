@@ -155,6 +155,8 @@ const starterInventory=[
 
   {id:"seed-clinsol-gel",name:"Clinsol Gel",type:"Pharma/Brand",generic:"Clindamycin Phosphate + Nicotinamide topical gel",category:"Cream/Gel",form:"Topical Gel",batch:"Not clearly legible on provided photograph",mfg:"2025-11",expiry:"2027-11-01",stock:1,minStock:0,mrp:99,notes:"15 g topical gel. Pack states Clindamycin Phosphate & Nicotinamide Gel.",use:"Topical treatment of acne where clinically indicated.",dose:"Use as directed by physician and product label. Verify exact strength and patient-specific skin considerations before use."},
 
+  {id:"seed-neo-becmet-cg",name:"Neo Becmet-CG Cream",type:"Pharma/Brand",generic:"Beclomethasone Dipropionate + Clotrimazole + Neomycin cream",category:"Cream/Gel",form:"Topical Cream",batch:"1016",mfg:"2025-09",expiry:"2027-08-01",stock:21,minStock:0,mrp:93.75,notes:"10 g topical cream. Pack states Beclomethasone Dipropionate, Clotrimazole & Neomycin cream.",use:"Topical treatment of selected inflammatory/infective skin conditions where clinically indicated; verify diagnosis before use.",dose:"Use as directed by physician and product label. Avoid unsupervised prolonged use of topical corticosteroid-containing combinations."},
+
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
