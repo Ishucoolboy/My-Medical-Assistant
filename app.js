@@ -430,6 +430,19 @@ function phaseBPatientFactors(d,p){
   if(d.pregnancyStatus==="pregnant"){out.push("Pregnancy mode: gestational age and pregnancy-specific medicine safety must be confirmed before prescribing.");if(d.gestationalWeeks)out.push("Gestational age recorded: "+d.gestationalWeeks+" weeks.");}
   return out;
 }
+function suggestedOpdTests(d){
+  const t=opdText(d), age=Number(d.age), tests=[];
+  const hasAny=(terms)=>terms.some(x=>t.includes(x));
+  const bpNeeded=hasAny(["headache","dizziness","chest pain","breathlessness","palpitation","pregnan","hypertension","high bp","blood pressure","weakness"]) || (Number.isFinite(age)&&age>=30);
+  const sugarNeeded=hasAny(["polyuria","polydipsia","thirst","frequent urination","weight loss","diabetes","sugar","blurred vision","recurrent infection","weakness","fatigue"]);
+  const pulseNeeded=hasAny(["fever","dizziness","weakness","breathlessness","chest pain","palpitation","vomit","vomiting","diarr","dehydration","bleeding","shock"]);
+  if(bpNeeded)tests.push({name:"BP",reason:"BP check is relevant to the entered complaint/risk context. Measure correctly and repeat abnormal readings as clinically appropriate."});
+  if(sugarNeeded)tests.push({name:"Blood sugar",reason:"Check glucose because the complaint/history contains a diabetes/hyperglycaemia-related feature or symptom."});
+  if(pulseNeeded)tests.push({name:"Pulse",reason:"Pulse assessment is relevant because the complaint/history contains a systemic, cardiovascular or dehydration-related feature."});
+  if(!tests.length)tests.push({name:"No extra BP / sugar / pulse test auto-suggested",reason:"Add BP, blood sugar or pulse when examination, symptoms, age/risk factors or clinical judgment indicate it."});
+  return tests;
+}
+
 function buildAssessment(d){
   const t=opdText(d);
   const urgentTerms=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis","anaphylaxis"];
@@ -452,7 +465,8 @@ function buildAssessment(d){
   stewardship.slice().reverse().forEach(x=>checks.unshift(x));
   const possible=d.complaint?"Possible clinical considerations based on the entered complaint/history: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
   const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
-  return {urgent,possible,protocolMatches,matches,oral,phase2,injectable,checks,safety,rx,investigations,followUpSuggestion,patientFactors,stewardship,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Investigations ordered: "+(d.investigationsOrdered||"Not recorded"),"Investigation results: "+(d.investigationResults||"Not recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")+" • "+(d.followupStatus||"planned"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
+  const suggestedTests=suggestedOpdTests(d);
+  return {urgent,possible,protocolMatches,matches,oral,phase2,injectable,checks,safety,rx,investigations,followUpSuggestion,patientFactors,stewardship,suggestedTests,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Investigations ordered: "+(d.investigationsOrdered||"Not recorded"),"Investigation results: "+(d.investigationResults||"Not recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")+" • "+(d.followupStatus||"planned"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
 }
 
 function normalizeRxText(v){return String(v||"").toLowerCase().replace(/[^a-z0-9+.#%/ -]/g," ").replace(/\\s+/g," ").trim()}
@@ -507,6 +521,9 @@ function medicineSafetyForAutoRx(m,d,p,rx){
   if(age<12 && /nimesulide/.test(g))reasons.push("Nimesulide-containing products are not auto-selected below age 12.");
   if(age<18 && !/paediatric|pediatric|child|infant|suspension|drops|syrup/i.test((m.form||"")+" "+(m.category||"")) && !/paediatric|pediatric|child/i.test(String(p?.title||""))){
     reasons.push("No verified paediatric formulation/pathway for this medicine.");
+  }
+  if(d.sex==="Female" && (!d.pregnancyStatus || d.pregnancyStatus==="unknown") && /nsaid|aceclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|diclofenac|naproxen|fluoroquinolone|ciprofloxacin|ofloxacin/.test(g)){
+    reasons.push("Pregnancy status is not recorded; this medicine class is not auto-selected until pregnancy safety is reviewed.");
   }
   if(d.pregnancyStatus==="pregnant" && !/pregnancy|antenatal|trimester|anaemia in pregnancy|anemia in pregnancy/.test(String(p?.title||"").toLowerCase())){
     if(/nsaid|aceclofenac|ibuprofen|nimesulide|etoricoxib|fluoroquinolone|ciprofloxacin|ofloxacin/.test(g))reasons.push("Pregnancy context requires medicine-specific safety review; this class is not auto-selected by a non-pregnancy pathway.");
@@ -577,6 +594,13 @@ function renderAssessmentView(a,d,recordHistory){
   $("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
   $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
   $("clinicalSnapshot").innerHTML=`<div><span>Patient</span><strong>${esc(d.patientName||"—")}</strong></div><div><span>Age / Sex</span><strong>${esc(d.age||"—")} / ${esc(d.sex||"—")}</strong></div><div><span>Vitals</span><strong>BP ${esc(d.bp||"—")} • Sugar ${esc(d.bloodSugar||"—")} • Pulse ${esc(d.pulse||"—")} • SpO₂ ${esc(d.spo2||"—")} • Temp ${esc(d.temperature||"—")} • Weight ${esc(d.weight||"—")} kg • Pregnancy ${esc(d.pregnancyStatus||"—")}${d.gestationalWeeks?" • GA "+esc(d.gestationalWeeks)+" wk":""}</strong></div><div><span>Complaint</span><strong>${esc(d.complaint||"—")}</strong></div>`;
+  const testEl=$("suggestedTests");
+  if(testEl){
+    testEl.innerHTML=(a.suggestedTests||[]).map(x=>'<div style="margin-bottom:8px"><b>'+esc(x.name)+'</b><br><small>'+esc(x.reason)+'</small></div>').join("");
+  }
+  const autoRxItems=a.rx?.items||[];
+  const autoP1=autoRxItems.filter(m=>prescriptionPhase(m)==="1");
+  const autoP2=autoRxItems.filter(m=>prescriptionPhase(m)==="2");
   const rxTitle=a.rx?.protocol?'<div class="protocol-inline"><b>Matched clinic case:</b> '+esc(a.rx.protocol.title)+(a.rx.protocol.source?'<small> • '+esc(a.rx.protocol.source)+'</small>':"")+'</div>':"";
   const rxNotes=(a.rx?.notes||[]).map(x=>'<div class="medicine-warning">'+esc(x)+'</div>').join("");
   const pbFactors=(a.patientFactors||[]).map(x=>"<div class=\"protocol-inline\"><b>Patient factor:</b> "+esc(x)+"</div>").join("");
@@ -590,9 +614,9 @@ function renderAssessmentView(a,d,recordHistory){
   $("medicineMatchInfo").innerHTML=a.matches.length
     ?'<span>Only medicines recorded in the current clinic inventory are shown.</span> <span>Selection order: clinical/reference match → safety/patient factors → FEFO only within the same suitable stock group.</span>'
     :"<span>No inventory medicine was matched confidently to the entered complaint.</span>";
-  $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
-  $("phase2").innerHTML=a.phase2.length?a.phase2.map(medCard).join(""):'<div class="empty-list">No injection or short-course Phase 2 medicine matched this case.</div>';
-  selectedPrescriptions=(a.rx?.items||[]).map(x=>({...x}));
+  $("phase1").innerHTML=autoP1.length?autoP1.map(medCard).join(""):'<div class="empty-list">No safe automatic Phase 1 medicine was matched to this case. Review the complaint, examination and clinic reference before selecting a medicine.</div>';
+  $("phase2").innerHTML=autoP2.length?autoP2.map(medCard).join(""):'<div class="empty-list">No safe automatic Phase 2 injection/short-course medicine was matched. Do not add an injection or IV fluid unless clinically indicated and verified.</div>';
+  selectedPrescriptions=autoRxItems.map(x=>({...x}));
   renderPrescription();
   if($("summary"))$("summary").textContent=a.summary;
 }
