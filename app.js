@@ -613,7 +613,13 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
   // Do not substitute an NSAID/paracetamol combination for undifferentiated fever.
   const caseText=opdText(d);
   const needsParacetamol=/fever|acute fever|pyrexia|headache|migraine|body ache|myalgia|pain|dard|sir dard|badan dukhe/.test(caseText);
-  if(needsParacetamol && !items.some(m=>/paracetamol|acetaminophen/i.test(m.generic+" "+m.name))){
+  const hasPlainParacetamol=items.some(m=>{
+    const g=normalizeRxText((m.generic||"")+" "+(m.name||""));
+    const plain=/paracetamol|acetaminophen/.test(g);
+    const combo=/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin|dicyclomine|phenylephrine|chlorpheniramine|caffeine/.test(g);
+    return plain&&!combo;
+  });
+  if(needsParacetamol && !hasPlainParacetamol){
     const pcmCandidates=inventory.filter(m=>{
       const g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
       const plain=/paracetamol|acetaminophen/.test(g);
