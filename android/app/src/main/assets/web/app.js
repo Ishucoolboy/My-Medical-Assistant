@@ -31,7 +31,7 @@ function villageOpdCategoryFor(d){
   const rules=[
     ["fever",/fever|bukhar|taav|jwar|pyrexia|temperature|chills|rigor|kapkap/i],
     ["respiratory",/cough|khaansi|cold|jukam|sore throat|gala dard|gala dukhe|runny nose|naak bahe|wheeze|saans|breathlessness|asthma|phlegm|sputum/i],
-    ["gi",/acidity|heartburn|gastric|indigestion|dyspepsia|gas|pet dard|pet me dard|nausea|vomit|ulti|diarr|dast|julaab|constipation|kabz|abdominal/i],
+    ["gi",/acidity|heartburn|gastric|indigestion|dyspepsia|gas|pet dard|pet me dard|pet me dard|pet drd|pet.*drd|nausea|vomit|ulti|diarr|dast|julaab|constipation|kabz|abdominal/i],
     ["pain",/headache|sir dard|sir me dard|sir dukhe|migraine|body ache|badan dard|general pain|haath pair dard|haath-pair dard|dard/i],
     ["urinary",/urine|urinary|peshab|pesab|dysuria|burning urine|jalan.*peshab|frequency|urgency|retention|prostate|bph/i],
     ["skin_wounds",/wound|cut|chot|zakhm|burn|jal|itch|khujli|kharish|rash|fungal|daad|acne|pimple/i],
@@ -556,7 +556,7 @@ function expandMarwariClinicalText(value){
   Object.entries(aliases).sort((a,b)=>b[0].length-a[0].length).forEach(([k,v])=>{if(s.includes(k))s+=" "+v});
   return s;
 }
-function opdText(d){return expandMarwariClinicalText([d.complaint,d.history,d.exam,d.redFlags].join(" "))}
+function opdText(d){return expandMarwariClinicalText([d.complaint,d.history,d.exam,d.redFlags].join(" ")).replace(/\bdrd\b/gi,"dard")}
 function medicineRelevance(m,d){
   const t=opdText(d), mt=shelfText(m);
   let score=0, reasons=[];
@@ -694,11 +694,12 @@ function clinicalTriage(d){
   const t=opdText(d), reasons=[];
   const explicit=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis","anaphylaxis","severe abdominal pain","persistent vomiting","blood in vomit","blood in stool","black stool","bleeding gums","rapid breathing","cold clammy","very low urine","no urine"];
   explicit.forEach(x=>{if(t.includes(x))reasons.push("Red flag: "+x+" reported.");});
-  const spo2=Number(d.spo2),pulse=Number(d.pulse),temp=Number(d.temperature);
-  if(Number.isFinite(spo2)&&spo2<92)reasons.push("SpO₂ below 92%: urgent clinical review is indicated.");
-  if(Number.isFinite(pulse)&&pulse>130)reasons.push("Pulse >130/min: urgent clinical review is indicated.");
-  if(Number.isFinite(pulse)&&pulse<45)reasons.push("Pulse <45/min: urgent clinical review is indicated.");
-  if(Number.isFinite(temp)&&temp>=40)reasons.push("Temperature ≥40°C: urgent clinical assessment is indicated.");
+  const clinicalNumber=v=>{const s=String(v??"").trim();if(s==="")return null;const n=Number(s);return Number.isFinite(n)?n:null};
+  const spo2=clinicalNumber(d.spo2),pulse=clinicalNumber(d.pulse),temp=clinicalNumber(d.temperature);
+  if(spo2!==null&&spo2<92)reasons.push("SpO₂ below 92%: urgent clinical review is indicated.");
+  if(pulse!==null&&pulse>130)reasons.push("Pulse >130/min: urgent clinical review is indicated.");
+  if(pulse!==null&&pulse<45)reasons.push("Pulse <45/min: urgent clinical review is indicated.");
+  if(temp!==null&&temp>=40)reasons.push("Temperature ≥40°C: urgent clinical assessment is indicated.");
   const bp=String(d.bp||"").match(/(\\d{2,3})\\s*[\\/ -]\\s*(\\d{2,3})/);
   if(bp&&Number(bp[1])<90)reasons.push("Systolic BP <90 mmHg: urgent clinical review is indicated.");
   if(/pregnan/.test(t)&&/(bleed|bleeding|vaginal blood|severe abdominal pain)/.test(t))reasons.push("Pregnancy with bleeding/severe abdominal pain requires urgent obstetric assessment.");
