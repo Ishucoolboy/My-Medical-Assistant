@@ -31,15 +31,15 @@ function villageOpdCategoryFor(d){
   const rules=[
     ["fever",/fever|bukhar|taav|jwar|pyrexia|temperature|chills|rigor|kapkap/i],
     ["respiratory",/cough|khaansi|cold|jukam|sore throat|gala dard|gala dukhe|runny nose|naak bahe|wheeze|saans|breathlessness|asthma|phlegm|sputum/i],
-    ["pain",/headache|sir dard|sir me dard|sir dukhe|migraine|body ache|badan dard|general pain|dard/i],
     ["gi",/acidity|heartburn|gastric|indigestion|dyspepsia|gas|pet dard|pet me dard|nausea|vomit|ulti|diarr|dast|julaab|constipation|kabz|abdominal/i],
+    ["pain",/headache|sir dard|sir me dard|sir dukhe|migraine|body ache|badan dard|general pain|haath pair dard|haath-pair dard|dard/i],
     ["urinary",/urine|urinary|peshab|pesab|dysuria|burning urine|jalan.*peshab|frequency|urgency|retention|prostate|bph/i],
     ["skin_wounds",/wound|cut|chot|zakhm|burn|jal|itch|khujli|kharish|rash|fungal|daad|acne|pimple/i],
     ["ent_eye",/ear|kaan|sinus|naak|nose|eye|aankh|conjunct|earache|kaan dard/i],
     ["dental_oral",/tooth|daant|dental|toothache|mouth ulcer|munh ke chhale|oral ulcer|gum/i],
     ["msk",/joint|jod|knee|ghutna|ghutne|back|kamar|neck|gardan|muscle|sprain|strain|spasm|paanv|pair|taang|pag dukhe/i],
     ["parasitic",/worm|keede|krimi|deworm|parasite|amoeb|giardia/i],
-    ["nutrition",/anaemia|anemia|iron|folate|calcium|vitamin d|weakness|nutrition|bhook|appetite/i],
+    ["nutrition",/anaemia|anemia|iron|folate|calcium|vitamin d|weakness|kamzori|jeev.?dora|jeevdora|nutrition|bhook|bhukh|bhookh|appetite|bhukh nahi|bhook nahi|khana nahi/i],
     ["chronic",/diabetes|sugar|bph|prostate|follow.?up|chronic|regular medicine/i],
     ["women",/period|menses|menstrual|dysmenorr|pcos|pregnan|pregnancy|vaginal|white discharge|bleeding per vaginam/i],
     ["paediatric",/child|baby|infant|baccha|bacha|bachha|pediatric|paediatric/i],
@@ -76,7 +76,7 @@ function villageProblemFor(d,category){
   const rules={
     fever:[[/dengue/,"Dengue-suspected febrile illness"],[/malaria|rigor|chills/,"Malaria-suspected febrile illness"],[/typhoid|enteric/,"Enteric fever-suspected illness"],[/fever|bukhar|taav|jwar/,"Acute febrile illness"]],
     respiratory:[[/wheeze|wheezing|asthma/,"Wheeze / asthma-type episode"],[/allerg|sneez|itchy nose/,"Allergic rhinitis"],[/sore throat|gala dard|gala dukhe/,"Acute sore throat / pharyngitis-type complaint"],[/cough|khaansi|cold|jukam/,"Acute cough / common cold-type illness"]],
-    pain:[[/migraine|one-sided headache|photophobia/,"Migraine-type headache"],[/headache|sir dard|sir me dard|sir dukhe/,"Headache — cause to be assessed"],[/sprain|strain|muscle spasm|spasm/,"Musculoskeletal pain with possible spasm"],[/joint|jod|knee|ghutna|back|kamar/,"Joint/back musculoskeletal pain"],[/pain|dard|body ache|badan dard/,"Acute pain / body ache"]],
+    pain:[[/migraine|one-sided headache|photophobia/,"Migraine-type headache"],[/headache|sir dard|sir me dard|sir dukhe/,"Headache — cause to be assessed"],[/sprain|strain|muscle spasm|spasm/,"Musculoskeletal pain with possible spasm"],[/joint|jod|knee|ghutna|back|kamar/,"Joint/back musculoskeletal pain"],[/pain|dard|body ache|badan dard|haath pair dard|haath-pair dard/,"Acute pain / body ache"]],
     gi:[[/vomit|vomiting|ulti|nausea/,"Nausea / vomiting"],[/diarr|dast|julaab/,"Acute diarrhoeal illness"],[/constipation|kabz/,"Constipation"],[/acidity|heartburn|gastric|indigestion/,"Acidity / dyspepsia"],[/pet dard|abdominal/,"Abdominal pain — cause to be assessed"]],
     urinary:[[/retention|urine nahi|peshab nahi/,"Urinary retention — urgent assessment if acute"],[/burning urine|dysuria|peshab.*jalan|pesab.*jalan/,"Dysuria / suspected lower UTI"],[/frequency|urgency|prostate|bph/,"Lower urinary tract symptoms / BPH"]],
     skin_wounds:[[/burn|jal gaya/,"Minor burn — depth/extent assessment required"],[/wound|cut|chot|zakhm/,"Minor superficial wound"],[/fungal|daad/,"Fungal-type skin complaint"],[/acne|pimple/,"Acne"],[/itch|khujli|kharish|rash/,"Itching / dermatitis-type complaint"]],
@@ -84,15 +84,15 @@ function villageProblemFor(d,category){
     dental_oral:[[/tooth|daant|dental/,"Toothache / dental pain"],[/mouth ulcer|munh ke chhale|oral ulcer/,"Mouth ulcer"]],
     msk:[[/sprain|strain/,"Sprain / strain"],[/spasm|muscle/,"Muscle spasm / muscular pain"],[/joint|jod|knee|ghutna/,"Joint / knee pain"],[/back|kamar|neck|gardan|paanv|pair|taang|pag dukhe/,"Back/limb musculoskeletal pain"]],
     parasitic:[[/worm|keede|krimi|deworm/,"Suspected intestinal worm infestation"]],
-    nutrition:[[/anaemia|anemia|iron|folate/,"Possible iron/folate deficiency"],[/calcium|vitamin d/,"Possible calcium/Vitamin D supplementation need"]],
+    nutrition:[[/anaemia|anemia|iron|folate/,"Possible iron/folate deficiency"],[/calcium|vitamin d/,"Possible calcium/Vitamin D supplementation need"],[/weakness|kamzori|jeev.?dora|jeevdora|bhook|bhukh|appetite/,"Weakness / poor appetite — cause to be assessed"]],
     chronic:[[/diabetes|sugar/,"Type 2 diabetes — established diagnosis/follow-up required"],[/bph|prostate/,"BPH/LUTS — established diagnosis/follow-up required"],[/follow.?up|chronic/,"Chronic disease follow-up"]],
     women:[[/pregnan|pregnancy/,"Pregnancy-related complaint — pregnancy pathway"],[/period|menses|menstrual|dysmenorr/,"Menstrual complaint / dysmenorrhoea-type symptoms"],[/vaginal|white discharge/,"Vaginal complaint — focused assessment"]],
     paediatric:[[/fever|bukhar|taav/,"Paediatric fever"],[/cough|cold|khaansi|jukam/,"Paediatric cough/cold"],[/vomit|ulti|diarr|dast/,"Paediatric GI complaint"],[/pain|dard/,"Paediatric pain/fever complaint"]],
     mental_health:[[/depress/,"Depressive symptoms / established depression follow-up"],[/anxiety/,"Anxiety symptoms"],[/psychosis|risperidone/,"Established psychotic disorder follow-up"],[/sleep/,"Sleep complaint — assessment required"]]
   };
   const age=Number(d.age);
-  if(age<18)return VILLAGE_OPD_CATEGORIES.find(x=>x.id==="paediatric");
-  for(const [id,re] of (rules[category?.id]||[])){if(re.test(t))return rules[category.id].find(x=>x[0]===re)?.[1]}
+  if(age<18)return category?.problems?.find(x=>/child|paediatric|pediatric|fever|cough|vomit|diarr|pain/i.test(x))||"Paediatric complaint";
+  for(const [re,label] of (rules[category?.id]||[])){if(re.test(t))return label}
   return category?.problems?.[0]||"Clinical problem not yet classified";
 }
 function villageMedicineSelectionRules(d,category,problem,rx){
