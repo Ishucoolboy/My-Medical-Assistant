@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "lastReviewed": "2026-09-22",
+  "sourceBasis": [
+    "Pediatric Dosage Simplified (Hinglish/English) — pediatric dosing and antibiotic stewardship sections",
+    "Doctorwalah OPD Gold Edition — case-specific investigation and follow-up notes"
+  ],
+  "pediatric": {
+    "weightRequired": true,
+    "paracetamol": {
+      "minMgKg": 10,
+      "maxMgKg": 15,
+      "interval": "q4–6h",
+      "maxMgKgDay": 60
+    },
+    "ibuprofen": {
+      "minMgKg": 5,
+      "maxMgKg": 10,
+      "interval": "q6–8h",
+      "maxMgKgDay": 40,
+      "avoidContexts": [
+        "dengue",
+        "active GI bleeding",
+        "renal impairment",
+        "NSAID allergy"
+      ]
+    },
+    "rules": [
+      "Require weight before automatic pediatric dose calculation.",
+      "Do not derive a fixed-dose-combination pediatric dose from a paracetamol-only mg/kg reference.",
+      "Avoid aspirin as a routine antipyretic in children with viral fever.",
+      "Do not automatically substitute adult prescription products for pediatric patients."
+    ]
+  },
+  "pregnancy": {
+    "requirePregnancyStatus": true,
+    "requireGestationalWeeksWhenPregnant": true,
+    "rules": [
+      "Pregnancy pathway should take priority when pregnancy is documented.",
+      "Non-pregnancy pathways must not auto-select NSAIDs or fluoroquinolones in pregnancy without a pregnancy-specific reference match.",
+      "Confirm gestational age, CBC/antenatal status and medicine-specific safety before automatic selection."
+    ]
+  },
+  "antibioticStewardship": {
+    "rules": [
+      "Culture before antibiotics when possible.",
+      "Prefer the narrowest appropriate spectrum and escalate only when needed.",
+      "Use the shortest effective duration supported by the selected protocol.",
+      "Review culture/susceptibility results and de-escalate when appropriate.",
+      "Do not combine antibiotics routinely."
+    ]
+  },
+  "investigations": {
+    "Dengue Fever": [
+      "CBC",
+      "NS1 Ag.",
+      "IgG / IgM",
+      "LFT",
+      "Daily platelet count / warning-sign monitoring when clinically indicated"
+    ],
+    "Typhoid Fever": [
+      "Blood culture",
+      "CBC",
+      "Widal test after 1 week (as stated in source)",
+      "Typhidot / IgM"
+    ],
+    "Acute Uncomplicated UTI": [
+      "Urine Routine",
+      "Urine culture for recurrent cases / males"
+    ],
+    "Body Ache / Myalgia": [
+      "CBC",
+      "Dengue testing where indicated",
+      "Malaria testing where indicated",
+      "Typhoid testing where indicated"
+    ],
+    "Headache (Recurrent)": [
+      "Blood pressure measurement",
+      "Neuroimaging only when clinically indicated / red flags"
+    ],
+    "Diabetes Mellitus (Type 2)": [
+      "Glucose assessment and diabetes follow-up investigations as clinically indicated"
+    ],
+    "High Blood Pressure (Newly Detected)": [
+      "Repeat BP confirmation and appropriate cardiovascular/renal assessment as clinically indicated"
+    ]
+  },
+  "followUp": {
+    "Dengue Fever": "7 days / earlier immediately if warning signs; source also advises monitoring during the illness",
+    "Acute Uncomplicated UTI": "5 days",
+    "Typhoid Fever": "3–5 days; source says reassess/change antibiotic if no response",
+    "default": "Use the clinician-entered follow-up date; if absent, do not invent a date."
+  }
+}
