@@ -600,6 +600,27 @@ function medCard(m){
   return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="1"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="1">'+(selected&&prescriptionPhase(m)==="1"?"✓ Phase 1":"Add Phase 1")+'</button><button type="button" class="btn '+(selected&&prescriptionPhase(m)==="2"?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'" data-rx-phase="2">'+(selected&&prescriptionPhase(m)==="2"?"✓ Phase 2":"Add Phase 2")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
 }
 let currentCaseData=null;
+function rxConfidenceLabel(m){
+  const type=m?.rxSelectionType||"MANUAL";
+  return phaseC?.confidenceLevels?.[type]?.label||type;
+}
+function rxWhySelected(m){
+  const type=m?.rxSelectionType||"MANUAL";
+  if(type==="REFERENCE_MATCH")return "Direct clinic-reference match; patient-safety checks passed; FEFO is secondary.";
+  if(type==="EXPLICIT_REFERENCE_SUBSTITUTE")return "Explicitly supported inventory substitute; patient-safety checks passed.";
+  if(type==="SUPPORTED_INVENTORY_FALLBACK")return "Protocol-permitted inventory fallback; confirm indication before signing.";
+  return "Manually selected by clinician; no automatic protocol-match claim.";
+}
+function inventoryCompleteness(){
+  const required=phaseC?.databaseAudit?.requiredFields||["name","generic","category","use","dose","expiry","stock"];
+  const rows=inventory.map(m=>({m,missing:required.filter(k=>m[k]===undefined||m[k]===null||String(m[k]).trim()==="")}));
+  return {complete:rows.filter(x=>!x.missing.length),incomplete:rows.filter(x=>x.missing.length)};
+}
+function renderDatabaseAudit(){
+  const el=$("databaseAudit");if(!el)return;
+  const a=inventoryCompleteness();
+  el.innerHTML='<div class="rx-cost-grid"><div><span>Complete records</span><strong>'+a.complete.length+'</strong></div><div><span>Needs metadata</span><strong>'+a.incomplete.length+'</strong></div><div><span>Total records</span><strong>'+inventory.length+'</strong></div></div>';
+}
 function prescriptionPhase(m){
   if(m.rxPhase) return m.rxPhase;
   return ["Injection","IV Fluid","Respule"].includes(m.category) ? "2" : "1";
@@ -623,6 +644,8 @@ function renderPrescription(){
     return '<div class="rx-row"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><div class="rx-fields"><select data-rx-phase="'+i+'"><option value="1" '+(phase==="1"?"selected":"")+'>Phase 1 — Regular medicines</option><option value="2" '+(phase==="2"?"selected":"")+'>Phase 2 — Injection + short-course</option></select><input data-rx-dose="'+i+'" placeholder="Dose / strength" value="'+esc(m.rxDose||"")+'"><select data-rx-route="'+i+'"><option value="">Route</option><option '+(m.rxRoute==="IM"?"selected":"")+'>IM</option><option '+(m.rxRoute==="IV"?"selected":"")+'>IV</option><option '+(m.rxRoute==="SC"?"selected":"")+'>SC</option><option '+(m.rxRoute==="Oral"?"selected":"")+'>Oral</option><option '+(m.rxRoute==="Topical"?"selected":"")+'>Topical</option></select><input data-rx-freq="'+i+'" placeholder="Frequency" value="'+esc(m.rxFreq||"")+'"><input data-rx-duration="'+i+'" placeholder="'+(phase==="2"?"2–3 days / as indicated":"Duration")+'" value="'+esc(m.rxDuration||defaultDuration)+'"><input data-rx-instruction="'+i+'" placeholder="Instructions" value="'+esc(m.rxInstruction||"")+'"><input data-rx-compat="'+i+'" placeholder="IV/Drip compatibility — verify before mixing" value="'+esc(m.rxCompat||"")+'"><button type="button" class="btn danger-outline remove-rx" data-rx-remove="'+i+'">Remove</button></div></div>';
   }).join(""):'<div class="empty-list">Assessment se medicine par “Add to prescription” click karein. Phase 1 regular medicines ke liye hai; Phase 2 injection/IV ke saath 2–3 din ka short-course medicine bhi rakh sakte hain.</div>';
   renderPrescriptionCostSummary();
+  const confidenceEl=$("prescriptionConfidence");
+  if(confidenceEl){const groups={};selectedPrescriptions.forEach(m=>{const k=rxConfidenceLabel(m);groups[k]=(groups[k]||0)+1;});confidenceEl.innerHTML=selectedPrescriptions.length?Object.entries(groups).map(([k,n])=>"<span class=\"confidence-badge\">"+esc(k)+" × "+n+"</span>").join(" "):"";}
   const warnings=duplicateSafetyWarnings(selectedPrescriptions);
   warnEl.innerHTML=warnings.length?'<div class="medicine-warning"><b>Prescription safety check:</b> '+warnings.map(esc).join(" ")+'</div>':"";
   list.querySelectorAll("[data-rx-remove]").forEach(b=>b.addEventListener("click",()=>{selectedPrescriptions.splice(Number(b.dataset.rxRemove),1);renderPrescription();}));
