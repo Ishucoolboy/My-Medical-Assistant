@@ -107,7 +107,19 @@ function villageMedicineSelectionRules(d,category,problem,rx){
       || /biocetamol.?ds|kold.?2.?kold.?drops/.test(x);
   };
   const adultPatient=Number.isFinite(age)&&age>=18;
-  const eligible=inventory.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&(!adultPatient||!isPaediatricOnly(m))&&medicineSafetyForAutoRx(m,d,rx?.protocol||null,null).ok);
+  const childBelow7=Number.isFinite(age)&&age<7;
+  const medicineFormText=m=>normalizeRxText((m.form||"")+" "+(m.category||"")+" "+(m.name||"")+" "+(m.generic||""));
+  const isSolidOral=m=>/tablet|capsule|caplet|pill|lozenge|chewable tablet/.test(medicineFormText(m));
+  const isLiquidOral=m=>/syrup|suspension|oral liquid|drops|drop/.test(medicineFormText(m));
+  const eligible=inventory.filter(m=>
+    (Number(m.stock)||0)>0 &&
+    expiryStatus(m)!=="expired" &&
+    // Paediatric formulation rule: <7 years → liquid oral formulations only.
+    (!childBelow7 || (isLiquidOral(m) && !isSolidOral(m))) &&
+    // 7+ years → tablets/capsules may be considered when otherwise appropriate.
+    (!adultPatient || !isPaediatricOnly(m)) &&
+    medicineSafetyForAutoRx(m,d,rx?.protocol||null,null).ok
+  );
   const g=m=>normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
   const hasColdOrRespiratorySymptoms=/cough|khaansi|cold|jukam|runny nose|naak bahe|sore throat|gala dard|phlegm|sputum|wheeze|saans|breathlessness/i.test(t);
   const score=m=>{
