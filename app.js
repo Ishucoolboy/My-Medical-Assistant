@@ -5,6 +5,9 @@ const AUDIT_KEY="mma_audit_v1";
 const PIN_KEY="mma_clinic_pin_v1";
 const PROTOCOLS_URL="./data/protocols.json";
 const IV_COMPAT_URL="./data/iv-compatibility.json";
+const CLINIC_RX_URL="./data/clinic-rx-protocols.json";
+let clinicRxProtocols=[];
+async function loadClinicRxProtocols(){try{const r=await fetch(CLINIC_RX_URL);if(!r.ok)throw new Error("rx protocols unavailable");clinicRxProtocols=await r.json();}catch{clinicRxProtocols=[]}}
 let ivCompatibility={version:1,diluents:[],verifiedPairs:[]};
 async function loadIvCompatibility(){
   try{const r=await fetch(IV_COMPAT_URL);if(!r.ok)throw new Error("IV compatibility data unavailable");ivCompatibility=await r.json();}catch{ivCompatibility={version:1,diluents:[],verifiedPairs:[]}}
@@ -399,6 +402,66 @@ function buildAssessment(d){
   const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
   return {urgent,possible,protocolMatches,matches,oral,injectable,checks,summary:["Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Vitals/examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded")].join("\n")};
 }
+
+function normalizeRxText(v){return String(v||"").toLowerCase().replace(/[^a-z0-9+.#%/ -]/g," ")}
+function inventoryCandidateMatch(m,c){
+  const hay=normalizeRxText([m.name,m.generic,m.use,m.notes].join(" "));
+  const terms=(c.match||[]).map(normalizeRxText);
+  return terms.some(term=>term && hay.includes(term));
+}
+function findProtocolForCase(d){
+  const t=opdText(d);
+  let best=null,bestScore=0;
+  (clinicRxProtocols||[]).forEach(p=>{
+    const score=(p.keywords||[]).reduce((n,k)=>n+(t.includes(String(k).toLowerCase())?1:0),0);
+    if(score>bestScore){best=p;bestScore=score}
+  });
+  return bestScore>0?best:null;
+}
+function buildInventoryPrescription(d){
+  const p=findProtocolForCase(d);
+  if(!p)return {protocol:null,items:[],notes:["No clinic-reference pathway matched confidently."]};
+  const items=[];
+  (p.medicines||[]).forEach(rx=>{
+    const m=inventory.find(x=>(Number(x.stock)||0)>0&&!["expired"].includes(expiryStatus(x))&&inventoryCandidateMatch(x,rx));
+    if(m)items.push({...m,rxPhase:rx.phase||prescriptionPhase(m),rxDose:rx.dose||m.dose||"",rxFreq:rx.frequency||"",rxDuration:rx.duration||"",rxInstruction:rx.instruction||"",rxSource:p.title});
+  });
+  const missing=(p.medicines||[]).filter(rx=>!items.some(x=>inventoryCandidateMatch(x,rx))).map(x=>x.label);
+  const notes=[];
+  if(missing.length)notes.push("Reference pathway medicines not currently available in recorded stock: "+missing.join(", ")+". No substitute medicine is auto-invented.");
+  if(p.note)notes.push(p.note);
+  return {protocol:p,items,notes};
+}
+function renderAssessmentView(a,d,recordHistory){
+  $("emptyResult").classList.add("hidden");$("result").classList.remove("hidden");
+  $("resultState").textContent=a.urgent?"Referral review":(a.rx?.items?.length?"Prescription draft":"Generated");
+  $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");
+  $("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
+  $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
+  $("clinicalSnapshot").innerHTML='<div><span>Patient</span><strong>'+esc(d.patientName||"—")+'</strong></div><div><span>Age / Sex</span><strong>'+esc(d.age||"—")+" / "+esc(d.sex||"—")+'</strong></div><div><span>Vitals</span><strong>BP '+esc(d.bp||"—")+' • Sugar '+esc(d.bloodSugar||"—")+' • Pulse '+esc(d.pulse||"—")+' • SpO₂ '+esc(d.spo2||"—")+' • Temp '+esc(d.temperature||"—")+'</strong></div><div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div>';
+  const rxTitle=a.rx?.protocol?'<div class="protocol-inline"><b>Matched clinic case:</b> '+esc(a.rx.protocol.title)+(a.rx.protocol.source?'<small> • '+esc(a.rx.protocol.source)+'</small>':"")+'</div>':"";
+  const rxNotes=(a.rx?.notes||[]).map(x=>'<div class="medicine-warning">'+esc(x)+'</div>').join("");
+  $("possibleDiagnosis").innerHTML=esc(a.possible)+rxTitle+rxNotes+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
+  $("medicineMatchCount").textContent=a.matches.length+" matched";
+  $("medicineMatchInfo").innerHTML=a.matches.length?'<span>Only medicines recorded in the current clinic inventory are shown.</span> <span>Auto-draft uses the stored clinic case reference when a stock match exists.</span>':"<span>No inventory medicine was matched confidently to the entered complaint.</span>";
+  $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
+  $("phase2").innerHTML=a.injectable.length?a.injectable.map(medCard).join(""):'<div class="empty-list">No relevant verified injections/IV fluids/respules matched this case.</div>';
+  $("checks").innerHTML=a.checks.map(x=>"<li>"+esc(x)+"</li>").join("");
+  $("summary").textContent=a.summary;
+  if(a.rx?.items?.length){
+    selectedPrescriptions=a.rx.items.map(x=>({...x}));
+  }else if(recordHistory){
+    selectedPrescriptions=[];
+  }
+  renderPrescription();
+}
+function runLiveAssessment(){
+  const name=$("patientName")?.value.trim(), age=$("age")?.value, complaint=$("complaint")?.value.trim();
+  if(!name||!age||!complaint)return;
+  currentCaseData={patientName:name,age,sex:$("sex").value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint,history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
+  const a=buildAssessment(currentCaseData);
+  renderAssessmentView(a,currentCaseData,false);
+}
 function duplicateSafetyWarnings(matches){
   const text=matches.map(m=>(m.generic+" "+m.use+" "+m.notes).toLowerCase()).join(" ");
   const warnings=[];
@@ -593,6 +656,30 @@ document.addEventListener("click",e=>{const b=e.target.closest(".medicine-item[d
 refreshAll();renderReports();renderAudit();loadProtocols();alert("Backup restored successfully.");}catch(e){alert("Backup could not be restored. Please select a valid My Medical Assistant backup.");}};r.readAsText(file);
 }
 
+
+function buildAssessment(d){
+  const t=opdText(d);
+  const urgentTerms=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis","anaphylaxis"];
+  const urgent=urgentTerms.some(x=>t.includes(x));
+  const matches=inventory.map(m=>({...m,_match:medicineRelevance(m,d)})).filter(m=>m._match.score>0).sort((a,b)=>b._match.score-a._match.score||a.name.localeCompare(b.name));
+  const oral=matches.filter(m=>["Tablet/Capsule","Syrup/Drops","Cream/Gel/Ointment","Syrup/Suspension","Gel/Cream","Medical Supply"].includes(m.category));
+  const injectable=matches.filter(m=>["Injection","IV Fluid","Respule"].includes(m.category));
+  const checks=["Confirm allergy history and current medicines before prescribing.","Check age/weight, pregnancy status when relevant, renal/hepatic status and contraindications.","Record the available vital signs and examination findings.","Use only medicines from the verified clinic inventory.","Dose and route must be confirmed against the clinic protocol / product information before administration."];
+  if(Number(d.age)<18)checks.unshift("Paediatric case: confirm weight and use a verified age/weight-specific reference before dosing.");
+  if(d.redFlags.trim())checks.unshift("Reported red flags: "+d.redFlags.trim());
+  if(urgent)checks.unshift("Urgent red flag detected: this may need urgent referral / further investigation. Do not delay emergency care for this tool.");
+  const safety=duplicateSafetyWarnings(matches); safety.forEach(x=>checks.unshift(x));
+  const rx=buildInventoryPrescription(d);
+  const possible=d.complaint?"Possible clinical considerations based on the entered complaint/history: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
+  const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
+  return {urgent,possible,protocolMatches,matches,oral,injectable,checks,safety,rx,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
+}
+function setupLiveOpd(){
+  let timer=null;
+  const ids=["patientName","age","sex","complaint","history","bp","bloodSugar","pulse","spo2","temperature","exam","redFlags"];
+  ids.forEach(id=>$(id)?.addEventListener("input",()=>{clearTimeout(timer);timer=setTimeout(runLiveAssessment,300)}));
+  ids.forEach(id=>$(id)?.addEventListener("change",()=>{clearTimeout(timer);timer=setTimeout(runLiveAssessment,50)}));
+}
 function setupClinicSecurity(){
   const pin=localStorage.getItem(PIN_KEY),lock=$("pinLock");
   if(!lock)return;
@@ -619,4 +706,4 @@ function setupPrescriptionDelegation(){
 }
 setupPrescriptionDelegation();
 setupClinicSecurity();
-refreshAll();renderReports();renderAudit();loadProtocols();loadIvCompatibility();
+refreshAll();renderReports();renderAudit();loadProtocols();loadClinicRxProtocols();loadIvCompatibility();setupLiveOpd();
