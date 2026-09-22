@@ -168,7 +168,7 @@ const starterInventory=[
   {id:"seed-mp4",name:"MP-4",type:"Pharma/Brand",generic:"Methylprednisolone 4 mg",category:"Tablet/Capsule",form:"Tablet",batch:"TD-25146",mfg:"2025-04",expiry:"2027-09-01",stock:36,minStock:0,mrp:64.50,notes:"Methylprednisolone 4 mg uncoated tablets. Schedule H prescription medicine; use only under appropriate clinical supervision.",use:"Corticosteroid therapy for clinically indicated inflammatory/allergic/immune-mediated conditions.",dose:"Use according to the specific indication and physician-directed regimen; do not infer a patient dose from the pack alone."},
 
   {id:"seed-risperidone-2",name:"Risperidone 2 mg",type:"Pharma/Brand",generic:"Risperidone 2 mg",category:"Tablet/Capsule",form:"Tablet",batch:"D32T602",mfg:"2024-12",expiry:"2026-11-01",stock:17,minStock:0,mrp:50.10,notes:"Risperidone 2 mg tablets. Prescription medicine; use only under appropriate clinical supervision.",use:"Antipsychotic treatment for clinically indicated psychiatric conditions.",dose:"Use only according to the specific indication and physician-directed regimen; do not infer a patient dose from the pack alone."},
-
+];
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
