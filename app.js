@@ -1,11 +1,7 @@
 const INVENTORY_KEY="mma_inventory_v2";
 const SETTINGS_KEY="mma_settings_v1";
 const HISTORY_KEY="mma_history_v1";
-const starterInventory=[
-  {id:"seed-prevent-n",name:"Prevent-N",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item.",dose:"Dose not specified in the provided clinic reference files."},
-  {id:"seed-naproxen-250",name:"Naproxen 250 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item.",dose:"Pediatric reference: 10–20 mg/kg/day divided BD; acute migraine 5–7 mg/kg. Use only after age/weight and indication verification."},
-  {id:"seed-naproxen-500",name:"Naproxen 500 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:0,minStock:0,notes:"Verified clinic inventory item.",dose:"Pediatric reference: 10–20 mg/kg/day divided BD; acute migraine 5–7 mg/kg. Use only after age/weight and indication verification."}
-];
+const starterInventory=[];
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
@@ -57,7 +53,7 @@ const DOSE_GUIDE={
 };
 
 const $=id=>document.getElementById(id);
-function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));return Array.isArray(s)?s:starterInventory}catch{return starterInventory}}
+function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));if(!Array.isArray(s))return[];const legacySeedIds=new Set(["seed-prevent-n","seed-naproxen-250","seed-naproxen-500"]);const cleaned=s.filter(m=>!legacySeedIds.has(m?.id));if(cleaned.length!==s.length)localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{return[]}}
 function saveInventory(items){localStorage.setItem(INVENTORY_KEY,JSON.stringify(items))}
 function loadHistory(){try{const s=JSON.parse(localStorage.getItem(HISTORY_KEY));return Array.isArray(s)?s:[]}catch{return []}}
 function saveHistory(items){localStorage.setItem(HISTORY_KEY,JSON.stringify(items))}
@@ -159,7 +155,7 @@ $("addMedicine").addEventListener("click",()=>{
   inventory.push({id:crypto.randomUUID(),name:name.trim(),category:category.trim(),form:form.trim(),batch:batch.trim(),expiry:expiry.trim(),stock:Number.isFinite(stock)?stock:0,minStock:Number.isFinite(minStock)?minStock:0,notes:notes.trim(),use:use.trim(),dose:dose.trim()});
   saveInventory(inventory);refreshAll();
 });
-$("resetInventory").addEventListener("click",()=>{if(confirm("Reset local inventory changes?")){inventory=starterInventory.slice();saveInventory(inventory);refreshAll()}});
+$("resetInventory").addEventListener("click",()=>{if(confirm("Clear all locally stored inventory records?")){inventory=[];saveInventory(inventory);refreshAll()}});
 $("expirySettings").addEventListener("click",()=>{const n=prompt("Near-expiry alert days:",settings.expiryDays);if(n!==null&&Number(n)>0){settings.expiryDays=Number(n);saveSettings();refreshAll()}});
 $("exportPurchase").addEventListener("click",()=>{const rows=getReorder();const header="Medicine,Current Stock,Minimum Stock,Suggested Order,Status";const body=rows.map(m=>[m.name,m.stock||0,m.minStock||0,Math.max(0,(Number(m.minStock)||0)-(Number(m.stock)||0)),stockStatus(m)].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");const csv=header+"\n"+body;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="clinic-reorder-list.csv";a.click();URL.revokeObjectURL(a.href)});
 
