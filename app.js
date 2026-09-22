@@ -1,6 +1,30 @@
 const INVENTORY_KEY="mma_inventory_v2";
 const SETTINGS_KEY="mma_settings_v1";
 const HISTORY_KEY="mma_history_v1";
+const AUDIT_KEY="mma_audit_v1";
+const PROTOCOLS_URL="./data/protocols.json";
+function loadAudit(){try{const x=JSON.parse(localStorage.getItem(AUDIT_KEY));return Array.isArray(x)?x:[]}catch{return[]}}
+function logAudit(action,detail){const x=loadAudit();x.unshift({at:new Date().toLocaleString(),action,detail});localStorage.setItem(AUDIT_KEY,JSON.stringify(x.slice(0,100)));renderAudit()}
+function renderAudit(){const el=$("auditList");if(!el)return;const x=loadAudit();el.innerHTML=x.length?x.slice(0,30).map(v=>'<div class="history-item"><strong>'+esc(v.action)+'</strong><small>'+esc(v.at)+' • '+esc(v.detail||"")+'</small></div>').join(""):'<div class="empty-list">No local audit entries.</div>'}
+function switchTab(id){const b=document.querySelector('.tab[data-tab="'+id+'"]');if(b)b.click()}
+function medicineSearchRows(q){q=(q||"").trim().toLowerCase();if(!q)return[];return inventory.filter(m=>[m.name,m.generic,m.use,m.notes,m.category,m.form].join(" ").toLowerCase().includes(q)).sort((x,y)=>x.name.localeCompare(y.name))}
+function openMedicineModal(id){
+ const m=inventory.find(x=>x.id===id);if(!m)return;
+ const modal=$("medicineModal");$("modalMedicineName").textContent=m.name;
+ const dose=m.dose||"Dose not specified in the provided clinic reference files.";
+ const exp=expiryStatus(m),stock=Number(m.stock)||0;
+ $("medicineModalBody").innerHTML='<div class="detail-grid"><div><span>Generic / composition</span><strong>'+esc(m.generic||"—")+'</strong></div><div><span>Form</span><strong>'+esc(m.form||m.category||"—")+'</strong></div><div><span>Main use</span><strong>'+esc(m.use||m.notes||"—")+'</strong></div><div><span>Reference dose</span><strong>'+esc(dose)+'</strong></div><div><span>Batch</span><strong>'+esc(m.batch||"—")+'</strong></div><div><span>Expiry</span><strong class="'+(exp==="expired"?"expiry-bad":"")+'">'+esc(m.expiry||"—")+(m.expiry?" • "+expiryTimeLabel(m):"")+'</strong></div></div><div class="stock-editor"><strong>Stock: <span id="modalStockValue">'+stock+'</span></strong><button class="btn ghost" data-stock-action="minus">− 1</button><button class="btn primary" data-stock-action="plus">+ 1</button><input id="modalStockInput" type="number" min="0" value="'+stock+'"><button class="btn ghost" data-stock-action="set">Set</button></div><div class="medicine-warning">Always verify indication, contraindications, formulation strength and patient-specific dose before use.</div>';
+ modal.classList.remove("hidden");modal.setAttribute("aria-hidden","false");
+ modal.querySelectorAll("[data-stock-action]").forEach(b=>b.addEventListener("click",()=>{const action=b.dataset.stockAction;let n=Number(m.stock)||0;if(action==="minus")n=Math.max(0,n-1);if(action==="plus")n=n+1;if(action==="set")n=Math.max(0,Number($("modalStockInput").value)||0);m.stock=n;saveInventory(inventory);$("modalStockValue").textContent=n;$("modalStockInput").value=n;logAudit("Stock adjusted",m.name+" → "+n);refreshAll()}));
+}
+function closeMedicineModal(){const modal=$("medicineModal");if(modal){modal.classList.add("hidden");modal.setAttribute("aria-hidden","true")}}
+function renderGlobalSearch(q){
+ const rows=medicineSearchRows(q);let box=$("globalSearchResults");if(!box)return;
+ if(!q){box.classList.add("hidden");return}
+ box.classList.remove("hidden");box.innerHTML=rows.length?rows.slice(0,12).map(m=>'<button class="search-result" data-med-id="'+esc(m.id)+'"><strong>'+esc(m.name)+'</strong><small>'+esc(m.use||m.generic||"")+' • '+(Number(m.stock)||0)+' available</small></button>').join(""):'<div class="search-empty">No matching medicine.</div>';
+ box.querySelectorAll("[data-med-id]").forEach(b=>b.addEventListener("click",()=>{openMedicineModal(b.dataset.medId);$("globalMedicineSearch").value="";box.classList.add("hidden")}));
+}
+
 const starterInventory=[
   {id:"seed-cyclofen-mr",name:"Cyclofen-MR",type:"Pharma/Brand",generic:"Aceclofenac 100 mg + Paracetamol 325 mg + Chlorzoxazone 250 mg",category:"Tablet/Capsule",form:"Tablet",batch:"SPA252687",expiry:"2027-10-01",stock:40,minStock:0,notes:"Pain/inflammation with muscle spasm; use only for appropriate musculoskeletal indications.",use:"Musculoskeletal pain, inflammation and muscle spasm/stiffness.",dose:"100 mg aceclofenac + 325 mg paracetamol + 250 mg chlorzoxazone; reference protocol: 1 tablet BD after food where indicated. Verify patient-specific contraindications before use."},
   {id:"seed-nimucaff-plus",name:"Nimucaff Plus",type:"Pharma/Brand",generic:"Nimesulide 100 mg + Paracetamol 325 mg",category:"Tablet/Capsule",form:"Tablet",batch:"AB26004",expiry:"2028-01-01",stock:160,minStock:0,notes:"Short-term pain/inflammation and fever relief; use only when clinically appropriate and prescribed.",use:"Acute pain, painful inflammatory conditions and fever.",dose:"Label: as directed by physician. Use the lowest effective dose for the shortest duration; avoid duplicate paracetamol/nimesulide-containing medicines and review liver, kidney and GI risk before use."},
@@ -145,6 +169,8 @@ function renderDashboard(){
   $("statLow").textContent=reorder.filter(x=>stockStatus(x)==="low").length;
   $("statOut").textContent=reorder.filter(x=>stockStatus(x)==="out").length;
   $("statExpiry").textContent=expiry.length;
+  $("statExpired").textContent=expiry.filter(m=>expiryStatus(m)==="expired").length;
+  $("statUnits").textContent=inventory.reduce((sum,m)=>sum+(Number(m.stock)||0),0);
   $("dashboardReorder").innerHTML=reorder.length?reorder.map(m=>`<div class="alert-row"><strong>${esc(m.name)}</strong><span>${m.stock||0} / min ${m.minStock||0} • Need ${Math.max(0,(Number(m.minStock)||0)-(Number(m.stock)||0))}</span></div>`).join(""):'<div class="empty-list">No reorder items.</div>';
   $("dashboardExpiry").innerHTML=expiry.length?expiry.map(m=>`<div class="alert-row ${expiryStatus(m)==="expired"?"expired":""}"><strong>${esc(m.name)}</strong><span>${esc(m.batch||"No batch")} • ${expiryStatus(m)==="expired"?"EXPIRED":expiryTimeLabel(m)+" days"} • ${esc(m.expiry||"—")}</span></div>`).join(""):'<div class="empty-list">No expiry alerts.</div>';
 }
@@ -297,7 +323,7 @@ function medCard(m){
   const dose=m.dose||Object.entries(DOSE_GUIDE).find(([k])=>m.name.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(m.name.toLowerCase()))?.[1]||"Dose not specified in the provided clinic reference files.";
   const stock=Number(m.stock)||0, exp=expiryStatus(m);
   const warn=ageWarnings(m,currentCaseData||{});
-  return '<div class="medicine-item"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
+  return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
 }
 let currentCaseData=null;
 
@@ -316,12 +342,66 @@ $("caseForm").addEventListener("submit",e=>{
   $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
   $("phase2").innerHTML=a.injectable.length?a.injectable.map(medCard).join(""):'<div class="empty-list">No relevant verified injections/IV fluids/respules matched this case.</div>';
   $("checks").innerHTML=a.checks.map(c=>"<li>"+esc(c)+"</li>").join("");$("summary").textContent=a.summary;
-  const h=loadHistory();h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),complaint:d.complaint,age:d.age,sex:d.sex,summary:a.summary});saveHistory(h.slice(0,30));
+  const h=loadHistory();h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),complaint:d.complaint,age:d.age,sex:d.sex,summary:a.summary});saveHistory(h.slice(0,30));logAudit("OPD case recorded",d.complaint||"Unnamed complaint");
 });
 $("printSummary").addEventListener("click",()=>{const text=$("summary")?.textContent||"";const w=window.open("","_blank");if(!w)return;w.document.write("<pre style=\"font:14px Arial;padding:30px;white-space:pre-wrap\">"+esc(text)+"</pre>");w.document.close();w.print()});
 $("clearCase").addEventListener("click",()=>{$("caseForm").reset();$("emptyResult").classList.remove("hidden");$("result").classList.add("hidden");$("resultState").textContent="Waiting"});
 
 function renderHistory(){const h=loadHistory();$("historyList").innerHTML=h.length?h.map(x=>'<div class="history-item"><strong>'+esc(x.complaint||"Unnamed complaint")+'</strong><small>'+esc(x.createdAt)+" • Age: "+esc(x.age||"—")+" • Sex: "+esc(x.sex||"—")+"</small></div>").join(""):'<div class="empty-list">No cases stored in this browser yet.</div>'}
 $("clearHistory").addEventListener("click",()=>{if(confirm("Clear locally stored case history?")){localStorage.removeItem(HISTORY_KEY);renderHistory()}});
+
+
+let clinicProtocols=[];
+async function loadProtocols(){
+ try{const r=await fetch(PROTOCOLS_URL);clinicProtocols=await r.json();}catch{clinicProtocols=[]}
+ renderProtocols();
+}
+function renderProtocols(){
+ const el=$("protocolList"),q=($("protocolSearch")?.value||"").toLowerCase().trim();if(!el)return;
+ const rows=clinicProtocols.filter(p=>!q||[p.title,p.category,p.summary,(p.redFlags||[]).join(" ")].join(" ").toLowerCase().includes(q));
+ $("protocolCount").textContent=clinicProtocols.length+" protocols";
+ el.innerHTML=rows.length?rows.map(p=>'<article class="protocol-card"><div><span class="mini-label">'+esc(p.category||"REFERENCE")+'</span><h3>'+esc(p.title)+'</h3><p>'+esc(p.summary||"")+'</p></div><div class="protocol-points">'+(p.checks||[]).map(x=>'<span>✓ '+esc(x)+'</span>').join("")+'</div><div class="protocol-caution"><b>Safety:</b> '+esc(p.caution||"Correlate clinically and verify current guidance.")+'</div></article>').join(""):'<div class="empty-list">No matching protocols.</div>';
+}
+function renderPedMedicineOptions(){
+ const el=$("pedMedicine");if(!el)return;
+ const names=inventory.filter(m=>/paediatric|pediatric|syrup|suspension|drops/i.test(m.form+" "+m.category)).slice().sort((a,b)=>a.name.localeCompare(b.name));
+ el.innerHTML='<option value="">Generic calculation / custom</option>'+names.map(m=>'<option>'+esc(m.name)+'</option>').join("");
+}
+function calculatePediatric(){
+ const w=Number($("pedWeight").value),d=Number($("pedDose").value),s=Number($("pedStrength").value),max=Number($("pedMax").value);
+ if(!(w>0&&d>0&&s>0))return;
+ const mg=w*d,ml=mg/s,maxDaily=max>0?w*max:null;
+ $("pedResult").className="";$("pedResult").innerHTML='<div class="calc-result"><span>Weight</span><strong>'+w+' kg</strong><span>Target dose</span><strong>'+mg.toFixed(1)+' mg per dose</strong><span>Product strength</span><strong>'+s+' mg/mL</strong><span>Calculated volume</span><strong class="calc-big">'+ml.toFixed(2)+' mL per dose</strong>'+(maxDaily?'<span>Maximum daily reference</span><strong>'+maxDaily.toFixed(1)+' mg/day</strong>':"")+'<div class="medicine-warning">Calculation only. Verify the product label, indication, dosing interval, maximum dose and patient-specific factors before administration.</div></div>';
+}
+function renderReports(){
+ const el=$("reportCards"),tb=$("reportTables");if(!el||!tb)return;
+ const expired=inventory.filter(m=>expiryStatus(m)==="expired"),near=inventory.filter(m=>expiryStatus(m)==="near"),low=inventory.filter(m=>stockStatus(m)==="low"),out=inventory.filter(m=>stockStatus(m)==="out"),h=loadHistory();
+ el.innerHTML='<article class="report-card"><span>Total stock units</span><strong>'+inventory.reduce((x,m)=>x+(Number(m.stock)||0),0)+'</strong></article><article class="report-card"><span>Near expiry</span><strong>'+near.length+'</strong></article><article class="report-card"><span>Expired</span><strong>'+expired.length+'</strong></article><article class="report-card"><span>Cases stored</span><strong>'+h.length+'</strong></article>';
+ const list=(title,rows)=>'<section class="report-table"><h3>'+title+'</h3>'+ (rows.length?'<table><thead><tr><th>Medicine</th><th>Stock</th><th>Expiry</th></tr></thead><tbody>'+rows.slice(0,15).map(m=>'<tr><td><button class="link-button" data-report-med="'+esc(m.id)+'">'+esc(m.name)+'</button></td><td>'+esc(m.stock||0)+'</td><td>'+esc(m.expiry||"—")+'</td></tr>').join("")+'</tbody></table>':'<div class="empty-list">None.</div>')+'</section>';
+ tb.innerHTML=list("Low stock",low)+list("Expiring within 6 months",near)+list("Expired",expired);
+ tb.querySelectorAll("[data-report-med]").forEach(b=>b.addEventListener("click",()=>openMedicineModal(b.dataset.reportMed)));
+}
+function downloadJson(filename,obj){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(obj,null,2)],{type:"application/json"}));a.download=filename;a.click();URL.revokeObjectURL(a.href)}
+function backupAll(){
+ downloadJson("my-medical-assistant-backup.json",{version:2,exportedAt:new Date().toISOString(),inventory,settings,history:loadHistory(),audit:loadAudit()});
+ logAudit("Backup created","Full local backup downloaded");
+}
+function restoreBackupFile(file){
+ const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x.inventory))throw new Error("Invalid backup");localStorage.setItem(INVENTORY_KEY,JSON.stringify(x.inventory));if(x.settings)localStorage.setItem(SETTINGS_KEY,JSON.stringify(x.settings));if(Array.isArray(x.history))localStorage.setItem(HISTORY_KEY,JSON.stringify(x.history));if(Array.isArray(x.audit))localStorage.setItem(AUDIT_KEY,JSON.stringify(x.audit));inventory=loadInventory();settings=loadSettings();
+document.querySelectorAll("[data-quick-tab]").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.quickTab)));
+$("globalMedicineSearch")?.addEventListener("input",e=>renderGlobalSearch(e.target.value));
+if($("globalMedicineSearch"))$("globalMedicineSearch").insertAdjacentHTML("afterend",'<div id="globalSearchResults" class="global-search-results hidden"></div>');
+document.addEventListener("click",e=>{if(e.target.matches("[data-close-modal]"))closeMedicineModal();});
+$("protocolSearch")?.addEventListener("input",renderProtocols);
+$("pediatricForm")?.addEventListener("submit",e=>{e.preventDefault();calculatePediatric();});
+$("backupAll")?.addEventListener("click",backupAll);
+$("restoreBackup")?.addEventListener("change",e=>{if(e.target.files[0])restoreBackupFile(e.target.files[0])});
+$("clearAudit")?.addEventListener("click",()=>{if(confirm("Clear local audit log?")){localStorage.removeItem(AUDIT_KEY);renderAudit()}});
+$("exportReport")?.addEventListener("click",()=>downloadJson("clinic-report.json",{generatedAt:new Date().toISOString(),inventory,nearExpiry:inventory.filter(m=>expiryStatus(m)==="near"),expired:inventory.filter(m=>expiryStatus(m)==="expired"),lowStock:inventory.filter(m=>stockStatus(m)==="low"),cases:loadHistory()}));
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.tab==="protocols")renderProtocols();if(b.dataset.tab==="pediatric")renderPedMedicineOptions();if(b.dataset.tab==="reports")renderReports();if(b.dataset.tab==="dataCenter")renderAudit()}));
+document.addEventListener("click",e=>{const b=e.target.closest(".medicine-item[data-med-id]");if(b)openMedicineModal(b.dataset.medId)});
+
+refreshAll();renderReports();renderAudit();alert("Backup restored successfully.");}catch(e){alert("Backup could not be restored. Please select a valid My Medical Assistant backup.");}};r.readAsText(file);
+}
 
 refreshAll();
