@@ -317,7 +317,8 @@ function buildAssessment(d){
   if(d.redFlags.trim())checks.unshift("Reported red flags: "+d.redFlags.trim());
   if(urgent)checks.unshift("Urgent red flag detected: this may need urgent referral / further investigation. Do not delay emergency care for this tool.");
   const possible=d.complaint?"Possible clinical considerations based on the entered complaint/history: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
-  return {urgent,possible,matches,oral,injectable,checks,summary:["Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Vitals/examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded")].join("\n")};
+  const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
+  return {urgent,possible,protocolMatches,matches,oral,injectable,checks,summary:["Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Vitals/examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded")].join("\n")};
 }
 function medCard(m){
   const dose=m.dose||Object.entries(DOSE_GUIDE).find(([k])=>m.name.toLowerCase().includes(k.toLowerCase())||k.toLowerCase().includes(m.name.toLowerCase()))?.[1]||"Dose not specified in the provided clinic reference files.";
@@ -336,7 +337,7 @@ $("caseForm").addEventListener("submit",e=>{
   $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");$("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
   $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
   $("clinicalSnapshot").innerHTML='<div><span>Age</span><strong>'+esc(d.age||"—")+'</strong></div><div><span>Sex</span><strong>'+esc(d.sex||"—")+'</strong></div><div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div><div><span>Vitals / Exam</span><strong>'+esc(d.exam||"Not recorded")+'</strong></div>';
-  $("possibleDiagnosis").textContent=a.possible;
+  $("possibleDiagnosis").innerHTML=esc(a.possible)+(a.protocolMatches?.length?'<div class="protocol-inline"><b>Relevant clinic reference:</b> '+a.protocolMatches.map(p=>esc(p.title)).join(" • ")+'</div>':"");
   $("medicineMatchCount").textContent=a.matches.length+" matched";
   $("medicineMatchInfo").innerHTML=a.matches.length?'<span>Matched from the current clinic inventory using complaint/history keywords and recorded medicine uses.</span> <span>Review each medicine clinically before use.</span>':'<span>No inventory medicine was matched confidently to the entered complaint.</span>';
   $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
