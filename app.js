@@ -622,6 +622,20 @@ function addRelevantInventoryOptions(items,d,p){
   const painCase=/pain|headache|migraine|body ache|dard/.test(caseText);
   const gastricCase=/gas|acidity|heartburn|gastric|reflux|indigestion|abdomen|abdominal|nausea|vomit/.test(caseText);
 
+  // Prefer a medicine whose recorded clinical use directly matches the complaint.
+  // This keeps a generic respiratory/allergy match below a directly documented cough treatment.
+  candidates.forEach(m=>{
+    const g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
+    let specificity=0;
+    if(coughCase && /cough/.test(g))specificity+=8;
+    if(coughCase && /cold/.test(g))specificity+=3;
+    if(feverCase && /fever|antipyretic/.test(g))specificity+=8;
+    if(painCase && /pain|analges|headache/.test(g))specificity+=6;
+    if(gastricCase && /acid|gastric|antacid|heartburn|indigestion|nausea|vomit/.test(g))specificity+=6;
+    m._treatmentSpecificity=specificity;
+  });
+  candidates.sort((a,b)=>(b._treatmentSpecificity||0)-(a._treatmentSpecificity||0)||b._match.score-a._match.score||daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
+
   for(const m of candidates){
     const g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
     if(coughCase && !/cough|cold|respir|sputum|phlegm|allerg|rhinitis/.test(g))continue;
