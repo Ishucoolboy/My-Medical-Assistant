@@ -427,7 +427,9 @@ function buildAssessment(d){
   if(Number(d.age)<18)checks.unshift("Paediatric case: confirm weight and use a verified age/weight-specific reference before dosing.");
   if(d.redFlags.trim())checks.unshift("Reported red flags: "+d.redFlags.trim());
   if(urgent)checks.unshift("Urgent red flag detected: this may need urgent referral / further investigation. Do not delay emergency care for this tool.");
-  const safety=duplicateSafetyWarnings(matches);safety.forEach(x=>checks.unshift(x));
+  const safety=duplicateSafetyWarnings(rx.items||[]);safety.forEach(x=>checks.unshift(x));
+  const investigations=phaseBInvestigations(rx.protocol,d),followUpSuggestion=phaseBFollowUp(rx.protocol,d),patientFactors=phaseBPatientFactors(d,rx.protocol),stewardship=phaseBAntibioticChecks(rx.items||[]);
+  stewardship.slice().reverse().forEach(x=>checks.unshift(x));
   const possible=d.complaint?"Possible clinical considerations based on the entered complaint/history: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
   const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
   return {urgent,possible,protocolMatches,matches,oral,phase2,injectable,checks,safety,rx,investigations,followUpSuggestion,patientFactors,stewardship,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
@@ -443,9 +445,6 @@ function inventoryCandidateMatch(m,c){
 }
 function findProtocolForCase(d){
   const t=opdText(d);
-  const pediatric=Number(d.age)<18;
-  const pediatricText=pediatric&&/fever|pain|bukhar|taav|jwar|body ache|headache|dard/.test(t);
-  if(pediatricText){const pp=(clinicRxProtocols||[]).find(p=>p.title==="Paediatric Fever / Pain — Weight-based");if(pp)return pp;}
   const pediatric=Number(d.age)<18;
   const pediatricText=pediatric&&/fever|pain|bukhar|taav|jwar|body ache|headache|dard/.test(t);
   if(pediatricText){const pp=(clinicRxProtocols||[]).find(p=>p.title==="Paediatric Fever / Pain — Weight-based");if(pp)return pp;}
@@ -557,7 +556,7 @@ function renderAssessmentView(a,d,recordHistory){
   $("triageStatus").className="status-tag "+(a.urgent?"expired":"ok");
   $("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
   $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
-  $("clinicalSnapshot").innerHTML='<div><span>Patient</span><strong>'+esc(d.patientName||"—")+'</strong></div><div><span>Age / Sex</span><strong>'+esc(d.age||"—")+" / "+esc(d.sex||"—")+'</strong></div><div><span>Vitals</span><strong>BP '+esc(d.bp||"—")+' • Sugar '+esc(d.bloodSugar||"—")+' • Pulse '+esc(d.pulse||"—")+' • SpO₂ '+esc(d.spo2||"—")+' • Temp '+esc(d.temperature||"—")+' • Weight '+esc(d.weight||"—")+' kg • Pregnancy '+esc(d.pregnancyStatus||"—")+(d.gestationalWeeks?" • GA "+esc(d.gestationalWeeks)+" wk":"")+"</strong></div><div><span>Complaint</span><strong>'+esc(d.complaint||"—")+'</strong></div>';
+  $("clinicalSnapshot").innerHTML=`<div><span>Patient</span><strong>${esc(d.patientName||"—")}</strong></div><div><span>Age / Sex</span><strong>${esc(d.age||"—")} / ${esc(d.sex||"—")}</strong></div><div><span>Vitals</span><strong>BP ${esc(d.bp||"—")} • Sugar ${esc(d.bloodSugar||"—")} • Pulse ${esc(d.pulse||"—")} • SpO₂ ${esc(d.spo2||"—")} • Temp ${esc(d.temperature||"—")} • Weight ${esc(d.weight||"—")} kg • Pregnancy ${esc(d.pregnancyStatus||"—")}${d.gestationalWeeks?" • GA "+esc(d.gestationalWeeks)+" wk":""}</strong></div><div><span>Complaint</span><strong>${esc(d.complaint||"—")}</strong></div>`;
   const rxTitle=a.rx?.protocol?'<div class="protocol-inline"><b>Matched clinic case:</b> '+esc(a.rx.protocol.title)+(a.rx.protocol.source?'<small> • '+esc(a.rx.protocol.source)+'</small>':"")+'</div>':"";
   const rxNotes=(a.rx?.notes||[]).map(x=>'<div class="medicine-warning">'+esc(x)+'</div>').join("");
   const pbFactors=(a.patientFactors||[]).map(x=>"<div class=\"protocol-inline\"><b>Patient factor:</b> "+esc(x)+"</div>").join("");
