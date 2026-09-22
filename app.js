@@ -303,7 +303,38 @@ const OPD_SHELVES=[
   {id:"nutrition",label:"Anaemia / Nutrition",keys:["anaemia","anemia","iron","folic","vitamin","mineral","nutrition"]},
   {id:"worms",label:"Worm / Parasite",keys:["worm","parasite","helminth","anthelmint"]}
 ];
-function opdText(d){return [d.complaint,d.history,d.exam,d.redFlags].join(" ").toLowerCase()}
+const MARWARI_CLINICAL_ALIASES={
+  "बुखार":"fever","ताव":"fever","ज्वर":"fever","बुखार चढ़":"fever",
+  "खांसी":"cough","खासी":"cough","खांस":"cough","खांसी रोके कोनी":"persistent cough",
+  "जुकाम":"cold","नाक बहे":"runny nose","नक बह":"runny nose","नाक बंद":"nasal congestion",
+  "गला दुखे":"sore throat","गला दुख":"sore throat","गला में पीड़":"sore throat",
+  "सिर दुखे":"headache","सिर दुख":"headache","सिर में पीड़":"headache","चक्कर आवे":"dizziness","चक्कर आ":"dizziness",
+  "पेट दुखे":"abdominal pain","पेट दुख":"abdominal pain","पेट में पीड़":"abdominal pain","पेट साफ कोनी":"constipation",
+  "उल्टी":"vomiting","ओक":"vomiting","जी मचल":"nausea","जी मिचल":"nausea",
+  "दस्त":"diarrhoea","जुलाब":"diarrhoea","पातळ दस्त":"diarrhoea",
+  "पेशाब में जलन":"urinary burning","पेशाब जळे":"urinary burning","पेशाब में पीड़":"urinary pain",
+  "कमर दुखे":"back pain","कमर में पीड़":"back pain","जोड़ दुखे":"joint pain","जोड़ में पीड़":"joint pain",
+  "शरीर दुखे":"body ache","सारा शरीर दुखे":"body ache","बदन दुखे":"body ache",
+  "सांस फूल":"breathlessness","सांस चढ़":"breathlessness","दम घुट":"breathlessness",
+  "सीने में दर्द":"chest pain","छाती में दर्द":"chest pain",
+  "खुजली":"itching","खारिश":"itching","दाने":"rash",
+  "कान दुखे":"ear pain","आंख दुखे":"eye pain","आंख लाल":"red eye"
+};
+const MARWARI_LATIN_ALIASES={
+  "bukhar":"fever","taav":"fever","tap":"fever","khansi":"cough","khasi":"cough","jukam":"cold","nak bahe":"runny nose","gala dukhe":"sore throat","gala dukhe hai":"sore throat",
+  "sir dukhe":"headache","sir dukh":"headache","chakkar aave":"dizziness","pet dukhe":"abdominal pain","pet dukh":"abdominal pain","pet saaf koni":"constipation","pet saaf nahi":"constipation",
+  "ulti":"vomiting","ok":"vomiting","ji michlawe":"nausea","ji machlawe":"nausea","dast":"diarrhoea","julaab":"diarrhoea",
+  "peshab me jalan":"urinary burning","pesab me jalan":"urinary burning","kamar me peer":"back pain","kamar me peed":"back pain","jod dukhe":"joint pain",
+  "badan dukhe":"body ache","sara badan dukhe":"body ache","saans foole":"breathlessness","saans chadhe":"breathlessness","dam ghute":"breathlessness",
+  "chhati me dard":"chest pain","sine me dard":"chest pain","khujli":"itching","kharish":"itching","daane":"rash","kaan dukhe":"ear pain","aankh dukhe":"eye pain","aankh laal":"red eye"
+};
+function expandMarwariClinicalText(value){
+  let s=(value||"").toLowerCase();
+  const aliases={...MARWARI_CLINICAL_ALIASES,...MARWARI_LATIN_ALIASES};
+  Object.entries(aliases).sort((a,b)=>b[0].length-a[0].length).forEach(([k,v])=>{if(s.includes(k))s+=" "+v});
+  return s;
+}
+function opdText(d){return expandMarwariClinicalText([d.complaint,d.history,d.exam,d.redFlags].join(" "))}
 function medicineRelevance(m,d){
   const t=opdText(d), mt=shelfText(m);
   let score=0, reasons=[];
@@ -356,24 +387,35 @@ function medCard(m){
   return '<div class="medicine-item" data-med-id="'+esc(m.id)+'"><div class="medicine-item-top"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+' available</span></div><small>'+esc(m.category||"")+(m.form?" • "+esc(m.form):"")+'</small><div class="medicine-dose"><b>Reference:</b> '+esc(dose)+'</div><div class="medicine-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="medicine-actions"><button type="button" class="btn '+(selected?"primary":"ghost")+' add-prescription" data-add-rx="'+esc(m.id)+'">'+(selected?"✓ Added to prescription":"Add to prescription")+'</button></div>'+(m.expiry?'<div class="medicine-meta"><span>Expiry: '+esc(m.expiry)+'</span><span class="'+(exp==="expired"?"expiry-bad":"")+'">'+(exp==="expired"?"EXPIRED":expiryTimeLabel(m))+'</span></div>':"")+(warn.length?'<div class="medicine-warning">'+warn.map(x=>esc(x)).join(" ")+'</div>':"")+'</div>';
 }
 let currentCaseData=null;
+function prescriptionPhase(m){
+  if(m.rxPhase) return m.rxPhase;
+  return ["Injection","IV Fluid","Respule"].includes(m.category) ? "2" : "1";
+}
 function renderPrescription(){
   const list=$("selectedPrescriptionList"), warnEl=$("prescriptionWarnings");
   if(!list)return;
-  list.innerHTML=selectedPrescriptions.length?selectedPrescriptions.map((m,i)=>'<div class="rx-row"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><div class="rx-fields"><input data-rx-dose="'+i+'" placeholder="Dose / strength" value="'+esc(m.rxDose||"")+'"><input data-rx-freq="'+i+'" placeholder="Frequency" value="'+esc(m.rxFreq||"")+'"><input data-rx-duration="'+i+'" placeholder="Duration" value="'+esc(m.rxDuration||"")+'"><input data-rx-instruction="'+i+'" placeholder="Instructions" value="'+esc(m.rxInstruction||"")+'"><button type="button" class="btn danger-outline remove-rx" data-rx-remove="'+i+'">Remove</button></div></div>').join(""):'<div class="empty-list">Assessment se medicine par “Add to prescription” click karein. Dose/frequency/duration clinician verify karke fill karein.</div>';
+  list.innerHTML=selectedPrescriptions.length?selectedPrescriptions.map((m,i)=>{
+    const phase=prescriptionPhase(m);
+    const defaultDuration=phase==="2"&&!m.rxDuration?"2–3 days":"";
+    return '<div class="rx-row"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><div class="rx-fields"><select data-rx-phase="'+i+'"><option value="1" '+(phase==="1"?"selected":"")+'>Phase 1 — Regular medicines</option><option value="2" '+(phase==="2"?"selected":"")+'>Phase 2 — Injection + short-course</option></select><input data-rx-dose="'+i+'" placeholder="Dose / strength" value="'+esc(m.rxDose||"")+'"><select data-rx-route="'+i+'"><option value="">Route</option><option '+(m.rxRoute==="IM"?"selected":"")+'>IM</option><option '+(m.rxRoute==="IV"?"selected":"")+'>IV</option><option '+(m.rxRoute==="SC"?"selected":"")+'>SC</option><option '+(m.rxRoute==="Oral"?"selected":"")+'>Oral</option><option '+(m.rxRoute==="Topical"?"selected":"")+'>Topical</option></select><input data-rx-freq="'+i+'" placeholder="Frequency" value="'+esc(m.rxFreq||"")+'"><input data-rx-duration="'+i+'" placeholder="'+(phase==="2"?"2–3 days / as indicated":"Duration")+'" value="'+esc(m.rxDuration||defaultDuration)+'"><input data-rx-instruction="'+i+'" placeholder="Instructions" value="'+esc(m.rxInstruction||"")+'"><input data-rx-compat="'+i+'" placeholder="IV/Drip compatibility — verify before mixing" value="'+esc(m.rxCompat||"")+'"><button type="button" class="btn danger-outline remove-rx" data-rx-remove="'+i+'">Remove</button></div></div>';
+  }).join(""):'<div class="empty-list">Assessment se medicine par “Add to prescription” click karein. Phase 1 regular medicines ke liye hai; Phase 2 injection/IV ke saath 2–3 din ka short-course medicine bhi rakh sakte hain.</div>';
   const warnings=duplicateSafetyWarnings(selectedPrescriptions);
   warnEl.innerHTML=warnings.length?'<div class="medicine-warning"><b>Prescription safety check:</b> '+warnings.map(esc).join(" ")+'</div>':"";
   list.querySelectorAll("[data-rx-remove]").forEach(b=>b.addEventListener("click",()=>{selectedPrescriptions.splice(Number(b.dataset.rxRemove),1);renderPrescription();}));
-  list.querySelectorAll("[data-rx-dose],[data-rx-freq],[data-rx-duration],[data-rx-instruction]").forEach(inp=>inp.addEventListener("input",()=>{
-    const i=Number(inp.dataset.rxDose??inp.dataset.rxFreq??inp.dataset.rxDuration??inp.dataset.rxInstruction);
+  list.querySelectorAll("[data-rx-phase],[data-rx-dose],[data-rx-route],[data-rx-freq],[data-rx-duration],[data-rx-instruction],[data-rx-compat]").forEach(inp=>inp.addEventListener(inp.tagName==="SELECT"?"change":"input",()=>{
+    const i=Number(inp.dataset.rxPhase??inp.dataset.rxDose??inp.dataset.rxRoute??inp.dataset.rxFreq??inp.dataset.rxDuration??inp.dataset.rxInstruction??inp.dataset.rxCompat);
+    if(inp.dataset.rxPhase!==undefined)selectedPrescriptions[i].rxPhase=inp.value;
     if(inp.dataset.rxDose!==undefined)selectedPrescriptions[i].rxDose=inp.value;
+    if(inp.dataset.rxRoute!==undefined)selectedPrescriptions[i].rxRoute=inp.value;
     if(inp.dataset.rxFreq!==undefined)selectedPrescriptions[i].rxFreq=inp.value;
     if(inp.dataset.rxDuration!==undefined)selectedPrescriptions[i].rxDuration=inp.value;
     if(inp.dataset.rxInstruction!==undefined)selectedPrescriptions[i].rxInstruction=inp.value;
+    if(inp.dataset.rxCompat!==undefined)selectedPrescriptions[i].rxCompat=inp.value;
   }));
 }
 function addPrescription(id){
   const m=inventory.find(x=>x.id===id);if(!m)return;
-  if(!selectedPrescriptions.some(x=>x.id===id))selectedPrescriptions.push({...m});
+  if(!selectedPrescriptions.some(x=>x.id===id))selectedPrescriptions.push({...m,rxPhase:["Injection","IV Fluid","Respule"].includes(m.category)?"2":"1"});
   renderPrescription();
   if(currentCaseData) rerenderAssessmentCards();
 }
@@ -383,16 +425,23 @@ function rerenderAssessmentCards(){
   $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
   $("phase2").innerHTML=a.injectable.length?a.injectable.map(medCard).join(""):'<div class="empty-list">No relevant verified injections/IV fluids/respules matched this case.</div>';
 }
+function formatRxGroup(rows){
+  return rows.map((m,i)=>{
+    const dose=m.rxDose||m.dose||"Verify dose";
+    const route=m.rxRoute?(" • Route: "+m.rxRoute):"";
+    const compat=m.rxCompat?("\n   IV/Drip compatibility note: "+m.rxCompat):"";
+    return (i+1)+". "+m.name+"\n   Dose: "+dose+route+"\n   Frequency: "+(m.rxFreq||"Verify")+
+      "\n   Duration: "+(m.rxDuration||"Verify")+"\n   Instructions: "+(m.rxInstruction||"—")+compat;
+  }).join("\n\n");
+}
 function printPrescription(){
   if(!selectedPrescriptions.length){alert("Please add at least one medicine to the prescription.");return}
   const d=currentCaseData||{};
-  const rows=selectedPrescriptions.map((m,i)=>{
-    const dose=m.rxDose||m.dose||"Verify dose";
-    return (i+1)+". "+m.name+"\n   Dose: "+dose+"\n   Frequency: "+(m.rxFreq||"Verify")+
-      "\n   Duration: "+(m.rxDuration||"Verify")+"\n   Instructions: "+(m.rxInstruction||"—");
-  }).join("\n\n");
+  const p1=selectedPrescriptions.filter(m=>prescriptionPhase(m)==="1");
+  const p2=selectedPrescriptions.filter(m=>prescriptionPhase(m)==="2");
+  const section=(title,rows)=>"<h2>"+title+"</h2><pre style='white-space:pre-wrap;font:14px Arial'>"+esc(rows.length?formatRxGroup(rows):"None prescribed in this phase.")+"</pre>";
   const w=window.open("","_blank");if(!w)return;
-  w.document.write("<html><head><title>Prescription</title><style>body{font:14px Arial;padding:30px;max-width:800px;margin:auto}h1{margin-bottom:4px}.muted{color:#666}.line{border-bottom:1px solid #ddd;margin:15px 0}</style></head><body><h1>My Medical Assistant</h1><div class='muted'>Clinic prescription draft</div><div class='line'></div><p><b>Patient:</b> "+esc(d.patientName||"—")+" &nbsp; <b>Age:</b> "+esc(d.age||"—")+" &nbsp; <b>Sex:</b> "+esc(d.sex||"—")+"</p><p><b>Mobile:</b> "+esc(d.mobile||"—")+" &nbsp; <b>Village:</b> "+esc(d.village||"—")+"</p><p><b>Complaint:</b> "+esc(d.complaint||"—")+"</p><div class='line'></div><pre style='white-space:pre-wrap;font:14px Arial'>"+esc(rows)+"</pre><p class='muted'>Prescription draft — verify indication, dose, contraindications and patient-specific factors before signing.</p></body></html>");
+  w.document.write("<html><head><title>Prescription</title><style>body{font:14px Arial;padding:30px;max-width:800px;margin:auto}h1{margin-bottom:4px}.muted{color:#666}.line{border-bottom:1px solid #ddd;margin:15px 0}h2{margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:6px}</style></head><body><h1>My Medical Assistant</h1><div class='muted'>Clinic prescription draft</div><div class='line'></div><p><b>Patient:</b> "+esc(d.patientName||"—")+" &nbsp; <b>Age:</b> "+esc(d.age||"—")+" &nbsp; <b>Sex:</b> "+esc(d.sex||"—")+"</p><p><b>Mobile:</b> "+esc(d.mobile||"—")+" &nbsp; <b>Village:</b> "+esc(d.village||"—")+"</p><p><b>Complaint:</b> "+esc(d.complaint||"—")+"</p><div class='line'></div>"+section("PHASE 1 — Regular Medicines",p1)+section("PHASE 2 — Injection + Short-course Medicines",p2)+"<p class='muted'>Prescription draft — verify indication, dose, route, compatibility, contraindications and patient-specific factors before signing.</p></body></html>");
   w.document.close();w.print();
 }
 function buildAssessment(d){
