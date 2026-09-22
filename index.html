@@ -34,7 +34,6 @@
         <button class="tab" data-tab="diseaseShelf">Use / Condition Shelves</button><button class="tab" data-tab="assistant">OPD Treatment</button>
         <button class="tab" data-tab="required">Required / Reorder</button>
         <button class="tab" data-tab="expiry">Near Expiry</button>
-        <button class="tab" data-tab="history">Recent Cases</button>
         <button class="tab" data-tab="storeTablets">Medicine Available</button>
         <button class="tab" data-tab="protocols">Clinic Protocols</button>
         <button class="tab" data-tab="pediatric">Paediatric Calculator</button>
@@ -176,65 +175,8 @@
             </form>
           </article>
 
-          <article class="card result-card">
-            <div class="card-head">
-              <div>
-                <h2>OPD Treatment</h2>
-                <p>Clinician-editable treatment and prescription workspace.</p>
-              </div>
-              <span id="resultState" class="badge">Waiting</span>
-            </div>
-
-            <div id="emptyResult" class="empty">
-              <div class="empty-icon">🩺</div>
-              <h3>No treatment yet</h3>
-              <p>Enter the patient's complaint and generate the treatment plan.</p>
-            </div>
-
-            <div id="result" class="hidden">
-              <div id="referralBox"></div>
-
-              <div id="treatmentPatientBar" class="clinical-snapshot treatment-patient-bar"></div>
-
-              <section class="result-section treatment-section">
-                <div class="opd-section-head">
-                  <div><span class="mini-label">PHASE 1</span><h3>Regular Treatment</h3></div>
-                  <span class="badge">Oral / Topical</span>
-                </div>
-                <div class="treatment-note">Select medicines to add them to the prescription. Dose, frequency and duration remain editable before printing.</div>
-                <div id="phase1" class="medicine-list"></div>
-              </section>
-
-              <section class="result-section treatment-section">
-                <div class="opd-section-head">
-                  <div><span class="mini-label">PHASE 2</span><h3>Injection / IV / Short-course Treatment</h3></div>
-                  <span class="badge">Clinician verified</span>
-                </div>
-                <div class="treatment-note">Use Phase 2 only when clinically indicated. Verify route, dose, compatibility and patient-specific contraindications before administration.</div>
-                <div id="phase2" class="medicine-list"></div>
-              </section>
-
-              <section class="result-section prescription-treatment-section">
-                <div class="opd-section-head">
-                  <div><span class="mini-label">PRESCRIPTION</span><h3>Write Prescription</h3></div>
-                  <span id="medicineMatchCount" class="badge">0 selected</span>
-                </div>
-                <div id="medicineMatchInfo" class="match-info"></div>
-
-                <div id="prescriptionBuilder" class="prescription-builder">
-                  <div class="protocol-inline"><b>Prescription editor:</b> Add treatment items above, then enter or edit dose, route, frequency, duration and instructions for each item.</div>
-                  <div id="selectedPrescriptionList" class="selected-prescription-list"></div>
-                  <div class="prescription-actions">
-                    <button id="printPrescription" class="btn primary" type="button">Print Prescription</button>
-                    <button id="clearPrescription" class="btn ghost" type="button">Clear Prescription</button>
-                  </div>
-                  <div id="prescriptionConfidence" class="prescription-confidence"></div>
-                  <div id="prescriptionWarnings"></div>
-                  <div id="prescriptionCostSummary" class="prescription-cost-summary"></div>
-                </div>
-              </section>
-            </div>
-          </article>
+          <article class="card result-card" id="treatmentWorkspacePlaceholder"></article>
+>
         </div>
       </section>
 
@@ -360,19 +302,6 @@
   </div>
 </section>
 
-<section id="history" class="tab-panel">
-        <article class="card">
-          <div class="card-head">
-            <div>
-              <h2>Recent Cases</h2>
-              <p>Stored only in this browser unless you later connect a database.</p>
-            </div>
-            <button id="clearHistory" class="btn danger-outline">Clear history</button>
-          </div>
-          <div class="history-toolbar"><input id="historySearch" placeholder="Search patient / mobile / village / complaint..." /></div>
-          <div id="historyList" class="history-list"></div>
-        </article>
-      </section>
     </main>
 
     <div id="pinLock" class="pin-lock hidden">
@@ -391,7 +320,7 @@
       <span>Clinical decision support, not a substitute for medical care.</span>
     </footer>
   </div>
-  <script src="app.js?v=20260923-33"></script>
+  <script src="app.js?v=20260923-34"></script>
 <div id="medicineModal" class="modal hidden" aria-hidden="true">
   <div class="modal-backdrop" data-close-modal></div>
   <div class="modal-card">
@@ -399,6 +328,6 @@
     <div id="medicineModalBody"></div>
   </div>
 </div>
-<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js?v=20260923-33").catch(()=>{}));}</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js?v=20260923-34").catch(()=>{}));}</script>
 </body>
 </html>
