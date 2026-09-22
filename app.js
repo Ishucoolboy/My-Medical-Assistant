@@ -95,21 +95,20 @@ function renderStoreTablets(){
   if(!listEl)return;
   const q=(searchEl?.value||"").trim().toLowerCase();
   const mode=stockEl?.value||"available";
-  const isTablet=m=>["Tablet/Capsule","Tablet","Capsule"].includes(m.category)||/tablet|capsule/i.test(m.form||"");
   const rows=inventory.filter(m=>{
-    const matchesSearch=!q||[m.name,m.form,m.notes,m.batch,m.use,m.dose].join(" ").toLowerCase().includes(q);
+    const matchesSearch=!q||[m.name,m.category,m.form,m.notes,m.batch,m.use,m.dose].join(" ").toLowerCase().includes(q);
     const available=(Number(m.stock)||0)>0;
-    return isTablet(m)&&matchesSearch&&(mode==="all"||available);
+    return matchesSearch&&(mode==="all"||available);
   });
-  const total=inventory.filter(m=>isTablet(m)&&(Number(m.stock)||0)>0).length;
+  const total=inventory.filter(m=>(Number(m.stock)||0)>0).length;
   if(countEl)countEl.textContent=total+" available";
   listEl.innerHTML=rows.length?rows.map(m=>{
     const stock=Number(m.stock)||0;
     const use=m.use||m.notes||"Not specified";
     const dose=m.dose||"Not specified";
     const expiry=m.expiry||"—";
-    return '<tr><td><strong>'+esc(m.name)+'</strong><br><small>'+esc(m.form||"Tablet/Capsule")+'</small></td><td>'+esc(use)+'</td><td>'+esc(dose)+'</td><td>'+esc(expiry)+'</td><td><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+'</span></td></tr>';
-  }).join(""):'<tr><td colspan="5" class="store-empty">No tablets are currently recorded for this view. Add tablets from Inventory.</td></tr>';
+    return '<tr><td><strong>'+esc(m.name)+'</strong><br><small>'+esc(m.category||"Medicine")+(m.form?" • "+esc(m.form):"")+'</small></td><td>'+esc(use)+'</td><td>'+esc(dose)+'</td><td>'+esc(expiry)+'</td><td><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+'</span></td></tr>';
+  }).join(""):'<tr><td colspan="5" class="store-empty">No medicines are currently recorded for this view. Add medicines from Inventory.</td></tr>';
 }
 
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
