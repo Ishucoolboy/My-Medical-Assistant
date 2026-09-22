@@ -86,49 +86,72 @@
               </div>
               <button id="clearCase" class="btn ghost">Clear</button>
             </div>
-
             <form id="caseForm">
               <div class="patient-grid">
                 <label>Patient name
-                  <input id="patientName" type="text" autocomplete="name" placeholder="Patient name" />
+                  <input id="patientName" type="text" autocomplete="name" placeholder="Patient name" required />
                 </label>
                 <label>Age
-                  <input id="age" type="number" min="0" max="120" placeholder="e.g. 32" />
-                </label><label>Weight<input id="weight" type="number" min="0" step="0.1" placeholder="kg (required for paediatric mode)" /></label><label>Pregnancy status<select id="pregnancyStatus"><option value="unknown">Unknown / not recorded</option><option value="not-pregnant">Not pregnant</option><option value="pregnant">Pregnant</option></select></label><label>Gestational weeks<input id="gestationalWeeks" type="number" min="0" max="45" step="1" placeholder="weeks (if pregnant)" /></label>
-                <label>Sex
-                  <select id="sex">
+                  <input id="age" type="number" min="0" max="120" placeholder="Age" required />
+                </label>
+                <label>Weight
+                  <input id="weight" type="number" min="0" step="0.1" placeholder="kg" required />
+                </label>
+                <label>Male / Female
+                  <select id="sex" required>
                     <option value="">Select</option>
                     <option>Female</option>
                     <option>Male</option>
-                    <option>Other</option>
                   </select>
                 </label>
-                <label>Mobile number
-                  <input id="mobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile" />
-                </label>
-                <label>Gaav / Village
-                  <input id="village" type="text" placeholder="Gaav ka naam" />
-                </label>
               </div>
 
-              <label>Chief complaint
-                <input id="complaint" required placeholder="e.g. fever, cough, vomiting..." />
+              <label>Complaint / problem
+                <textarea id="complaint" required rows="4" placeholder="Patient ki main problem / complaint likhein..."></textarea>
               </label>
 
-              <label>Symptoms / history
-                <textarea id="history" rows="6" placeholder="Duration, severity, associated symptoms, relevant history, pregnancy status when relevant, allergies, current medicines, etc."></textarea>
-              </label>
-
-              <div class="vitals-grid">
-                <label>BP<input id="bp" type="text" inputmode="decimal" placeholder="e.g. 120/80" /></label>
-                <label>Blood Sugar<input id="bloodSugar" type="text" inputmode="decimal" placeholder="e.g. 110 mg/dL" /></label>
-                <label>Pulse<input id="pulse" type="number" min="0" placeholder="bpm" /></label>
-                <label>SpO₂<input id="spo2" type="number" min="0" max="100" placeholder="%" /></label>
-                <label>Temperature<input id="temperature" type="number" step="0.1" placeholder="°F" /></label>
+              <div class="protocol-inline">
+                <b>Quick OPD:</b> Sirf patient details + complaint enter karein. Assessment ke baad app clinically indicated <b>BP, blood sugar aur pulse</b> checks suggest karega aur current clinic inventory/reference ke basis par Phase 1 + Phase 2 treatment draft karega.
               </div>
-              <label>Examination findings
-                <textarea id="exam" rows="4" placeholder="Clinical examination findings..."></textarea>
-              </label>
+
+              <details class="phase-d-fields">
+                <summary><strong>Optional clinical details</strong> — only when needed</summary>
+                <div class="patient-grid" style="margin-top:12px">
+                  <label>Pregnancy status
+                    <select id="pregnancyStatus">
+                      <option value="unknown">Unknown / not recorded</option>
+                      <option value="not-pregnant">Not pregnant</option>
+                      <option value="pregnant">Pregnant</option>
+                    </select>
+                  </label>
+                  <label>Gestational weeks
+                    <input id="gestationalWeeks" type="number" min="0" max="45" step="1" placeholder="if pregnant" />
+                  </label>
+                  <label>Mobile number
+                    <input id="mobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile" />
+                  </label>
+                  <label>Gaav / Village
+                    <input id="village" type="text" placeholder="Gaav ka naam" />
+                  </label>
+                </div>
+                <label>Symptoms / history
+                  <textarea id="history" rows="4" placeholder="Duration, severity, associated symptoms, allergies, current medicines, etc."></textarea>
+                </label>
+                <div class="vitals-grid">
+                  <label>BP<input id="bp" type="text" inputmode="decimal" placeholder="e.g. 120/80" /></label>
+                  <label>Blood Sugar<input id="bloodSugar" type="text" inputmode="decimal" placeholder="e.g. 110 mg/dL" /></label>
+                  <label>Pulse<input id="pulse" type="number" min="0" placeholder="bpm" /></label>
+                  <label>SpO₂<input id="spo2" type="number" min="0" max="100" placeholder="%" /></label>
+                  <label>Temperature<input id="temperature" type="number" step="0.1" placeholder="°F" /></label>
+                </div>
+                <label>Examination findings
+                  <textarea id="exam" rows="3" placeholder="Clinical examination findings..."></textarea>
+                </label>
+                <label>Red flags / concerns
+                  <textarea id="redFlags" rows="3" placeholder="Severe breathlessness, altered sensorium, shock, severe dehydration, chest pain, bleeding, etc."></textarea>
+                </label>
+              </details>
+
               <div class="phase-d-fields">
                 <label>Follow-up date
                   <input id="followupDate" type="date" />
@@ -144,18 +167,14 @@
               </div>
               <div class="phase-d-fields">
                 <label>Investigations ordered / advised
-                  <textarea id="investigationsOrdered" rows="3" placeholder="CBC, urine routine, dengue NS1, LFT, etc."></textarea>
+                  <textarea id="investigationsOrdered" rows="2" placeholder="Optional"></textarea>
                 </label>
                 <label>Investigation results available
-                  <textarea id="investigationResults" rows="3" placeholder="Enter available results only. Do not infer missing results."></textarea>
+                  <textarea id="investigationResults" rows="2" placeholder="Optional — enter actual results only"></textarea>
                 </label>
               </div>
 
-              <label>Red flags / concerns
-                <textarea id="redFlags" rows="4" placeholder="Severe breathlessness, altered sensorium, shock, severe dehydration, chest pain, bleeding, etc."></textarea>
-              </label>
-
-              <button class="btn primary" type="submit">Generate Structured Assessment</button>
+              <button class="btn primary" type="submit">Assess & Show Treatment</button>
             </form>
           </article>
 
@@ -182,7 +201,12 @@
               </section>
 
               <section class="result-section">
-                <div class="opd-section-head"><div><span class="mini-label">2 • CONSIDER</span><h3>Possible clinical considerations</h3></div></div>
+                <div class="opd-section-head"><div><span class="mini-label">2 • CHECK</span><h3>Tests / Vitals if clinically indicated</h3></div></div>
+                <div id="suggestedTests" class="phaseb-box"></div>
+              </section>
+
+              <section class="result-section">
+                <div class="opd-section-head"><div><span class="mini-label">3 • CONSIDER</span><h3>Possible clinical considerations</h3></div></div>
                 <p id="possibleDiagnosis"></p>
               </section>
 
