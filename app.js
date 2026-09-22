@@ -156,7 +156,7 @@ function renderExpiry(){
   const rows=getExpiryAlerts();
   $("expiryTable").innerHTML=rows.length?`<table><thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th>Time Left</th><th>Stock</th><th>Status</th></tr></thead><tbody>${rows.map(m=>`<tr><td><strong>${esc(m.name)}</strong></td><td>${esc(m.batch||"—")}</td><td>${esc(m.expiry||"—")}</td><td>${expiryTimeLabel(m)}</td><td>${m.stock||0}</td><td><span class="status-tag ${expiryStatus(m)}">${expiryStatus(m)==="expired"?"EXPIRED":"NEAR EXPIRY"}</span></td></tr>`).join("")}</tbody></table>`:'<div class="empty-list">No near-expiry or expired batches.</div>';
 }
-function refreshAll(){renderDashboard();renderRequired();renderExpiry();renderStoreTablets()}
+function refreshAll(){renderDashboard();renderRequired();renderExpiry();renderStoreTablets();renderUseShelves()}
 
 function renderStoreTablets(){
   const searchEl=$("storeTabletSearch"), stockEl=$("storeTabletStock"), listEl=$("storeTabletsList"), countEl=$("tabletCount");
@@ -188,9 +188,51 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
   if(b.dataset.tab==="expiry")renderExpiry();
   if(b.dataset.tab==="history")renderHistory();
   if(b.dataset.tab==="storeTablets")renderStoreTablets();
+  if(b.dataset.tab==="diseaseShelf")renderUseShelves();
 }));
 
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+const USE_SHELVES=[
+  {id:"all",name:"All Medicines",icon:"💊",keys:[]},
+  {id:"fever-pain",name:"Fever & Pain",icon:"🌡️",keys:["fever","pain","headache","migraine","analges","antipyret","body ache"]},
+  {id:"gastric",name:"Acidity, Gas & Digestion",icon:"🫄",keys:["acidity","heartburn","gas","antacid","gastric","reflux","indigestion","ulcer","digest"]},
+  {id:"nausea",name:"Nausea & Vomiting",icon:"🤢",keys:["nausea","vomit","antiemetic"]},
+  {id:"constipation",name:"Constipation & Bowel",icon:"🚽",keys:["constipation","laxative","diarr","diarrhoea","diarrhea","bowel","stool"]},
+  {id:"cough-cold",name:"Cough, Cold & Allergy",icon:"🤧",keys:["cough","cold","allerg","rhinitis","nasal","sneez","antihistamine","mucus"]},
+  {id:"respiratory",name:"Respiratory / Asthma",icon:"🫁",keys:["asthma","respir","bronch","airway","wheez","breath"]},
+  {id:"infection",name:"Bacterial / Infective Conditions",icon:"🦠",keys:["antibiotic","bacterial","infect","infection","antimicrobial"]},
+  {id:"musculoskeletal",name:"Muscle, Joint & Spasm",icon:"🦴",keys:["musculoskeletal","joint","arthritis","muscle","spasm","sprain","strain","stiffness","inflamm"]},
+  {id:"skin-wound",name:"Skin, Cuts & Wounds",icon:"🩹",keys:["wound","cut","skin","antiseptic","topical","dressing","lesion"]},
+  {id:"eye-ear",name:"Eye & Ear",icon:"👁️",keys:["eye","ear","otic","ophthalm","red eye"]},
+  {id:"nutrition",name:"Vitamins, Iron & Nutrition",icon:"🥗",keys:["vitamin","mineral","iron","folic","nutri","anaemia","anemia","supplement","lysine"]},
+  {id:"worms",name:"Worm / Parasite Treatment",icon:"🪱",keys:["worm","helminth","parasite","anthelmint"]},
+  {id:"women",name:"Women's Health",icon:"👩",keys:["pregnancy","pregnant","pcod","pcos","menstrual","dysmen","mastalgia","gynaec","gynec","folate"]},
+  {id:"mental-health",name:"Mental Health",icon:"🧠",keys:["depress","psychiatric","ssri","mental"]},
+  {id:"other",name:"Other / Review",icon:"📦",keys:[]}
+];
+let activeUseShelf="all";
+function shelfText(m){return [m.name,m.generic,m.use,m.notes,m.category,m.form].join(" ").toLowerCase()}
+function medicineMatchesShelf(m,shelf){
+  if(shelf.id==="all")return true;
+  if(shelf.id==="other")return !USE_SHELVES.some(x=>x.id!=="all"&&x.id!=="other"&&x.keys.some(k=>shelfText(m).includes(k)));
+  return shelf.keys.some(k=>shelfText(m).includes(k));
+}
+function renderUseShelves(){
+  const shelvesEl=$("diseaseShelves"),listEl=$("diseaseShelfList"),titleEl=$("diseaseShelfTitle"),subEl=$("diseaseShelfSub"),countEl=$("diseaseShelfCount");
+  if(!shelvesEl||!listEl)return;
+  const shelf=USE_SHELVES.find(x=>x.id===activeUseShelf)||USE_SHELVES[0];
+  const rows=inventory.filter(m=>medicineMatchesShelf(m,shelf)).sort((x,y)=>x.name.localeCompare(y.name));
+  shelvesEl.innerHTML=USE_SHELVES.map(x=>{
+    const count=inventory.filter(m=>medicineMatchesShelf(m,x)).length;
+    return '<button class="disease-shelf '+(x.id===activeUseShelf?"active":"")+'" data-shelf="'+x.id+'"><span class="disease-shelf-icon">'+x.icon+'</span><span><strong>'+esc(x.name)+'</strong><small>'+count+' medicine'+(count===1?"":"s")+'</small></span></button>';
+  }).join("");
+  titleEl.textContent=shelf.name;
+  subEl.textContent=rows.length+" medicine"+(rows.length===1?"":"s");
+  countEl.textContent=inventory.length+" medicines";
+  listEl.innerHTML=rows.length?rows.map(m=>'<div class="disease-medicine"><div><strong>'+esc(m.name)+'</strong><small>'+esc(m.generic||"")+'</small></div><div class="disease-use"><b>Use:</b> '+esc(m.use||m.notes||"Not specified")+'</div><div class="disease-stock"><span>'+esc(m.form||m.category||"Medicine")+'</span><strong>'+((Number(m.stock)||0)>0?(m.stock+" available"):"Out of stock")+'</strong></div></div>').join(""):'<div class="empty-list">No medicines are currently classified in this shelf.</div>';
+  shelvesEl.querySelectorAll("[data-shelf]").forEach(b=>b.addEventListener("click",()=>{activeUseShelf=b.dataset.shelf;renderUseShelves()}));
+}
+
 function stockClass(v){const n=Number(v);if(!Number.isFinite(n))return "";if(n<=0)return"stock-out";if(n<=5)return"stock-low";return"stock-ok"}
 
 function renderInventory(){
