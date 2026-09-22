@@ -129,3 +129,5 @@ footer{width:min(1240px,calc(100% - 32px));margin:0 auto 30px;color:#718087;font
 .iv-status p{margin:0 0 6px}
 .iv-status small{display:block;margin-top:5px}
 @media(max-width:650px){.iv-check-grid{grid-template-columns:1fr}}
+
+.phaseb-box{margin:10px 0;padding:12px 14px;border:1px solid var(--line,#dfe5ec);border-radius:12px;background:var(--soft,#f7f9fc)}.phaseb-box b{display:block;margin-bottom:6px}.phaseb-box ul{margin:6px 0 0 18px;padding:0}.phaseb-box li{margin:3px 0}
