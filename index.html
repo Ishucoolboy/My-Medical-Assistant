@@ -50,6 +50,8 @@
     <article class="stat-card"><span>Near Expiry</span><strong id="statExpiry">0</strong><small>Within 6 months</small></article>
     <article class="stat-card"><span>Expired</span><strong id="statExpired">0</strong><small>Do not dispense</small></article>
     <article class="stat-card"><span>Stock Units</span><strong id="statUnits">0</strong><small>Total recorded quantity</small></article>
+    <article class="stat-card"><span>Today's OPD</span><strong id="statTodayCases">0</strong><small>Cases recorded today</small></article>
+    <article class="stat-card"><span>Follow-ups Due</span><strong id="statFollowups">0</strong><small>Today / overdue</small></article>
   </div>
   <div class="quick-actions">
     <button class="btn primary" data-quick-tab="assistant">👨‍⚕️ New OPD Case</button>
@@ -67,6 +69,10 @@
       <div class="card-head"><div><h2>Expiry Alerts</h2><p>Batch-level expiry monitoring.</p></div></div>
       <div id="dashboardExpiry"></div>
     </article>
+    <article class="card">
+      <div class="card-head"><div><h2>Follow-ups</h2><p>Today and overdue follow-up cases.</p></div></div>
+      <div id="dashboardFollowups"></div>
+    </article>
   </div>
 </section>
 
@@ -82,18 +88,28 @@
             </div>
 
             <form id="caseForm">
-              <label>Patient age
-                <input id="age" type="number" min="0" max="120" placeholder="e.g. 32" />
-              </label>
-
-              <label>Sex
-                <select id="sex">
-                  <option value="">Select</option>
-                  <option>Female</option>
-                  <option>Male</option>
-                  <option>Other</option>
-                </select>
-              </label>
+              <div class="patient-grid">
+                <label>Patient name
+                  <input id="patientName" type="text" autocomplete="name" placeholder="Patient name" />
+                </label>
+                <label>Age
+                  <input id="age" type="number" min="0" max="120" placeholder="e.g. 32" />
+                </label>
+                <label>Sex
+                  <select id="sex">
+                    <option value="">Select</option>
+                    <option>Female</option>
+                    <option>Male</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+                <label>Mobile number
+                  <input id="mobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10-digit mobile" />
+                </label>
+                <label>Gaav / Village
+                  <input id="village" type="text" placeholder="Gaav ka naam" />
+                </label>
+              </div>
 
               <label>Chief complaint
                 <input id="complaint" required placeholder="e.g. fever, cough, vomiting..." />
@@ -103,8 +119,18 @@
                 <textarea id="history" rows="6" placeholder="Duration, severity, associated symptoms, relevant history, pregnancy status when relevant, allergies, current medicines, etc."></textarea>
               </label>
 
-              <label>Vitals / examination
-                <textarea id="exam" rows="5" placeholder="BP, pulse, temperature, SpO₂, RR, examination findings..."></textarea>
+              <div class="vitals-grid">
+                <label>BP<input id="bp" type="text" inputmode="decimal" placeholder="e.g. 120/80" /></label>
+                <label>Blood Sugar<input id="bloodSugar" type="text" inputmode="decimal" placeholder="e.g. 110 mg/dL" /></label>
+                <label>Pulse<input id="pulse" type="number" min="0" placeholder="bpm" /></label>
+                <label>SpO₂<input id="spo2" type="number" min="0" max="100" placeholder="%" /></label>
+                <label>Temperature<input id="temperature" type="number" step="0.1" placeholder="°F" /></label>
+              </div>
+              <label>Examination findings
+                <textarea id="exam" rows="4" placeholder="Clinical examination findings..."></textarea>
+              </label>
+              <label>Follow-up date
+                <input id="followupDate" type="date" />
               </label>
 
               <label>Red flags / concerns
@@ -158,12 +184,23 @@
               </section>
 
               <section class="result-section">
-                <div class="opd-section-head"><div><span class="mini-label">4 • SAFETY</span><h3>Important checks & red flags</h3></div></div>
+                <div class="opd-section-head"><div><span class="mini-label">4 • PRESCRIPTION</span><h3>Prescription Builder</h3></div></div>
+                <div id="prescriptionBuilder" class="prescription-builder">
+                  <div id="selectedPrescriptionList" class="selected-prescription-list"></div>
+                  <div class="prescription-actions">
+                    <button id="printPrescription" class="btn primary" type="button">Print Prescription</button>
+                    <button id="clearPrescription" class="btn ghost" type="button">Clear Selected</button>
+                  </div>
+                  <div id="prescriptionWarnings"></div>
+                </div>
+              </section>
+              <section class="result-section">
+                <div class="opd-section-head"><div><span class="mini-label">5 • SAFETY</span><h3>Important checks & red flags</h3></div></div>
                 <ul id="checks" class="checks"></ul>
               </section>
 
               <section class="result-section">
-                <div class="opd-section-head"><div><span class="mini-label">5 • DOCUMENT</span><h3>Patient summary</h3></div><button id="printSummary" class="btn ghost" type="button">Print summary</button></div>
+                <div class="opd-section-head"><div><span class="mini-label">6 • DOCUMENT</span><h3>Patient summary</h3></div><button id="printSummary" class="btn ghost" type="button">Print summary</button></div>
                 <pre id="summary" class="summary"></pre>
               </section>
             </div>
@@ -275,6 +312,15 @@
         <label class="btn ghost file-btn">Restore backup<input id="restoreBackup" type="file" accept=".json,application/json" hidden></label>
       </div>
       <div class="backup-note">Backup includes inventory, settings, case history and local audit log. Cloud sync/login is intentionally not faked in this static version.</div>
+      <div class="security-box">
+        <strong>Clinic PIN</strong>
+        <p>Optional local browser lock for this device.</p>
+        <div class="security-actions">
+          <input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4–8 digit PIN" />
+          <button id="setPin" class="btn ghost">Set / Change PIN</button>
+          <button id="removePin" class="btn danger-outline">Remove PIN</button>
+        </div>
+      </div>
     </article>
     <article class="card">
       <div class="card-head"><div><h2>Local Audit Log</h2><p>Recent changes made in this browser.</p></div><button id="clearAudit" class="btn danger-outline">Clear</button></div>
@@ -292,10 +338,22 @@
             </div>
             <button id="clearHistory" class="btn danger-outline">Clear history</button>
           </div>
+          <div class="history-toolbar"><input id="historySearch" placeholder="Search patient / mobile / village / complaint..." /></div>
           <div id="historyList" class="history-list"></div>
         </article>
       </section>
     </main>
+
+    <div id="pinLock" class="pin-lock hidden">
+      <div class="pin-card">
+        <div class="eyebrow">CLINIC ACCESS</div>
+        <h2>My Medical Assistant</h2>
+        <p>Enter clinic PIN to continue.</p>
+        <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="PIN" />
+        <button id="pinUnlock" class="btn primary">Unlock</button>
+        <small id="pinError" class="pin-error"></small>
+      </div>
+    </div>
 
     <footer>
       <span>My Medical Assistant</span><span>•</span>
