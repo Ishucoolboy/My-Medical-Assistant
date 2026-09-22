@@ -93,6 +93,8 @@ const starterInventory=[
   {id:"seed-azimax-250",name:"Azimax 250",type:"Pharma/Brand",generic:"Azithromycin 250 mg",category:"Tablet/Capsule",form:"Film-coated Tablet",batch:"21104576",expiry:"2028-11-01",stock:48,minStock:0,notes:"Schedule H prescription macrolide antibiotic; use only for an appropriate susceptible bacterial infection and according to the clinical indication.",use:"Bacterial infections caused by susceptible organisms; current clinic reference includes azithromycin protocols for typhoid, acute sinusitis and acute diarrhoea.",dose:"Clinic reference: Azithromycin 500 mg OD x 7 days in documented typhoid protocol; 500 mg OD x 5 days in acute sinusitis; 500 mg OD x 3 days in acute diarrhoea. This pack is 250 mg, so do not automatically substitute tablet count without checking the intended regimen."},
   {id:"seed-amoxyclav-625",name:"Amoxicillin + Clavulanate 625 mg (Oneclav-625 / Mahamox-CV 625)",type:"Pharma/Brand",generic:"Amoxicillin 500 mg + Clavulanic acid 125 mg",category:"Tablet/Capsule",form:"Tablet",batch:"",expiry:"",stock:34,minStock:0,notes:"Prescription penicillin-class antibiotic combination. Stock count recorded as 34 tablets across the photographed brands; batch/expiry not legible from the provided images.",use:"Susceptible bacterial infections where amoxicillin/clavulanate is clinically indicated.",dose:"No specific adult tablet dose for this product is documented in the current clinic reference files; do not invent a patient-specific dose. Confirm indication, renal function, allergy history and product details before use."},
   {id:"seed-theomox-250-dt",name:"Theomox-250 DT",type:"Pharma/Brand",generic:"Amoxicillin 250 mg",category:"Tablet/Capsule",form:"Dispersible Tablet",batch:"ET250304",expiry:"2027-03-01",stock:60,minStock:0,notes:"Schedule H prescription penicillin antibiotic; use only for an appropriate susceptible bacterial infection and according to the clinical indication.",use:"Susceptible bacterial infections where amoxicillin is clinically indicated.",dose:"No specific adult dose for this 250 mg formulation is documented in the current clinic reference files; do not invent a patient-specific dose. Confirm indication, age/weight, renal function and allergy history before use."},
+  {id:"seed-abd-plus",name:"ABD-PLUS Suspension",type:"Pharma/Brand",generic:"Albendazole + Ivermectin",category:"Syrup/Drops",form:"Suspension",batch:"5AWL040",expiry:"2027-10-01",stock:7,minStock:0,mrp:57.66,notes:"Prescription anthelmintic suspension. Exact strength per 10 mL is not legible on the provided photographs; verify the label before prescribing.",use:"Anthelmintic treatment where albendazole/ivermectin combination is clinically indicated.",dose:"Exact dose cannot be safely recorded from the provided photographs because the strength per 10 mL is not visible. Verify product strength and patient age/weight before use."},
+  {id:"seed-glynase-mf",name:"Glynase MF",type:"Pharma/Brand",generic:"Glipizide 5 mg + Metformin hydrochloride 500 mg",category:"Tablet/Capsule",form:"Tablet",batch:"04012116",mfg:"2026-05",expiry:"2027-10-01",stock:60,minStock:0,mrp:22.75,notes:"Prescription antidiabetic combination. Use for appropriate type 2 diabetes indications with patient-specific glucose monitoring and hypoglycaemia precautions.",use:"Type 2 diabetes mellitus where glipizide + metformin is clinically indicated.",dose:"Each tablet contains glipizide 5 mg + metformin hydrochloride 500 mg. Use the physician-directed regimen; verify renal function, glucose control and hypoglycaemia risk before prescribing."},
   {id:"seed-aristo-gesic-suspension",name:"Aristo Gesic Suspension",type:"Pharma/Brand",generic:"Ibuprofen 100 mg + Paracetamol 162.5 mg per 5 mL",category:"Syrup/Drops",form:"Suspension",batch:"AIAL25022",expiry:"2027-10-01",stock:5,minStock:0,notes:"Prescription pediatric analgesic/antipyretic combination. Label warns about ibuprofen-related bronchospasm in susceptible patients and cautions against exceeding the daily dose.",use:"Symptomatic relief of pain and fever in appropriate pediatric patients.",dose:"Current clinic reference provides pediatric paracetamol dosing separately (10–15 mg/kg q4–6h, max 60 mg/kg/day); this fixed-dose ibuprofen/paracetamol suspension should not be assigned a dose from that paracetamol-only guide. Confirm age/weight, indication and total paracetamol/NSAID exposure before use."},
   {id:"seed-biocetamol-ds",name:"Biocetamol-DS",type:"Pharma/Brand",generic:"Paracetamol 250 mg per 5 mL",category:"Syrup/Drops",form:"Paediatric Oral Suspension",batch:"SF4252955",expiry:"2027-11-01",stock:1,minStock:0,notes:"Paediatric analgesic/antipyretic suspension. Label states 3–4 times daily as directed, minimum 4-hour interval and maximum 60 mg/kg/day.",use:"Fever and pain relief in paediatric patients.",dose:"Clinic paediatric reference: Paracetamol 10–15 mg/kg per dose every 4–6 hours; maximum 60 mg/kg/day. This product contains 250 mg per 5 mL, so volume should be calculated from the child's weight and the selected mg/kg dose."},
   {id:"seed-flott-oz",name:"Flott-OZ Suspension",type:"Pharma/Brand",generic:"Ofloxacin 50 mg + Metronidazole equivalent 120 mg + Simethicone 10 mg per 5 mL",category:"Syrup/Drops",form:"Oral Suspension",batch:"HHP25007",expiry:"2027-01-01",stock:1,minStock:0,notes:"Paediatric prescription combination containing ofloxacin, metronidazole and simethicone. Label cautions include hypoglycaemia and mental-health-related adverse effects; use only when clinically indicated.",use:"Selected gastrointestinal/infective conditions where this combination is specifically indicated.",dose:"No specific dose for this fixed-dose paediatric combination is documented in the current clinic reference files; do not invent a patient-specific dose. Confirm age/weight, indication and contraindications before use."},
@@ -122,7 +124,7 @@ const starterInventory=[
   {id:"seed-kold2kold",name:"Kold 2 Kold Drops",type:"Pharma/Brand",generic:"Paracetamol + Phenylephrine HCl + Chlorpheniramine Maleate",category:"Syrup/Drops",form:"Paediatric oral drops",batch:"2FG-3073",expiry:"2027-06-01",stock:4,minStock:0,notes:"Paediatric cough/cold drops; pack warns about overdose-related severe liver injury and allergic reactions. Avoid duplicate paracetamol-containing products.",use:"Symptomatic relief of cough/cold symptoms in children where clinically appropriate.",dose:"Exact ingredient strengths and a specific dose are not legible in the provided photographs/current clinic reference; verify product label and age/weight-specific dosing before prescribing."},
   {id:"seed-montiride-fxa",name:"Montiride FXA",type:"Pharma/Brand",generic:"Acebrophylline SR + Montelukast + Fexofenadine Hydrochloride",category:"Tablet/Capsule",form:"Tablet",batch:"IE154009",expiry:"2026-11-01",stock:1,minStock:0,notes:"Respiratory/allergic symptom combination; use only for an appropriate documented indication.",use:"Selected respiratory/allergic conditions with cough, bronchospasm or allergic symptoms where clinically appropriate.",dose:"Product-specific dose not documented in the current clinic reference files; use the documented protocol for the diagnosed condition rather than inventing a dose."},
   {id:"seed-zukamin-plus",name:"Zukamin Plus Drops",type:"Pharma/Brand",generic:"Paracetamol + Phenylephrine HCl + Chlorpheniramine Maleate",category:"Syrup/Drops",form:"Paediatric oral drops",batch:"ZPL26006RH",expiry:"2028-01-01",stock:5,minStock:0,notes:"Paediatric cough/cold drops. Exact ingredient strengths were not legible on the provided photographs; avoid duplicate paracetamol-containing products and verify age-specific suitability.",use:"Symptomatic relief of cough/cold symptoms in children where clinically appropriate.",dose:"Exact strengths and a specific dose are not documented clearly enough in the provided photos/current clinic reference; verify product label and use age/weight-specific dosing before prescribing."},
-  {id:"seed-oflokem-oz-plus",name:"Oflokem-OZ+ Suspension",type:"Pharma/Brand",generic:"Ofloxacin + Metronidazole + Simethicone (strengths not legible on photographed pack)",category:"Syrup/Drops",form:"Paediatric Oral Suspension",batch:"OFL26006RH",expiry:"2028-01-01",stock:12,minStock:0,notes:"Paediatric prescription antimicrobial combination. Exact composition strengths were not legible from the provided photographs; verify pack label before clinical use.",use:"Selected gastrointestinal/infective conditions where this combination is specifically indicated.",dose:"Not specified because the exact strength is not legible and no specific dose for this product is documented in the current clinic reference files."},,
+  {id:"seed-oflokem-oz-plus",name:"Oflokem-OZ+ Suspension",type:"Pharma/Brand",generic:"Ofloxacin + Metronidazole + Simethicone (strengths not legible on photographed pack)",category:"Syrup/Drops",form:"Paediatric Oral Suspension",batch:"OFL26006RH",expiry:"2028-01-01",stock:12,minStock:0,notes:"Paediatric prescription antimicrobial combination. Exact composition strengths were not legible from the provided photographs; verify pack label before clinical use.",use:"Selected gastrointestinal/infective conditions where this combination is specifically indicated.",dose:"Not specified because the exact strength is not legible and no specific dose for this product is documented in the current clinic reference files."},
   {"id":"stock-picorest","name":"Picorest","type":"Pharma/Brand","generic":"Sodium Picosulfate 5 mg per 5 mL","category":"Syrup/Suspension","form":"Oral Solution","batch":"PCS-2502","expiry":"2027-11-01","stock":3,"minStock":0,"notes":"Prescription stimulant laxative. Pack states physician-directed dosing.","use":"Short-term relief of constipation.","dose":"Pack: as directed by physician; verify age, indication and product-specific dose."},
   {"id":"stock-fortadol-spas","name":"Fortadol-Spas","type":"Pharma/Brand","generic":"Aceclofenac 100 mg + Drotaverine 80 mg","category":"Tablet/Capsule","form":"Tablet","batch":"","expiry":"2027-04-01","stock":60,"minStock":0,"notes":"Prescription analgesic/antispasmodic combination; avoid duplicate NSAID therapy.","use":"Pain associated with smooth-muscle spasm/cramp where clinically appropriate.","dose":"Pack: as directed by physician."},
   {"id":"stock-solzyme","name":"SOLZYME","type":"Supplement","generic":"Papain 50 mg + Diastase 25 mg + L-Lysine Monohydrochloride 5 mg per 15 mL","category":"Syrup/Suspension","form":"Syrup","batch":"SF-2616","expiry":"2027-09-01","stock":1,"minStock":0,"notes":"Pack labels this as a dietary supplement and states NOT FOR MEDICINAL USE; do not use as an automatic medicinal prescription pathway.","use":"Digestive enzyme / lysine dietary supplement.","dose":"Pack: as directed by health expert; not for medicinal use."},
@@ -192,7 +194,7 @@ const DOSE_GUIDE={
 };
 
 const $=id=>document.getElementById(id);
-function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));const base=Array.isArray(s)?s:[];const legacySeedIds=new Set(["seed-prevent-n","seed-naproxen-250","seed-naproxen-500","seed-cefjoy-50"]);let cleaned=base.filter(m=>!legacySeedIds.has(m?.id));let changed=cleaned.length!==base.length;for(const seed of starterInventory){if(!cleaned.some(m=>m?.id===seed.id)){cleaned.push({...seed});changed=true}}if(changed||!Array.isArray(s))localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{return starterInventory.map(m=>({...m}))}}
+function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));const base=Array.isArray(s)?s:[];const legacySeedIds=new Set(["seed-prevent-n","seed-naproxen-250","seed-naproxen-500","seed-cefjoy-50"]);let cleaned=base.filter(m=>!legacySeedIds.has(m?.id));let changed=cleaned.length!==base.length;for(const seed of starterInventory){if(!cleaned.some(m=>m?.id===seed.id)){cleaned.push({...seed});changed=true}}if(!cleaned.length&&starterInventory.length){cleaned=starterInventory.map(m=>({...m}));changed=true}if(changed||!Array.isArray(s))localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{const seeded=starterInventory.map(m=>({...m}));try{localStorage.setItem(INVENTORY_KEY,JSON.stringify(seeded))}catch{}return seeded}}
 function saveInventory(items){localStorage.setItem(INVENTORY_KEY,JSON.stringify(items))}
 function loadHistory(){try{const s=JSON.parse(localStorage.getItem(HISTORY_KEY));return Array.isArray(s)?s:[]}catch{return []}}
 function saveHistory(items){localStorage.setItem(HISTORY_KEY,JSON.stringify(items))}
@@ -201,7 +203,7 @@ let settings=loadSettings();
 
 function loadSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{expiryDays:90}}catch{return{expiryDays:90}}}
 function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
-function daysUntil(date){if(!date)return Infinity;const d=new Date(date+"T23:59:59");return Math.ceil((d-Date.now())/86400000)}
+function parseExpiryDate(value){if(!value)return null;const raw=String(value).trim();if(!raw)return null;let d=null;if(/^\d{4}-\d{2}-\d{2}$/.test(raw))d=new Date(raw+"T23:59:59");else if(/^\d{2}[\/-]\d{4}$/.test(raw)){const [mm,yyyy]=raw.split(/[\/-]/).map(Number);d=new Date(yyyy,mm,0,23,59,59)}else if(/^\d{2}[\/-]\d{2}[\/-]\d{4}$/.test(raw)){const [dd,mm,yyyy]=raw.split(/[\/-]/).map(Number);d=new Date(yyyy,mm-1,dd,23,59,59)}else if(/^\d{4}[\/-]\d{2}$/.test(raw)){const [yyyy,mm]=raw.split(/[\/-]/).map(Number);d=new Date(yyyy,mm,0,23,59,59)}else d=new Date(raw);return Number.isNaN(d.getTime())?null:d}function daysUntil(date){const d=parseExpiryDate(date);if(!d)return Infinity;return Math.ceil((d-Date.now())/86400000)}
 function sixMonthExpiryCutoff(){
   const d=new Date();
   d.setHours(23,59,59,999);
@@ -217,14 +219,7 @@ function expiryTimeLabel(m){
   return months+" month"+(months===1?"":"s")+" left";
 }
 function stockStatus(m){const n=Number(m.stock)||0, min=Number(m.minStock)||0;return n<=0?"out":n<=min?"low":"ok"}
-function expiryStatus(m){
-  if(!m.expiry)return"none";
-  const d=daysUntil(m.expiry);
-  if(!Number.isFinite(d))return"none";
-  if(d<0)return"expired";
-  const expiryDate=new Date(m.expiry+"T23:59:59");
-  return expiryDate<=sixMonthExpiryCutoff()?"near":"ok";
-}
+function expiryStatus(m){const expiryDate=parseExpiryDate(m?.expiry);if(!expiryDate)return"none";const d=daysUntil(m.expiry);if(d<0)return"expired";return expiryDate<=sixMonthExpiryCutoff()?"near":"ok"}
 function getReorder(){return inventory.filter(m=>stockStatus(m)!=="ok")}
 function getExpiryAlerts(){return inventory.filter(m=>["expired","near"].includes(expiryStatus(m))).sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry))}
 function medicineRow(m,mode="inventory"){
@@ -239,7 +234,8 @@ function renderDashboard(){
   if($("statTodayCases"))$("statTodayCases").textContent=todayCases.length;
   if($("statFollowups"))$("statFollowups").textContent=due.length;
   if($("dashboardFollowups"))$("dashboardFollowups").innerHTML=due.length?due.slice(0,12).map(x=>'<div class="alert-row"><strong>'+esc(x.patientName||"Unnamed patient")+'</strong><span>'+esc(x.followupDate||"—")+' • '+esc(x.mobile||"")+' • '+esc(x.complaint||"")+'</span></div>').join(""):'<div class="empty-list">No follow-ups due.</div>';
-  $("statTotal").textContent=inventory.length;
+  const totalItems=Array.isArray(inventory)?inventory.length:0;
+  $("statTotal").textContent=totalItems;
   $("statLow").textContent=reorder.filter(x=>stockStatus(x)==="low").length;
   $("statOut").textContent=reorder.filter(x=>stockStatus(x)==="out").length;
   $("statExpiry").textContent=expiry.length;
@@ -430,6 +426,38 @@ function phaseBPatientFactors(d,p){
   if(d.pregnancyStatus==="pregnant"){out.push("Pregnancy mode: gestational age and pregnancy-specific medicine safety must be confirmed before prescribing.");if(d.gestationalWeeks)out.push("Gestational age recorded: "+d.gestationalWeeks+" weeks.");}
   return out;
 }
+function suggestedOpdTests(d){
+  const t=opdText(d), age=Number(d.age), tests=[];
+  const hasAny=(terms)=>terms.some(x=>t.includes(x));
+  const bpNeeded=hasAny(["headache","dizziness","chest pain","breathlessness","palpitation","pregnan","hypertension","high bp","blood pressure","weakness"]) || (Number.isFinite(age)&&age>=30);
+  const sugarNeeded=hasAny(["polyuria","polydipsia","thirst","frequent urination","weight loss","diabetes","sugar","blurred vision","recurrent infection","weakness","fatigue"]);
+  const pulseNeeded=hasAny(["fever","dizziness","weakness","breathlessness","chest pain","palpitation","vomit","vomiting","diarr","dehydration","bleeding","shock"]);
+  const feverPresent=hasAny(["fever","bukhar","taav","jwar","pyrexia"]);
+  const feverDurationMatch=t.match(/(?:fever|bukhar|taav|jwar|pyrexia)[^0-9]{0,20}(?:for|since|from)?[^0-9]{0,10}(\\d+(?:\\.\\d+)?)\\s*(day|days|din|d)/i)
+    || t.match(/(\\d+(?:\\.\\d+)?)\\s*(day|days|din|d)[^a-z0-9]{0,15}(?:fever|bukhar|taav|jwar|pyrexia)/i);
+  const feverDays=feverDurationMatch?Number(feverDurationMatch[1]):null;
+  if(bpNeeded)tests.push({name:"BP",reason:"BP check is relevant to the entered complaint/risk context. Measure correctly and repeat abnormal readings as clinically appropriate."});
+  if(sugarNeeded)tests.push({name:"Blood sugar",reason:"Check glucose because the complaint/history contains a diabetes/hyperglycaemia-related feature or symptom."});
+  if(pulseNeeded)tests.push({name:"Pulse",reason:"Pulse assessment is relevant because the complaint/history contains a systemic, cardiovascular or dehydration-related feature."});
+
+  if(feverPresent && Number.isFinite(feverDays) && feverDays>=3){
+    tests.push({name:"CBC",reason:"Fever duration is "+feverDays+" days; CBC can help assess leukocyte/platelet pattern and severity when clinically indicated."});
+    tests.push({name:"Malaria test (RDT / peripheral smear)",reason:"Consider when malaria exposure/endemic risk or compatible symptoms are present; fever alone does not establish malaria."});
+    tests.push({name:"Dengue testing",reason:"Consider when dengue is clinically compatible. In the first week, direct detection such as NS1/NAAT can be useful; antibody testing becomes more informative as illness progresses. Interpret with local prevalence and clinical findings."});
+  } else if(feverPresent){
+    tests.push({name:"Clinical fever assessment",reason:"Record measured temperature, pulse and hydration status; add targeted investigations according to the associated symptoms and examination."});
+  }
+
+  if(hasAny(["burning urine","dysuria","frequent urination","urine","flank pain","loin pain"])){
+    tests.push({name:"Urine routine / microscopy",reason:"Urinary symptoms are present; evaluate for urinary infection before selecting antibiotics."});
+  }
+  if(hasAny(["cough","sore throat","runny nose","breathlessness"])){
+    tests.push({name:"Respiratory assessment",reason:"Respiratory symptoms are present; assess oxygen saturation, respiratory rate and chest findings, with targeted testing/imaging if clinically indicated."});
+  }
+  if(!tests.length)tests.push({name:"No extra BP / sugar / pulse test auto-suggested",reason:"Add BP, blood sugar or pulse when examination, symptoms, age/risk factors or clinical judgment indicate it."});
+  return tests;
+}
+
 function buildAssessment(d){
   const t=opdText(d);
   const urgentTerms=["severe breathlessness","respiratory distress","chest pain","unconscious","altered sensorium","shock","severe bleeding","seizure","cyanosis","anaphylaxis"];
@@ -452,7 +480,8 @@ function buildAssessment(d){
   stewardship.slice().reverse().forEach(x=>checks.unshift(x));
   const possible=d.complaint?"Possible clinical considerations based on the entered complaint/history: "+d.complaint+". Correlate with history, examination and investigations before assigning a diagnosis.":"Insufficient information for a meaningful clinical consideration.";
   const protocolMatches=(clinicProtocols||[]).filter(p=>[p.title,p.category,p.summary].join(" ").toLowerCase().split(/[,/ ]+/).filter(x=>x.length>3).some(k=>t.includes(k))).slice(0,3);
-  return {urgent,possible,protocolMatches,matches,oral,phase2,injectable,checks,safety,rx,investigations,followUpSuggestion,patientFactors,stewardship,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Investigations ordered: "+(d.investigationsOrdered||"Not recorded"),"Investigation results: "+(d.investigationResults||"Not recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")+" • "+(d.followupStatus||"planned"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
+  const suggestedTests=suggestedOpdTests(d);
+  return {urgent,possible,protocolMatches,matches,oral,phase2,injectable,checks,safety,rx,investigations,followUpSuggestion,patientFactors,stewardship,suggestedTests,summary:["Patient: "+(d.patientName||"Not recorded"),"Age: "+(d.age||"Not recorded"),"Sex: "+(d.sex||"Not recorded"),"Mobile: "+(d.mobile||"Not recorded"),"Village: "+(d.village||"Not recorded"),"Chief complaint: "+(d.complaint||"Not recorded"),"Symptoms/history: "+(d.history||"Not recorded"),"Investigations ordered: "+(d.investigationsOrdered||"Not recorded"),"Investigation results: "+(d.investigationResults||"Not recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")+" • "+(d.followupStatus||"planned"),"BP: "+(d.bp||"Not recorded"),"Blood sugar: "+(d.bloodSugar||"Not recorded"),"Pulse: "+(d.pulse||"Not recorded"),"SpO₂: "+(d.spo2||"Not recorded"),"Temperature: "+(d.temperature||"Not recorded"),"Examination: "+(d.exam||"Not recorded"),"Red flags: "+(d.redFlags||"None recorded"),"Follow-up: "+(d.followupDate||"Not scheduled")].join("\n")};
 }
 
 function normalizeRxText(v){return String(v||"").toLowerCase().replace(/[^a-z0-9+.#%/ -]/g," ").replace(/\\s+/g," ").trim()}
@@ -508,6 +537,9 @@ function medicineSafetyForAutoRx(m,d,p,rx){
   if(age<18 && !/paediatric|pediatric|child|infant|suspension|drops|syrup/i.test((m.form||"")+" "+(m.category||"")) && !/paediatric|pediatric|child/i.test(String(p?.title||""))){
     reasons.push("No verified paediatric formulation/pathway for this medicine.");
   }
+  if(d.sex==="Female" && (!d.pregnancyStatus || d.pregnancyStatus==="unknown") && /nsaid|aceclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|diclofenac|naproxen|fluoroquinolone|ciprofloxacin|ofloxacin/.test(g)){
+    reasons.push("Pregnancy status is not recorded; this medicine class is not auto-selected until pregnancy safety is reviewed.");
+  }
   if(d.pregnancyStatus==="pregnant" && !/pregnancy|antenatal|trimester|anaemia in pregnancy|anemia in pregnancy/.test(String(p?.title||"").toLowerCase())){
     if(/nsaid|aceclofenac|ibuprofen|nimesulide|etoricoxib|fluoroquinolone|ciprofloxacin|ofloxacin/.test(g))reasons.push("Pregnancy context requires medicine-specific safety review; this class is not auto-selected by a non-pregnancy pathway.");
   }
@@ -535,6 +567,33 @@ function explicitInventorySubstituteCandidates(p,rx,d){
   if(!Array.isArray(subs)||!subs.length)return [];
   return inventory.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&subs.some(s=>inventoryCandidateMatch(m,{match:s.match||[]})));
 }
+function inventoryTreatmentEligibility(m,d,p){
+  const t=opdText(d),g=normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+  const safety=medicineSafetyForAutoRx(m,d,p,null);
+  if(!safety.ok)return false;
+  const antibiotic=/antibiotic|amoxicillin|amoxycillin|clavulan|azithromycin|cefixime|ciprofloxacin|ofloxacin|norfloxacin|metronidazole|tinidazole|fluoroquinolone|macrolide|cephalosporin/.test(g);
+  const infectious=/uti|urinary infection|dysentery|diarrh|typhoid|enteric|sinusitis|bacterial|infect/.test(t);
+  if(antibiotic&&!infectious)return false;
+  const fever=/fever|bukhar|taav|jwar|pyrexia|dengue|malaria|typhoid/.test(t);
+  const nsaid=/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin/.test(g);
+  if(fever&&nsaid)return false;
+  if(/dengue/.test(t)&&nsaid)return false;
+  return true;
+}
+function addRelevantInventoryOptions(items,d,p){
+  const existing=new Set(items.map(x=>x.id));
+  const candidates=inventory.map(m=>({...m,_match:medicineRelevance(m,d)}))
+    .filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&!existing.has(m.id)&&m._match.score>=6&&inventoryTreatmentEligibility(m,d,p))
+    .sort((a,b)=>b._match.score-a._match.score||daysUntil(a.expiry)-daysUntil(b.expiry)||a.name.localeCompare(b.name));
+  const added=[];
+  for(const m of candidates){
+    if(added.length>=3)break;
+    if(added.some(x=>sameClinicalStockGroup(x,m)))continue;
+    added.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"As clinically indicated",rxInstruction:"Inventory-supported treatment option matched from the medicine's recorded clinical use. Confirm indication, contraindications and exact product dose before signing.",rxSource:"Clinic inventory clinical-use match",rxSelectionType:"INVENTORY_USE_MATCH"});
+  }
+  return added;
+}
+
 function buildInventoryPrescription(d,triage=clinicalTriage(d)){
   const p=findProtocolForCase(d),items=[],missing=[],notes=[];
   if(triage.urgent){
@@ -558,11 +617,37 @@ function buildInventoryPrescription(d,triage=clinicalTriage(d)){
     if(p.note)notes.push(p.note);
   }
   if(!items.length&&(!p||p.allowInventoryFallback===true)){
-    const fallback=inventory.map(m=>({...m,_match:medicineRelevance(m,d),_safety:medicineSafetyForAutoRx(m,d,p,null)}))
-      .filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&m._match.score>=6&&m._safety.ok)
-      .sort((a,b)=>b._match.score-a._match.score||a.name.localeCompare(b.name)).slice(0,1);
-    fallback.forEach(m=>items.push({...m,rxPhase:prescriptionPhase(m),rxDose:m.dose||"",rxFreq:"",rxDuration:"Short course / as clinically indicated",rxInstruction:"Inventory fallback is permitted by this protocol. Confirm indication, contraindications and product label before signing.",rxSource:"Inventory fallback",rxSelectionType:"SUPPORTED_INVENTORY_FALLBACK"}));
+    const fallback=addRelevantInventoryOptions([],d,p).slice(0,1);
+    fallback.forEach(m=>items.push({...m,rxSelectionType:"SUPPORTED_INVENTORY_FALLBACK"}));
   }
+  // Use the current clinic inventory's own recorded clinical-use information as an
+  // additional treatment source when the reference case does not enumerate every stocked option.
+  const extraOptions=addRelevantInventoryOptions(items,d,p);
+  extraOptions.forEach(m=>items.push(m));
+  // Supportive paracetamol pathway: use a plain paracetamol product for fever/pain when stocked.
+  // Do not substitute an NSAID/paracetamol combination for undifferentiated fever.
+  const caseText=opdText(d);
+  const needsParacetamol=/fever|acute fever|pyrexia|headache|migraine|body ache|myalgia|pain|dard|sir dard|badan dukhe/.test(caseText);
+  const hasPlainParacetamol=items.some(m=>{
+    const g=normalizeRxText((m.generic||"")+" "+(m.name||""));
+    const plain=/paracetamol|acetaminophen/.test(g);
+    const combo=/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin|dicyclomine|phenylephrine|chlorpheniramine|caffeine/.test(g);
+    return plain&&!combo;
+  });
+  if(needsParacetamol && !hasPlainParacetamol){
+    const pcmCandidates=inventory.filter(m=>{
+      const g=normalizeRxText(m.generic+" "+m.name+" "+m.use+" "+m.notes);
+      const plain=/paracetamol|acetaminophen/.test(g);
+      const nsaid=/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen|aspirin/.test(g);
+      return plain && !nsaid;
+    });
+    const pcm=chooseRxStockCandidate(pcmCandidates,{match:["paracetamol","acetaminophen"]},d,p);
+    if(pcm){
+      items.push({...pcm,rxPhase:"1",rxDose:Number(d.age)<18?"10–15 mg/kg/dose q4–6h; max 60 mg/kg/day":"500 mg–1 g every 4–6 hours; verify patient-specific maximum",rxFreq:Number(d.age)<18?"q4–6h PRN":"q4–6h PRN",rxDuration:"As clinically indicated",rxInstruction:"Supportive antipyretic/analgesic option. Verify total paracetamol exposure, liver risk and product strength before use.",rxSource:"Supportive paracetamol pathway",rxSelectionType:"SUPPORTIVE_PLAIN_PARACETAMOL"});
+      notes.push("Supportive plain paracetamol was added because the complaint contains fever/pain features and a suitable stocked paracetamol-only product was found.");
+    }
+  }
+
   if(missing.length)notes.unshift("Reference medicine not currently available in recorded usable stock: "+missing.join(", ")+". No substitute is invented unless this protocol explicitly defines a supported substitute.");
   if(!items.length)notes.push("No safe automatic prescription match was found in current usable clinic stock for this case. Do not use expiry/stock pressure as a reason to choose another medicine.");
   const fefo=items.filter(m=>m._selection?.fefoUsed);
@@ -577,6 +662,13 @@ function renderAssessmentView(a,d,recordHistory){
   $("triageStatus").textContent=a.urgent?"URGENT REVIEW":"ROUTINE REVIEW";
   $("referralBox").innerHTML=a.urgent?'<div class="referral"><strong>Urgent review:</strong> This may need urgent referral / further investigation. Do not delay emergency care for this tool.</div>':"";
   $("clinicalSnapshot").innerHTML=`<div><span>Patient</span><strong>${esc(d.patientName||"—")}</strong></div><div><span>Age / Sex</span><strong>${esc(d.age||"—")} / ${esc(d.sex||"—")}</strong></div><div><span>Vitals</span><strong>BP ${esc(d.bp||"—")} • Sugar ${esc(d.bloodSugar||"—")} • Pulse ${esc(d.pulse||"—")} • SpO₂ ${esc(d.spo2||"—")} • Temp ${esc(d.temperature||"—")} • Weight ${esc(d.weight||"—")} kg • Pregnancy ${esc(d.pregnancyStatus||"—")}${d.gestationalWeeks?" • GA "+esc(d.gestationalWeeks)+" wk":""}</strong></div><div><span>Complaint</span><strong>${esc(d.complaint||"—")}</strong></div>`;
+  const testEl=$("suggestedTests");
+  if(testEl){
+    testEl.innerHTML=(a.suggestedTests||[]).map(x=>'<div style="margin-bottom:8px"><b>'+esc(x.name)+'</b><br><small>'+esc(x.reason)+'</small></div>').join("");
+  }
+  const autoRxItems=a.rx?.items||[];
+  const autoP1=autoRxItems.filter(m=>prescriptionPhase(m)==="1");
+  const autoP2=autoRxItems.filter(m=>prescriptionPhase(m)==="2");
   const rxTitle=a.rx?.protocol?'<div class="protocol-inline"><b>Matched clinic case:</b> '+esc(a.rx.protocol.title)+(a.rx.protocol.source?'<small> • '+esc(a.rx.protocol.source)+'</small>':"")+'</div>':"";
   const rxNotes=(a.rx?.notes||[]).map(x=>'<div class="medicine-warning">'+esc(x)+'</div>').join("");
   const pbFactors=(a.patientFactors||[]).map(x=>"<div class=\"protocol-inline\"><b>Patient factor:</b> "+esc(x)+"</div>").join("");
@@ -590,9 +682,9 @@ function renderAssessmentView(a,d,recordHistory){
   $("medicineMatchInfo").innerHTML=a.matches.length
     ?'<span>Only medicines recorded in the current clinic inventory are shown.</span> <span>Selection order: clinical/reference match → safety/patient factors → FEFO only within the same suitable stock group.</span>'
     :"<span>No inventory medicine was matched confidently to the entered complaint.</span>";
-  $("phase1").innerHTML=a.oral.length?a.oral.map(medCard).join(""):'<div class="empty-list">No relevant verified oral/topical medicines matched this case.</div>';
-  $("phase2").innerHTML=a.phase2.length?a.phase2.map(medCard).join(""):'<div class="empty-list">No injection or short-course Phase 2 medicine matched this case.</div>';
-  selectedPrescriptions=(a.rx?.items||[]).map(x=>({...x}));
+  $("phase1").innerHTML=autoP1.length?autoP1.map(medCard).join(""):'<div class="empty-list">No safe automatic Phase 1 medicine was matched to this case. Review the complaint, examination and clinic reference before selecting a medicine.</div>';
+  $("phase2").innerHTML=autoP2.length?autoP2.map(medCard).join(""):'<div class="empty-list">No safe automatic Phase 2 injection/short-course medicine was matched. Do not add an injection or IV fluid unless clinically indicated and verified.</div>';
+  selectedPrescriptions=autoRxItems.map(x=>({...x}));
   renderPrescription();
   if($("summary"))$("summary").textContent=a.summary;
 }
