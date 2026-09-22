@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "lastReviewed": "2026-09-22",
+  "policy": "Only explicitly verified medicine+diluent combinations should be marked compatible. Unknown combinations remain unverified and must not be mixed based on this tool.",
+  "diluents": [
+    "0.9% Normal Saline (NS)",
+    "Ringer Lactate (RL)",
+    "5% Dextrose (DNS/D5)",
+    "Sterile Water for Injection (SWFI)"
+  ],
+  "verifiedPairs": [],
+  "rules": [
+    {
+      "status": "unverified",
+      "label": "NOT VERIFIED",
+      "message": "No verified compatibility entry is loaded for this medicine + diluent pair. Do not mix in the same syringe/bag/line based on this tool. Check the product insert, pharmacy compatibility reference, or institutional protocol."
+    },
+    {
+      "status": "do-not-mix",
+      "label": "DO NOT MIX",
+      "message": "This combination is explicitly marked as incompatible in the clinic compatibility database. Use a separate administration method if clinically appropriate."
+    },
+    {
+      "status": "compatible",
+      "label": "VERIFIED COMPATIBLE",
+      "message": "Compatibility has been explicitly entered into the clinic database. Verify concentration, route, stability, administration time and current product information before use."
+    }
+  ]
+}
