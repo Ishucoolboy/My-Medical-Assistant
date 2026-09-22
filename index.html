@@ -169,23 +169,15 @@
               </section>
 
               <section class="result-section">
-                <div class="opd-section-head"><div><span class="mini-label">3 • REFERENCE</span><h3>Relevant clinic medicines</h3></div><span id="medicineMatchCount" class="badge">0 matched</span></div>
+                <div class="opd-section-head"><div><span class="mini-label">3 • REFERENCE</span><h3>Clinic Reference + Prescription</h3></div><span id="medicineMatchCount" class="badge">0 matched</span></div>
                 <div id="medicineMatchInfo" class="match-info"></div>
-              </section>
-
-              <section class="result-section">
                 <div class="phase-title"><span>PHASE 1</span><h3>Regular Medicines</h3></div>
                 <div id="phase1" class="medicine-list"></div>
-              </section>
-
-              <section class="result-section">
-                <div class="phase-title"><span>PHASE 2</span><h3>Injection + 2–3 Day Short-course Medicines</h3></div>
+                <div class="phase-title"><span>PHASE 2</span><h3>Injection + Short-course Medicines</h3></div>
                 <div id="phase2" class="medicine-list"></div>
-              </section>
-
-              <section class="result-section">
-                <div class="opd-section-head"><div><span class="mini-label">4 • INSTANT PRESCRIPTION</span><h3>Prescription Draft — Your Stock + Clinic Case Reference</h3></div></div>
-                <div id="prescriptionBuilder" class="prescription-builder"><div class="protocol-inline"><b>Auto-draft:</b> Naam + age + complaint enter karte hi matching clinic case reference se sirf currently available stock medicines yahan add honge. Unavailable medicines ko substitute karke invent nahi kiya jayega.</div>
+                <div class="opd-section-head prescription-inline-head"><div><span class="mini-label">PRESCRIPTION</span><h3>Auto Prescription — Clinic Stock + Reference</h3></div></div>
+                <div id="prescriptionBuilder" class="prescription-builder">
+                  <div class="protocol-inline"><b>Auto-draft:</b> Complaint/history ke basis par uploaded clinic references ko current stock se match karke prescription yahan auto-fill hoga. Near-expiry usable stock ko, jab clinically suitable ho, FEFO priority di jayegi.</div>
                   <div id="selectedPrescriptionList" class="selected-prescription-list"></div>
                   <div class="prescription-actions">
                     <button id="printPrescription" class="btn primary" type="button">Print Prescription</button>
@@ -194,27 +186,10 @@
                   <div id="prescriptionWarnings"></div><div id="prescriptionCostSummary" class="prescription-cost-summary"></div>
                 </div>
               </section>
-              <section class="result-section">
-                <div class="opd-section-head"><div><span class="mini-label">5 • IV SAFETY</span><h3>Injection / IV compatibility check</h3></div></div>
-                <div class="iv-checker">
-                  <div class="iv-check-grid">
-                    <label>Medicine / injection<select id="ivMedicineSelect"><option value="">Select injection / IV medicine</option></select></label>
-                    <label>Diluent<select id="ivDiluentSelect"><option value="">Select diluent</option></select></label>
-                  </div>
-                  <button id="checkIvCompatibility" class="btn primary" type="button">Check compatibility</button>
-                  <div id="ivCompatibilityResult" class="iv-result"><div class="empty-list">Select a medicine and diluent. Unknown combinations will remain UNVERIFIED.</div></div>
-                  <div class="medicine-warning">Never assume NS/RL/DNS compatibility. This checker only uses explicitly verified entries in the clinic database and does not replace the product insert or pharmacy/institutional compatibility reference.</div>
-                </div>
-              </section>
-              <section class="result-section">
-                <div class="opd-section-head"><div><span class="mini-label">5 • SAFETY</span><h3>Important checks & red flags</h3></div></div>
-                <ul id="checks" class="checks"></ul>
-              </section>
+              
+              
 
-              <section class="result-section">
-                <div class="opd-section-head"><div><span class="mini-label">6 • DOCUMENT</span><h3>Patient summary</h3></div><button id="printSummary" class="btn ghost" type="button">Print summary</button></div>
-                <pre id="summary" class="summary"></pre>
-              </section>
+              
             </div>
           </article>
         </div>
