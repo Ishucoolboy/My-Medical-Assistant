@@ -26,12 +26,76 @@ const VILLAGE_OPD_CATEGORIES=[
   {id:"mental_health",title:"Mental Health & Neuropsychiatric",problems:["Previously diagnosed psychiatric conditions","Medication follow-up where diagnosis is established","Sleep/anxiety/depressive symptoms requiring assessment"],redFlags:["Suicidal/self-harm thoughts, acute behavioural disturbance, delirium, severe confusion or immediate safety concerns"]}
 ];
 
+function villageOpdCategoryFor(d){
+  const t=opdText(d);
+  const rules=[
+    ["fever",/fever|bukhar|taav|jwar|pyrexia|temperature|chills|rigor|kapkap/i],
+    ["respiratory",/cough|khaansi|cold|jukam|sore throat|gala dard|gala dukhe|runny nose|naak bahe|wheeze|saans|breathlessness|asthma|phlegm|sputum/i],
+    ["pain",/headache|sir dard|sir me dard|sir dukhe|migraine|body ache|badan dard|general pain|dard/i],
+    ["gi",/acidity|heartburn|gastric|indigestion|dyspepsia|gas|pet dard|pet me dard|nausea|vomit|ulti|diarr|dast|julaab|constipation|kabz|abdominal/i],
+    ["urinary",/urine|urinary|peshab|pesab|dysuria|burning urine|jalan.*peshab|frequency|urgency|retention|prostate|bph/i],
+    ["skin_wounds",/wound|cut|chot|zakhm|burn|jal|itch|khujli|kharish|rash|fungal|daad|acne|pimple/i],
+    ["ent_eye",/ear|kaan|sinus|naak|nose|eye|aankh|conjunct|earache|kaan dard/i],
+    ["dental_oral",/tooth|daant|dental|toothache|mouth ulcer|munh ke chhale|oral ulcer|gum/i],
+    ["msk",/joint|jod|knee|ghutna|ghutne|back|kamar|neck|gardan|muscle|sprain|strain|spasm|paanv|pair|taang|pag dukhe/i],
+    ["parasitic",/worm|keede|krimi|deworm|parasite|amoeb|giardia/i],
+    ["nutrition",/anaemia|anemia|iron|folate|calcium|vitamin d|weakness|nutrition|bhook|appetite/i],
+    ["chronic",/diabetes|sugar|bph|prostate|follow.?up|chronic|regular medicine/i],
+    ["women",/period|menses|menstrual|dysmenorr|pcos|pregnan|pregnancy|vaginal|white discharge|bleeding per vaginam/i],
+    ["paediatric",/child|baby|infant|baccha|bacha|bachha|pediatric|paediatric/i],
+    ["mental_health",/depress|anxiety|psychiatric|psychosis|sleep problem|risperidone|fluoxetine|suicid/i]
+  ];
+  const age=Number(d.age);
+  if(age<18)return VILLAGE_OPD_CATEGORIES.find(x=>x.id==="paediatric");
+  for(const [id,re] of rules){if(re.test(t))return VILLAGE_OPD_CATEGORIES.find(x=>x.id===id)}
+  return null;
+}
+function villageTreatmentPathway(d,category,triage){
+  if(triage.urgent)return "URGENT REVIEW / REFERRAL PATHWAY — automatic medicine selection paused.";
+  if(!category)return "Unclassified complaint — clinical examination and diagnosis first; no automatic treatment pathway.";
+  const t=opdText(d);
+  if(category.id==="fever")return /dengue|malaria|typhoid/.test(t) ? "Febrile illness → targeted examination/investigation → treat confirmed/likely cause; avoid blind antibiotic selection." : "Febrile illness → vitals/hydration assessment → supportive care + targeted investigation when indicated.";
+  if(category.id==="respiratory")return "Respiratory → SpO₂/respiratory examination → distinguish viral/allergic/wheeze/bacterial features → symptom-directed treatment.";
+  if(category.id==="pain")return "Pain/headache → characterize pain + red flags → choose one appropriate analgesic/supportive option after contraindication review.";
+  if(category.id==="gi")return "GI → hydration/severity + abdominal assessment → symptom-directed treatment; investigate persistent/severe/bleeding cases.";
+  if(category.id==="urinary")return "Urinary → assess dysuria/systemic features → urine testing when indicated → targeted treatment; refer retention/upper-tract/systemic cases.";
+  if(category.id==="skin_wounds")return "Skin/wound → inspect lesion and severity → local wound care/topical treatment where appropriate → refer deep/extensive/infected lesions.";
+  if(category.id==="ent_eye")return "ENT/eye → focused examination → avoid antibiotic/steroid combinations unless indication is established.";
+  if(category.id==="dental_oral")return "Dental/oral → local assessment + symptomatic care → dental referral for persistent infection, swelling or structural disease.";
+  if(category.id==="msk")return "Musculoskeletal → trauma/neurovascular assessment → conservative/analgesic pathway where appropriate.";
+  if(category.id==="parasitic")return "Parasitic → establish likely organism/indication → appropriate anthelmintic/anti-infective only when clinically supported.";
+  if(category.id==="nutrition")return "Nutrition → assess likely deficiency and severity → supplementation plus investigation when indicated.";
+  if(category.id==="chronic")return "Chronic-care → confirm existing diagnosis/medication → review vitals/labs/adherence before continuation or adjustment.";
+  if(category.id==="women")return "Women’s health → pregnancy status + focused assessment → pregnancy-specific pathway or referral when indicated.";
+  if(category.id==="paediatric")return "Paediatric → age + weight + danger signs → weight-based/product-specific treatment only.";
+  if(category.id==="mental_health")return "Mental-health → establish diagnosis/current treatment + safety assessment → urgent referral for immediate safety concerns.";
+  return "Clinical assessment pathway.";
+}
+function villageSelectedMedicines(rx,d){
+  if(!rx?.items?.length)return [];
+  return rx.items.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&medicineSafetyForAutoRx(m,d,rx.protocol,null).ok).slice(0,4);
+}
+function renderVillageOpdEngine(d){
+  const el=$("treatmentWorkspacePlaceholder"); if(!el)return;
+  const category=villageOpdCategoryFor(d);
+  const triage=clinicalTriage(d);
+  const rx=buildInventoryPrescription(d,triage);
+  const selected=triage.urgent?[]:villageSelectedMedicines(rx,d);
+  const possible=category?category.problems.slice(0,4):[];
+  const pathway=villageTreatmentPathway(d,category,triage);
+  el.innerHTML='<div class="card-head"><div><h2>OPD Treatment Engine</h2><p>Complaint → Clinical category → Possible problem → Red-flag check → Stock medicines → Treatment pathway</p></div><span class="mini-label">'+(category?esc(category.title):"Clinical review")+'</span></div>'+
+    '<div class="rx-cost-grid"><div><span>Clinical category</span><strong>'+(category?esc(category.title):"Needs review")+'</strong></div><div><span>Possible problems</span><strong>'+esc(possible.length?possible.join(" • "):"Not enough information")+'</strong></div><div><span>Red-flag status</span><strong class="'+(triage.urgent?"expiry-bad":"")+'">'+(triage.urgent?"URGENT REVIEW":"No automatic red flag detected")+'</strong></div></div>'+
+    '<div class="protocol-caution"><b>Pathway:</b> '+esc(pathway)+'</div>'+
+    (triage.reasons.length?'<div class="medicine-warning"><b>Referral / red flags:</b> '+triage.reasons.map(esc).join(" • ")+'</div>':"")+
+    '<div class="card-head" style="margin-top:18px"><div><h3>Stock-based treatment</h3><p>'+esc(selected.length?"Inventory-linked options selected; clinician verification required.":"No automatic medicine selected.")+'</p></div><span class="mini-label">'+selected.length+' selected</span></div>'+
+    '<div class="protocol-grid">'+(selected.length?selected.map(m=>'<article class="protocol-card"><div><span class="mini-label">PHASE '+esc(prescriptionPhase(m))+'</span><h3>'+esc(m.name)+'</h3><p>'+esc(m.generic||"")+'</p><div class="protocol-points"><span>Use: '+esc(m.use||m.notes||"")+'</span><span>Reference: '+esc(m.rxDose||m.dose||"Verify product-specific dose")+'</span><span>Stock: '+esc(m.stock)+' available</span></div></div><div class="protocol-caution"><b>Why:</b> '+esc(rxWhySelected(m))+'<br><b>Verify:</b> indication, contraindications, exact dose, duration and interactions.</div></article>').join(""):'<div class="empty-list">No automatic medicine selected. Review examination/investigations and choose from verified inventory.</div>')+'</div>'+
+    '<div class="medicine-warning"><b>Clinical safety:</b> Decision support only — not a final diagnosis or prescription. Antibiotics, steroids, psychiatric medicines, antifungals, injections and paediatric medicines require indication-specific verification.</div>';
+  selectedPrescriptions=selected.map(x=>({...x}));
+  renderPrescription();
+}
 function renderVillageOpdCategories(){
-  const el=$("treatmentWorkspacePlaceholder");
-  if(!el)return;
-  el.innerHTML='<div class="card-head"><div><h2>Village OPD Clinical Categories</h2><p>Common OPD problems ko clinical categories mein organize kiya gaya hai. Treatment engine next step mein complaint + patient factors + red flags ke basis par relevant pathway select karega.</p></div><span class="mini-label">'+VILLAGE_OPD_CATEGORIES.length+' categories</span></div>'+
-    '<div class="protocol-grid">'+VILLAGE_OPD_CATEGORIES.map(c=>'<article class="protocol-card"><div><span class="mini-label">'+esc(c.title)+'</span><h3>'+esc(c.problems.length+' common problems')+'</h3><div class="protocol-points">'+c.problems.map(p=>'<span>• '+esc(p)+'</span>').join('')+'</div></div><div class="protocol-caution"><b>Red flags:</b> '+esc(c.redFlags.join('; '))+'</div></article>').join('')+
-    '</div>';
+  const el=$("treatmentWorkspacePlaceholder"); if(!el)return;
+  el.innerHTML='<div class="card-head"><div><h2>Village OPD Clinical Categories</h2><p>Enter patient details above and press Save OPD Case to run the treatment engine.</p></div><span class="mini-label">'+VILLAGE_OPD_CATEGORIES.length+' categories</span></div>';
 }
 
 const IV_COMPAT_URL="./data/iv-compatibility.json";
@@ -1030,8 +1094,8 @@ function printPrescription(){
 $("caseForm").addEventListener("submit",e=>{
   e.preventDefault();
   currentCaseData={patientName:$("patientName").value.trim(),age:$("age").value,sex:$("sex").value,weight:$("weight")?.value,pregnancyStatus:$("pregnancyStatus")?.value||"unknown",gestationalWeeks:$("gestationalWeeks")?.value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint:$("complaint").value.trim(),history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
-  // Treatment UI is intentionally disabled during the rebuild.
-  logAudit("OPD case entered",(currentCaseData.patientName||"Unnamed patient")+" • "+(currentCaseData.complaint||"Unnamed complaint"));
+  renderVillageOpdEngine(currentCaseData);
+  logAudit("OPD treatment engine",(currentCaseData.patientName||"Unnamed patient")+" • "+(currentCaseData.complaint||"Unnamed complaint"));
   renderDashboard();
 });
 
