@@ -4,6 +4,37 @@ const HISTORY_KEY="mma_history_v1";
 const AUDIT_KEY="mma_audit_v1";
 const PIN_KEY="mma_clinic_pin_v1";
 const PROTOCOLS_URL="./data/protocols.json";
+const IV_COMPAT_URL="./data/iv-compatibility.json";
+let ivCompatibility={version:1,diluents:[],verifiedPairs:[]};
+async function loadIvCompatibility(){
+  try{const r=await fetch(IV_COMPAT_URL);if(!r.ok)throw new Error("IV compatibility data unavailable");ivCompatibility=await r.json();}catch{ivCompatibility={version:1,diluents:[],verifiedPairs:[]}}
+  renderIvChecker();
+}
+function ivMedicineRows(){
+  return inventory.filter(m=>["Injection","IV Fluid","Respule"].includes(m.category)||/injection|infusion|respule/i.test((m.form||"")+" "+(m.category||""))).sort((a,b)=>a.name.localeCompare(b.name));
+}
+function renderIvChecker(){
+  const medEl=$("ivMedicineSelect"),dilEl=$("ivDiluentSelect");if(!medEl||!dilEl)return;
+  const selected=medEl.value;
+  medEl.innerHTML='<option value="">Select injection / IV medicine</option>'+ivMedicineRows().map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+(m.generic?" — "+esc(m.generic):"")+'</option>').join("");
+  if(selected&&ivMedicineRows().some(m=>m.id===selected))medEl.value=selected;
+  dilEl.innerHTML='<option value="">Select diluent</option>'+((ivCompatibility.diluents||[]).length?(ivCompatibility.diluents||[]):["0.9% Normal Saline (NS)","Ringer Lactate (RL)","5% Dextrose (DNS/D5)"]).map(x=>'<option>'+esc(x)+'</option>').join("");
+}
+function checkIvCompatibility(){
+  const medId=$("ivMedicineSelect")?.value,diluent=$("ivDiluentSelect")?.value,out=$("ivCompatibilityResult");if(!out)return;
+  if(!medId||!diluent){out.innerHTML='<div class="empty-list">Select both medicine and diluent first.</div>';return}
+  const med=inventory.find(m=>m.id===medId);
+  const pairs=ivCompatibility.verifiedPairs||[];
+  const key=(v)=>String(v||"").trim().toLowerCase();
+  const pair=pairs.find(p=>key(p.medicineId)===key(medId)&&key(p.diluent)===key(diluent))
+    ||pairs.find(p=>key(p.medicine)===key(med?.name)&&key(p.diluent)===key(diluent));
+  if(pair){
+    const status=pair.status==="do-not-mix"?"do-not-mix":"compatible";
+    out.innerHTML='<div class="iv-status '+status+'"><strong>'+esc(status==="compatible"?"VERIFIED COMPATIBLE":"DO NOT MIX")+'</strong><p>'+esc(pair.message||"Verify current product information before administration.")+'</p>'+(pair.concentration?'<small>Concentration: '+esc(pair.concentration)+'</small>':"")+(pair.source?'<small>Reference: '+esc(pair.source)+'</small>':"")+'</div>';
+    return;
+  }
+  out.innerHTML='<div class="iv-status unverified"><strong>NOT VERIFIED</strong><p>No verified compatibility entry is loaded for <b>'+esc(med?.name||"selected medicine")+'</b> + <b>'+esc(diluent)+'</b>.</p><small>Do not mix in the same syringe/bag/line based on this tool. Check the product insert, pharmacy compatibility reference, or institutional protocol.</small></div>';
+}
 function loadAudit(){try{const x=JSON.parse(localStorage.getItem(AUDIT_KEY));return Array.isArray(x)?x:[]}catch{return[]}}
 function logAudit(action,detail){const x=loadAudit();x.unshift({at:new Date().toLocaleString(),action,detail});localStorage.setItem(AUDIT_KEY,JSON.stringify(x.slice(0,100)));renderAudit()}
 function renderAudit(){const el=$("auditList");if(!el)return;const x=loadAudit();el.innerHTML=x.length?x.slice(0,30).map(v=>'<div class="history-item"><strong>'+esc(v.action)+'</strong><small>'+esc(v.at)+' • '+esc(v.detail||"")+'</small></div>').join(""):'<div class="empty-list">No local audit entries.</div>'}
@@ -548,6 +579,9 @@ $("globalMedicineSearch")?.addEventListener("input",e=>renderGlobalSearch(e.targ
 if($("globalMedicineSearch"))$("globalMedicineSearch").insertAdjacentHTML("afterend",'<div id="globalSearchResults" class="global-search-results hidden"></div>');
 document.addEventListener("click",e=>{if(e.target.matches("[data-close-modal]"))closeMedicineModal();});
 $("protocolSearch")?.addEventListener("input",renderProtocols);
+$("ivMedicineSelect")?.addEventListener("change",()=>{$("ivCompatibilityResult").innerHTML='<div class="empty-list">Select the diluent, then press Check compatibility.</div>'});
+$("ivDiluentSelect")?.addEventListener("change",()=>{$("ivCompatibilityResult").innerHTML='<div class="empty-list">Press Check compatibility to verify this pair.</div>'});
+$("checkIvCompatibility")?.addEventListener("click",checkIvCompatibility);
 $("pediatricForm")?.addEventListener("submit",e=>{e.preventDefault();calculatePediatric();});
 $("backupAll")?.addEventListener("click",backupAll);
 $("restoreBackup")?.addEventListener("change",e=>{if(e.target.files[0])restoreBackupFile(e.target.files[0])});
@@ -585,4 +619,4 @@ function setupPrescriptionDelegation(){
 }
 setupPrescriptionDelegation();
 setupClinicSecurity();
-refreshAll();renderReports();renderAudit();loadProtocols();
+refreshAll();renderReports();renderAudit();loadProtocols();loadIvCompatibility();
