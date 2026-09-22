@@ -165,6 +165,8 @@ const starterInventory=[
 
   {id:"seed-flucolab-150",name:"Flucolab-150",type:"Pharma/Brand",generic:"Fluconazole 150 mg",category:"Tablet/Capsule",form:"Tablet",batch:"FCT-011",mfg:"2024-11",expiry:"2026-10-01",stock:2,minStock:0,mrp:13.50,notes:"Fluconazole 150 mg uncoated tablets. Pack contains 1 tablet; Schedule H prescription medicine.",use:"Antifungal treatment for susceptible fungal infections where clinically indicated.",dose:"Use only according to the appropriate indication and physician-directed regimen; verify interactions, pregnancy status and hepatic considerations before prescribing."},
 
+  {id:"seed-mp4",name:"MP-4",type:"Pharma/Brand",generic:"Methylprednisolone 4 mg",category:"Tablet/Capsule",form:"Tablet",batch:"TD-25146",mfg:"2025-04",expiry:"2027-09-01",stock:36,minStock:0,mrp:64.50,notes:"Methylprednisolone 4 mg uncoated tablets. Schedule H prescription medicine; use only under appropriate clinical supervision.",use:"Corticosteroid therapy for clinically indicated inflammatory/allergic/immune-mediated conditions.",dose:"Use according to the specific indication and physician-directed regimen; do not infer a patient dose from the pack alone."},
+
 
 const DOSE_GUIDE={
   "Paracetamol":"650 mg BD x 5 days for recurrent tension-type headache; 650 mg TDS after food for arthritis/body ache/sciatica/knee pain; 500 mg QID in dengue/typhoid/malaria supportive care.",
