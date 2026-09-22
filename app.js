@@ -1000,19 +1000,15 @@ function printPrescription(){
 $("caseForm").addEventListener("submit",e=>{
   e.preventDefault();
   currentCaseData={patientName:$("patientName").value.trim(),age:$("age").value,sex:$("sex").value,weight:$("weight")?.value,pregnancyStatus:$("pregnancyStatus")?.value||"unknown",gestationalWeeks:$("gestationalWeeks")?.value,mobile:$("mobile").value.trim(),village:$("village").value.trim(),complaint:$("complaint").value.trim(),history:$("history").value.trim(),bp:$("bp").value.trim(),bloodSugar:$("bloodSugar").value.trim(),pulse:$("pulse").value,spo2:$("spo2").value,temperature:$("temperature").value,exam:$("exam").value.trim(),redFlags:$("redFlags").value.trim(),followupDate:$("followupDate").value};
-  const a=buildAssessment(currentCaseData);
-  renderAssessmentView(a,currentCaseData,true);
-  const h=loadHistory();
-  h.unshift({id:crypto.randomUUID(),createdAt:new Date().toLocaleString(),dateKey:new Date().toISOString().slice(0,10),followupDate:currentCaseData.followupDate,patientName:currentCaseData.patientName,mobile:currentCaseData.mobile,village:currentCaseData.village,complaint:currentCaseData.complaint,age:currentCaseData.age,sex:currentCaseData.sex,data:{...currentCaseData},summary:a.summary});
-  saveHistory(h.slice(0,100));
-  logAudit("OPD case recorded",(currentCaseData.patientName||"Unnamed patient")+" • "+(currentCaseData.complaint||"Unnamed complaint"));
-  renderHistory();renderDashboard();
+  // Treatment UI is intentionally disabled during the rebuild.
+  logAudit("OPD case entered",(currentCaseData.patientName||"Unnamed patient")+" • "+(currentCaseData.complaint||"Unnamed complaint"));
+  renderDashboard();
 });
 
 $("printSummary")?.addEventListener("click",()=>{const text=$("summary")?.textContent||"";const w=window.open("","_blank");if(!w)return;w.document.write("<pre style=\"font:14px Arial;padding:30px;white-space:pre-wrap\">"+esc(text)+"</pre>");w.document.close();w.print()});
 $("printPrescription")?.addEventListener("click",printPrescription);
 $("clearPrescription")?.addEventListener("click",()=>{selectedPrescriptions=[];renderPrescription();rerenderAssessmentCards()});
-$("clearCase").addEventListener("click",()=>{$("caseForm").reset();selectedPrescriptions=[];renderPrescription();$("emptyResult").classList.remove("hidden");$("result").classList.add("hidden");$("resultState").textContent="Waiting"});
+$("clearCase").addEventListener("click",()=>{$("caseForm").reset();selectedPrescriptions=[];});
 
 function renderHistory(){
   const h=loadHistory(), q=($("historySearch")?.value||"").trim().toLowerCase();
