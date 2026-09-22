@@ -193,7 +193,7 @@ const DOSE_GUIDE={
 };
 
 const $=id=>document.getElementById(id);
-function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));const base=Array.isArray(s)?s:[];const legacySeedIds=new Set(["seed-prevent-n","seed-naproxen-250","seed-naproxen-500","seed-cefjoy-50"]);let cleaned=base.filter(m=>!legacySeedIds.has(m?.id));let changed=cleaned.length!==base.length;for(const seed of starterInventory){if(!cleaned.some(m=>m?.id===seed.id)){cleaned.push({...seed});changed=true}}if(changed||!Array.isArray(s))localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{return starterInventory.map(m=>({...m}))}}
+function loadInventory(){try{const s=JSON.parse(localStorage.getItem(INVENTORY_KEY));const base=Array.isArray(s)?s:[];const legacySeedIds=new Set(["seed-prevent-n","seed-naproxen-250","seed-naproxen-500","seed-cefjoy-50"]);let cleaned=base.filter(m=>!legacySeedIds.has(m?.id));let changed=cleaned.length!==base.length;for(const seed of starterInventory){if(!cleaned.some(m=>m?.id===seed.id)){cleaned.push({...seed});changed=true}}if(!cleaned.length&&starterInventory.length){cleaned=starterInventory.map(m=>({...m}));changed=true}if(changed||!Array.isArray(s))localStorage.setItem(INVENTORY_KEY,JSON.stringify(cleaned));return cleaned}catch{const seeded=starterInventory.map(m=>({...m}));try{localStorage.setItem(INVENTORY_KEY,JSON.stringify(seeded))}catch{}return seeded}}
 function saveInventory(items){localStorage.setItem(INVENTORY_KEY,JSON.stringify(items))}
 function loadHistory(){try{const s=JSON.parse(localStorage.getItem(HISTORY_KEY));return Array.isArray(s)?s:[]}catch{return []}}
 function saveHistory(items){localStorage.setItem(HISTORY_KEY,JSON.stringify(items))}
@@ -202,7 +202,7 @@ let settings=loadSettings();
 
 function loadSettings(){try{return JSON.parse(localStorage.getItem(SETTINGS_KEY))||{expiryDays:90}}catch{return{expiryDays:90}}}
 function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
-function daysUntil(date){if(!date)return Infinity;const d=new Date(date+"T23:59:59");return Math.ceil((d-Date.now())/86400000)}
+function parseExpiryDate(value){if(!value)return null;const raw=String(value).trim();if(!raw)return null;let d=null;if(/^\\d{4}-\\d{2}-\\d{2}$/.test(raw))d=new Date(raw+"T23:59:59");else if(/^\\d{2}[\\/-]\\d{4}$/.test(raw)){const [mm,yyyy]=raw.split(/[\\/-]/).map(Number);d=new Date(yyyy,mm,0,23,59,59)}else if(/^\\d{2}[\\/-]\\d{2}[\\/-]\\d{4}$/.test(raw)){const [dd,mm,yyyy]=raw.split(/[\\/-]/).map(Number);d=new Date(yyyy,mm-1,dd,23,59,59)}else if(/^\\d{4}[\\/-]\\d{2}$/.test(raw)){const [yyyy,mm]=raw.split(/[\\/-]/).map(Number);d=new Date(yyyy,mm,0,23,59,59)}else d=new Date(raw);return Number.isNaN(d.getTime())?null:d}function daysUntil(date){const d=parseExpiryDate(date);if(!d)return Infinity;return Math.ceil((d-Date.now())/86400000)}
 function sixMonthExpiryCutoff(){
   const d=new Date();
   d.setHours(23,59,59,999);
@@ -218,14 +218,7 @@ function expiryTimeLabel(m){
   return months+" month"+(months===1?"":"s")+" left";
 }
 function stockStatus(m){const n=Number(m.stock)||0, min=Number(m.minStock)||0;return n<=0?"out":n<=min?"low":"ok"}
-function expiryStatus(m){
-  if(!m.expiry)return"none";
-  const d=daysUntil(m.expiry);
-  if(!Number.isFinite(d))return"none";
-  if(d<0)return"expired";
-  const expiryDate=new Date(m.expiry+"T23:59:59");
-  return expiryDate<=sixMonthExpiryCutoff()?"near":"ok";
-}
+function expiryStatus(m){const expiryDate=parseExpiryDate(m?.expiry);if(!expiryDate)return"none";const d=daysUntil(m.expiry);if(d<0)return"expired";return expiryDate<=sixMonthExpiryCutoff()?"near":"ok"}
 function getReorder(){return inventory.filter(m=>stockStatus(m)!=="ok")}
 function getExpiryAlerts(){return inventory.filter(m=>["expired","near"].includes(expiryStatus(m))).sort((a,b)=>daysUntil(a.expiry)-daysUntil(b.expiry))}
 function medicineRow(m,mode="inventory"){
