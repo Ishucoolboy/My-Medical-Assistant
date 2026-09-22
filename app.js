@@ -71,6 +71,51 @@ function villageTreatmentPathway(d,category,triage){
   if(category.id==="mental_health")return "Mental-health → establish diagnosis/current treatment + safety assessment → urgent referral for immediate safety concerns.";
   return "Clinical assessment pathway.";
 }
+function villageProblemFor(d,category){
+  const t=opdText(d);
+  const rules={
+    fever:[[/dengue/,"Dengue-suspected febrile illness"],[/malaria|rigor|chills/,"Malaria-suspected febrile illness"],[/typhoid|enteric/,"Enteric fever-suspected illness"],[/fever|bukhar|taav|jwar/,"Acute febrile illness"]],
+    respiratory:[[/wheeze|wheezing|asthma/,"Wheeze / asthma-type episode"],[/allerg|sneez|itchy nose/,"Allergic rhinitis"],[/sore throat|gala dard|gala dukhe/,"Acute sore throat / pharyngitis-type complaint"],[/cough|khaansi|cold|jukam/,"Acute cough / common cold-type illness"]],
+    pain:[[/migraine|one-sided headache|photophobia/,"Migraine-type headache"],[/headache|sir dard|sir me dard|sir dukhe/,"Headache — cause to be assessed"],[/sprain|strain|muscle spasm|spasm/,"Musculoskeletal pain with possible spasm"],[/joint|jod|knee|ghutna|back|kamar/,"Joint/back musculoskeletal pain"],[/pain|dard|body ache|badan dard/,"Acute pain / body ache"]],
+    gi:[[/vomit|vomiting|ulti|nausea/,"Nausea / vomiting"],[/diarr|dast|julaab/,"Acute diarrhoeal illness"],[/constipation|kabz/,"Constipation"],[/acidity|heartburn|gastric|indigestion/,"Acidity / dyspepsia"],[/pet dard|abdominal/,"Abdominal pain — cause to be assessed"]],
+    urinary:[[/retention|urine nahi|peshab nahi/,"Urinary retention — urgent assessment if acute"],[/burning urine|dysuria|peshab.*jalan|pesab.*jalan/,"Dysuria / suspected lower UTI"],[/frequency|urgency|prostate|bph/,"Lower urinary tract symptoms / BPH"]],
+    skin_wounds:[[/burn|jal gaya/,"Minor burn — depth/extent assessment required"],[/wound|cut|chot|zakhm/,"Minor superficial wound"],[/fungal|daad/,"Fungal-type skin complaint"],[/acne|pimple/,"Acne"],[/itch|khujli|kharish|rash/,"Itching / dermatitis-type complaint"]],
+    ent_eye:[[/eye|aankh|conjunct/,"Eye complaint — focused eye examination"],[/ear|kaan/,"Ear complaint"],[/sinus|facial pain|naak band/,"Sinus-type upper respiratory complaint"]],
+    dental_oral:[[/tooth|daant|dental/,"Toothache / dental pain"],[/mouth ulcer|munh ke chhale|oral ulcer/,"Mouth ulcer"]],
+    msk:[[/sprain|strain/,"Sprain / strain"],[/spasm|muscle/,"Muscle spasm / muscular pain"],[/joint|jod|knee|ghutna/,"Joint / knee pain"],[/back|kamar|neck|gardan|paanv|pair|taang|pag dukhe/,"Back/limb musculoskeletal pain"]],
+    parasitic:[[/worm|keede|krimi|deworm/,"Suspected intestinal worm infestation"]],
+    nutrition:[[/anaemia|anemia|iron|folate/,"Possible iron/folate deficiency"],[/calcium|vitamin d/,"Possible calcium/Vitamin D supplementation need"]],
+    chronic:[[/diabetes|sugar/,"Type 2 diabetes — established diagnosis/follow-up required"],[/bph|prostate/,"BPH/LUTS — established diagnosis/follow-up required"],[/follow.?up|chronic/,"Chronic disease follow-up"]],
+    women:[[/pregnan|pregnancy/,"Pregnancy-related complaint — pregnancy pathway"],[/period|menses|menstrual|dysmenorr/,"Menstrual complaint / dysmenorrhoea-type symptoms"],[/vaginal|white discharge/,"Vaginal complaint — focused assessment"]],
+    paediatric:[[/fever|bukhar|taav/,"Paediatric fever"],[/cough|cold|khaansi|jukam/,"Paediatric cough/cold"],[/vomit|ulti|diarr|dast/,"Paediatric GI complaint"],[/pain|dard/,"Paediatric pain/fever complaint"]],
+    mental_health:[[/depress/,"Depressive symptoms / established depression follow-up"],[/anxiety/,"Anxiety symptoms"],[/psychosis|risperidone/,"Established psychotic disorder follow-up"],[/sleep/,"Sleep complaint — assessment required"]]
+  };
+  const age=Number(d.age);
+  if(age<18)return VILLAGE_OPD_CATEGORIES.find(x=>x.id==="paediatric");
+  for(const [id,re] of (rules[category?.id]||[])){if(re.test(t))return rules[category.id].find(x=>x[0]===re)?.[1]}
+  return category?.problems?.[0]||"Clinical problem not yet classified";
+}
+function villageMedicineSelectionRules(d,category,problem,rx){
+  const t=opdText(d);
+  const eligible=(rx?.items||[]).filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&medicineSafetyForAutoRx(m,d,rx.protocol,null).ok);
+  const g=m=>normalizeRxText((m.generic||"")+" "+(m.name||"")+" "+(m.use||"")+" "+(m.notes||""));
+  const score=m=>{
+    const x=g(m);let s=0;
+    if(category?.id==="fever"){if(/paracetamol/.test(x)&&!/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s+=20;if(/antibiotic|ciprofloxacin|cefixime|azithromycin|amoxicillin|ofloxacin|norfloxacin|metronidazole/.test(x))s-=20;if(/dengue/.test(t)&&/aceclofenac|diclofenac|ibuprofen|nimesulide|etoricoxib|mefenamic|naproxen/.test(x))s-=100;}
+    if(category?.id==="pain"){if(/paracetamol/.test(x))s+=10;if(/aceclofenac|diclofenac|naproxen|etoricoxib|nimesulide|mefenamic/.test(x))s+=problem.includes("Musculoskeletal")?8:2;if(/chlorzoxazone|thiocolchicoside|drotaverine/.test(x)&&/spasm|sprain|strain|musculoskeletal/.test(problem.toLowerCase()))s+=8;}
+    if(category?.id==="respiratory"){if(/montelukast|levocetirizine|fexofenadine|dextromethorphan|guaifenesin|phenylephrine/.test(x))s+=8;if(/antibiotic/.test(x))s-=15;}
+    if(category?.id==="gi"){if(/omeprazole|rabeprazole|pantoprazole/.test(x)&&/acidity|dyspepsia/.test(problem.toLowerCase()))s+=12;if(/ondansetron|domperidone/.test(x)&&/nausea|vomiting/.test(problem.toLowerCase()))s+=12;if(/lactulose|bisacodyl|sodium picosulfate/.test(x)&&/constipation/.test(problem.toLowerCase()))s+=12;if(/loperamide/.test(x)&&/diarr/.test(problem.toLowerCase()))s+=6;}
+    if(category?.id==="urinary"){if(/tamsulosin/.test(x)&&/bph|lower urinary/.test(problem.toLowerCase()))s+=15;if(/antibiotic/.test(x)&&/uti/.test(problem.toLowerCase()))s+=3;}
+    if(category?.id==="skin_wounds"){if(/povidone|band aid|dressing|silver sulfadiazine/.test(x))s+=12;if(/clindamycin.*nicotinamide/.test(x)&&/acne/.test(problem.toLowerCase()))s+=15;}
+    if(category?.id==="dental_oral"){if(/clove oil/.test(x)&&/toothache/.test(problem.toLowerCase()))s+=12;if(/riboflavin|folic acid|niacinamide/.test(x)&&/mouth ulcer/.test(problem.toLowerCase()))s+=10;}
+    if(category?.id==="parasitic"&&/albendazole|ivermectin/.test(x))s+=15;
+    if(category?.id==="nutrition"&&/iron|folic|calcium|vitamin d|multivitamin/.test(x))s+=10;
+    if(category?.id==="chronic"&&/glipizide|metformin|tamsulosin/.test(x))s+=10;
+    return s;
+  };
+  return eligible.map(m=>({...m,_engineScore:score(m)})).filter(m=>m._engineScore>0).sort((a,b)=>b._engineScore-a._engineScore||daysUntil(a.expiry)-daysUntil(b.expiry)).slice(0,3);
+}
+
 function villageSelectedMedicines(rx,d){
   if(!rx?.items?.length)return [];
   return rx.items.filter(m=>(Number(m.stock)||0)>0&&expiryStatus(m)!=="expired"&&medicineSafetyForAutoRx(m,d,rx.protocol,null).ok).slice(0,4);
@@ -80,11 +125,12 @@ function renderVillageOpdEngine(d){
   const category=villageOpdCategoryFor(d);
   const triage=clinicalTriage(d);
   const rx=buildInventoryPrescription(d,triage);
-  const selected=triage.urgent?[]:villageSelectedMedicines(rx,d);
-  const possible=category?category.problems.slice(0,4):[];
+  const problem=villageProblemFor(d,category);
+  const selected=triage.urgent?[]:villageMedicineSelectionRules(d,category,problem,rx);
+  const possible=problem?[problem]:[];
   const pathway=villageTreatmentPathway(d,category,triage);
   el.innerHTML='<div class="card-head"><div><h2>OPD Treatment Engine</h2><p>Complaint → Clinical category → Possible problem → Red-flag check → Stock medicines → Treatment pathway</p></div><span class="mini-label">'+(category?esc(category.title):"Clinical review")+'</span></div>'+
-    '<div class="rx-cost-grid"><div><span>Clinical category</span><strong>'+(category?esc(category.title):"Needs review")+'</strong></div><div><span>Possible problems</span><strong>'+esc(possible.length?possible.join(" • "):"Not enough information")+'</strong></div><div><span>Red-flag status</span><strong class="'+(triage.urgent?"expiry-bad":"")+'">'+(triage.urgent?"URGENT REVIEW":"No automatic red flag detected")+'</strong></div></div>'+
+    '<div class="rx-cost-grid"><div><span>Clinical category</span><strong>'+(category?esc(category.title):"Needs review")+'</strong></div><div><span>Possible problem</span><strong>'+esc(possible.length?possible.join(" • "):"Not enough information")+'</strong></div><div><span>Red-flag status</span><strong class="'+(triage.urgent?"expiry-bad":"")+'">'+(triage.urgent?"URGENT REVIEW":"No automatic red flag detected")+'</strong></div></div>'+
     '<div class="protocol-caution"><b>Pathway:</b> '+esc(pathway)+'</div>'+
     (triage.reasons.length?'<div class="medicine-warning"><b>Referral / red flags:</b> '+triage.reasons.map(esc).join(" • ")+'</div>':"")+
     '<div class="card-head" style="margin-top:18px"><div><h3>Stock-based treatment</h3><p>'+esc(selected.length?"Inventory-linked options selected; clinician verification required.":"No automatic medicine selected.")+'</p></div><span class="mini-label">'+selected.length+' selected</span></div>'+
