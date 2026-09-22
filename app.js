@@ -101,7 +101,7 @@ function renderStoreTablets(){
   const mode=stockEl?.value||"available";
   const isTablet=m=>["Tablet/Capsule","Tablet","Capsule"].includes(m.category)||/tablet|capsule/i.test(m.form||"");
   const rows=inventory.filter(m=>{
-    const matchesSearch=!q||[m.name,m.form,m.notes,m.batch].join(" ").toLowerCase().includes(q);
+    const matchesSearch=!q||[m.name,m.form,m.notes,m.batch,m.use,m.dose].join(" ").toLowerCase().includes(q);
     const available=(Number(m.stock)||0)>0;
     return isTablet(m)&&matchesSearch&&(mode==="all"||available);
   });
@@ -109,9 +109,11 @@ function renderStoreTablets(){
   if(countEl)countEl.textContent=total+" available";
   listEl.innerHTML=rows.length?rows.map(m=>{
     const stock=Number(m.stock)||0;
-    const batch=m.batch?'<small>Batch: '+esc(m.batch)+'</small>':'';
-    return '<div class="store-tablet-card"><div class="store-tablet-icon">💊</div><div class="store-tablet-info"><strong>'+esc(m.name)+'</strong><small>'+esc(m.form||"Tablet/Capsule")+'</small>'+batch+'</div><div class="store-tablet-stock '+(stock>0?"in-stock":"out-stock")+'">'+(stock>0?stock+" in stock":"Out of stock")+'</div></div>';
-  }).join(""):'<div class="empty-list store-empty">No tablets are currently recorded for this view. Add tablet stock from Inventory.</div>';
+    const use=m.use||m.notes||"Not specified";
+    const dose=m.dose||"Not specified";
+    const expiry=m.expiry||"—";
+    return '<tr><td><strong>'+esc(m.name)+'</strong><br><small>'+esc(m.form||"Tablet/Capsule")+'</small></td><td>'+esc(use)+'</td><td>'+esc(dose)+'</td><td>'+esc(expiry)+'</td><td><span class="tablet-availability '+(stock>0?"available":"unavailable")+'">'+stock+'</span></td></tr>';
+  }).join(""):'<tr><td colspan="5" class="store-empty">No tablets are currently recorded for this view. Add tablets from Inventory.</td></tr>';
 }
 
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
@@ -151,8 +153,10 @@ $("addMedicine").addEventListener("click",()=>{
   const stockRaw=prompt("Current stock quantity:")||"0";
   const minRaw=prompt("Minimum stock / reorder level:")||"0";
   const notes=prompt("Verified clinic note / indication (optional):")||"";
+  const use=prompt("Main use (optional):")||"";
+  const dose=prompt("Dose / dosing reference (optional):")||"";
   const stock=Number(stockRaw),minStock=Number(minRaw);
-  inventory.push({id:crypto.randomUUID(),name:name.trim(),category:category.trim(),form:form.trim(),batch:batch.trim(),expiry:expiry.trim(),stock:Number.isFinite(stock)?stock:0,minStock:Number.isFinite(minStock)?minStock:0,notes:notes.trim()});
+  inventory.push({id:crypto.randomUUID(),name:name.trim(),category:category.trim(),form:form.trim(),batch:batch.trim(),expiry:expiry.trim(),stock:Number.isFinite(stock)?stock:0,minStock:Number.isFinite(minStock)?minStock:0,notes:notes.trim(),use:use.trim(),dose:dose.trim()});
   saveInventory(inventory);refreshAll();
 });
 $("resetInventory").addEventListener("click",()=>{if(confirm("Reset local inventory changes?")){inventory=starterInventory.slice();saveInventory(inventory);refreshAll()}});
